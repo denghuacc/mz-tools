@@ -1,6 +1,54 @@
 import { useState, useCallback } from "react";
 
+// 门派类型定义
+export type Sect =
+  // 物理职业门派
+  | "鬼王宗"
+  | "天道府"
+  | "万毒门"
+  // 法师职业门派
+  | "青云门"
+  | "焚香谷"
+  | "鬼道"
+  | "寒风龙族"
+  // 治疗职业门派
+  | "天音寺"
+  | "南疆古巫"
+  | "万灵宫"
+  // 封印职业门派
+  | "合欢门"
+  | "长生堂";
+
+// 职业类型定义
 export type Profession = "物理" | "法师" | "治疗" | "封印";
+
+// 门派与职业的映射关系
+export const SECT_TO_PROFESSION: Record<Sect, Profession> = {
+  // 物理职业门派
+  鬼王宗: "物理",
+  天道府: "物理",
+  万毒门: "物理",
+  // 法师职业门派
+  青云门: "法师",
+  焚香谷: "法师",
+  鬼道: "法师",
+  寒风龙族: "法师",
+  // 治疗职业门派
+  天音寺: "治疗",
+  南疆古巫: "治疗",
+  万灵宫: "治疗",
+  // 封印职业门派
+  合欢门: "封印",
+  长生堂: "封印",
+};
+
+// 按职业分组的门派
+export const SECTS_BY_PROFESSION: Record<Profession, Sect[]> = {
+  物理: ["鬼王宗", "天道府", "万毒门"],
+  法师: ["青云门", "焚香谷", "鬼道", "寒风龙族"],
+  治疗: ["天音寺", "南疆古巫", "万灵宫"],
+  封印: ["合欢门", "长生堂"],
+};
 
 export const WEAPON_LEVELS = {
   60: {
@@ -28,10 +76,11 @@ export type Attributes = {
   healing: AttributeValue;
 };
 
-// 获取职业的有效属性
-export const getEffectiveAttribute = (
-  profession: Profession
+// 获取门派的有效属性
+export const getEffectiveAttributeBySect = (
+  sect: Sect
 ): keyof Attributes | null => {
+  const profession = SECT_TO_PROFESSION[sect];
   switch (profession) {
     case "物理":
       return "physical";
@@ -60,9 +109,8 @@ export const convertAttributeValues = (
 
 export const useWeaponConverter = () => {
   const [weaponLevel, _setWeaponLevel] = useState<WeaponLevel>(60);
-  const [currentProfession, setCurrentProfession] =
-    useState<Profession>("物理");
-  const [targetProfession, setTargetProfession] = useState<Profession>("法师");
+  const [currentSect, setCurrentSect] = useState<Sect>("鬼王宗");
+  const [targetSect, setTargetSect] = useState<Sect>("青云门");
   const [attributes, setAttributes] = useState<Attributes>({
     physical: {
       current: undefined as unknown as number,
@@ -139,6 +187,10 @@ export const useWeaponConverter = () => {
       return;
     }
 
+    // 获取当前门派和目标门派的职业类型
+    const currentProfession = SECT_TO_PROFESSION[currentSect];
+    const targetProfession = SECT_TO_PROFESSION[targetSect];
+
     // 如果是封印职业相关的转换，直接返回原属性
     if (currentProfession === "封印" || targetProfession === "封印") {
       setResult({ ...attributes });
@@ -146,8 +198,8 @@ export const useWeaponConverter = () => {
     }
 
     const newAttributes = { ...attributes };
-    const currentEffectiveAttr = getEffectiveAttribute(currentProfession);
-    const targetEffectiveAttr = getEffectiveAttribute(targetProfession);
+    const currentEffectiveAttr = getEffectiveAttributeBySect(currentSect);
+    const targetEffectiveAttr = getEffectiveAttributeBySect(targetSect);
 
     if (
       currentEffectiveAttr &&
@@ -170,7 +222,7 @@ export const useWeaponConverter = () => {
     }
 
     setResult(newAttributes);
-  }, [attributes, currentProfession, targetProfession]);
+  }, [attributes, currentSect, targetSect]);
 
   const resetAttributes = useCallback(() => {
     setAttributes((prev) => ({
@@ -191,10 +243,10 @@ export const useWeaponConverter = () => {
   return {
     weaponLevel,
     setWeaponLevelAndMaxValues,
-    currentProfession,
-    setCurrentProfession,
-    targetProfession,
-    setTargetProfession,
+    currentSect,
+    setCurrentSect,
+    targetSect,
+    setTargetSect,
     attributes,
     setAttributes,
     result,

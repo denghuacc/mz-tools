@@ -2,16 +2,18 @@ import { useCallback, useEffect } from "react";
 import {
   useWeaponConverter,
   type WeaponLevel,
+  type Sect,
+  SECTS_BY_PROFESSION,
 } from "../hooks/useWeaponConverter";
 
 const WeaponConverter = () => {
   const {
     weaponLevel,
     setWeaponLevelAndMaxValues,
-    currentProfession,
-    setCurrentProfession,
-    targetProfession,
-    setTargetProfession,
+    currentSect,
+    setCurrentSect,
+    targetSect,
+    setTargetSect,
     attributes,
     setAttributes,
     result,
@@ -39,15 +41,13 @@ const WeaponConverter = () => {
     [setAttributes]
   );
 
-  const handleProfessionChange = useCallback(
-    (setter: typeof setCurrentProfession | typeof setTargetProfession) =>
+  const handleSectChange = useCallback(
+    (setter: typeof setCurrentSect | typeof setTargetSect) =>
       (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setter(e.target.value as typeof currentProfession);
+        setter(e.target.value as Sect);
       },
     []
   );
-
-  const professions = ["物理", "法师", "治疗", "封印"] as const;
 
   return (
     <div style={{ width: "100%", height: "100%" }}>
@@ -80,35 +80,47 @@ const WeaponConverter = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                当前职业
+                当前门派
               </label>
               <select
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
-                value={currentProfession}
-                onChange={handleProfessionChange(setCurrentProfession)}
+                value={currentSect}
+                onChange={handleSectChange(setCurrentSect)}
               >
-                {professions.map((prof) => (
-                  <option key={prof} value={prof}>
-                    {prof}
-                  </option>
-                ))}
+                {Object.entries(SECTS_BY_PROFESSION).map(
+                  ([profession, sects]) => (
+                    <optgroup key={profession} label={profession}>
+                      {sects.map((sect) => (
+                        <option key={sect} value={sect}>
+                          {sect}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )
+                )}
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                目标职业
+                目标门派
               </label>
               <select
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
-                value={targetProfession}
-                onChange={handleProfessionChange(setTargetProfession)}
+                value={targetSect}
+                onChange={handleSectChange(setTargetSect)}
               >
-                {professions.map((prof) => (
-                  <option key={prof} value={prof}>
-                    {prof}
-                  </option>
-                ))}
+                {Object.entries(SECTS_BY_PROFESSION).map(
+                  ([profession, sects]) => (
+                    <optgroup key={profession} label={profession}>
+                      {sects.map((sect) => (
+                        <option key={sect} value={sect}>
+                          {sect}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )
+                )}
               </select>
             </div>
           </div>
