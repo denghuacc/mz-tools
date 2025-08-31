@@ -248,26 +248,43 @@ const WeaponConverter = () => {
           </div>
 
           {result && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-md">
-              <h2 className="text-lg font-semibold mb-4">转换结果</h2>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center py-2 px-2 sm:px-4">
-                  <span className="text-sm text-gray-600">物攻：</span>
-                  <span className="font-medium text-base">
-                    {result.physical.current}
-                  </span>
+            <div className="mt-6 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+              <div className="bg-green-600 text-white px-4 py-3">
+                <h2 className="text-lg font-semibold text-center">转换结果</h2>
+              </div>
+              <div className="p-4">
+                <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="text-center">
+                    <span className="text-lg font-semibold text-green-700">
+                      {targetSect} - {SECT_WEAPON_TYPES[targetSect]}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center py-2 px-2 sm:px-4">
-                  <span className="text-sm text-gray-600">法攻：</span>
-                  <span className="font-medium text-base">
-                    {result.magic.current}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-2 px-2 sm:px-4">
-                  <span className="text-sm text-gray-600">治疗：</span>
-                  <span className="font-medium text-base">
-                    {result.healing.current}
-                  </span>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
+                    <span className="text-sm font-medium text-gray-700">
+                      物攻
+                    </span>
+                    <span className="font-semibold text-lg text-gray-900">
+                      {result.physical.current}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
+                    <span className="text-sm font-medium text-gray-700">
+                      法攻
+                    </span>
+                    <span className="font-semibold text-lg text-gray-900">
+                      {result.magic.current}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
+                    <span className="text-sm font-medium text-gray-700">
+                      治疗
+                    </span>
+                    <span className="font-semibold text-lg text-gray-900">
+                      {result.healing.current}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
