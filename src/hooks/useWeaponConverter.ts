@@ -156,7 +156,33 @@ export const useWeaponConverter = () => {
       magic: { ...prev.magic, max: maxValues.magic },
       healing: { ...prev.healing, max: maxValues.healing },
     }));
+    // 清空转换结果和错误信息
+    setResult(null);
+    setError(null);
   }, []);
+
+  // 修改门派选择时清空结果
+  const setCurrentSectWithReset = useCallback((sect: Sect) => {
+    setCurrentSect(sect);
+    setResult(null);
+    setError(null);
+  }, []);
+
+  const setTargetSectWithReset = useCallback((sect: Sect) => {
+    setTargetSect(sect);
+    setResult(null);
+    setError(null);
+  }, []);
+
+  // 修改属性时清空结果
+  const setAttributesWithReset = useCallback(
+    (newAttributes: Attributes | ((prev: Attributes) => Attributes)) => {
+      setAttributes(newAttributes);
+      setResult(null);
+      setError(null);
+    },
+    []
+  );
 
   const convertAttributes = useCallback(() => {
     // 清除之前的错误
@@ -264,11 +290,11 @@ export const useWeaponConverter = () => {
     weaponLevel,
     setWeaponLevelAndMaxValues,
     currentSect,
-    setCurrentSect,
+    setCurrentSect: setCurrentSectWithReset,
     targetSect,
-    setTargetSect,
+    setTargetSect: setTargetSectWithReset,
     attributes,
-    setAttributes,
+    setAttributes: setAttributesWithReset,
     result,
     error,
     convertAttributes,
