@@ -53,9 +53,12 @@ const WeaponConverter = () => {
   return (
     <div style={{ width: "100%", height: "100%" }}>
       <div className="sm:mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-lg">
-        <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center">
-          梦幻新诛仙武器转换器
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-center">
+          梦幻新诛仙
         </h1>
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-center text-gray-600">
+          武器属性转换器
+        </h2>
 
         <div className="space-y-4 sm:space-y-6">
           <div>
