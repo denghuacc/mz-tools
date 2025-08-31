@@ -50,6 +50,26 @@ export const SECTS_BY_PROFESSION: Record<Profession, Sect[]> = {
   封印: ["合欢门", "长生堂"],
 };
 
+// 门派武器类型映射
+export const SECT_WEAPON_TYPES: Record<Sect, string> = {
+  // 物理职业门派
+  鬼王宗: "刀",
+  天道府: "枪",
+  万毒门: "镰刀",
+  // 法师职业门派
+  青云门: "剑",
+  焚香谷: "扇子",
+  鬼道: "灯",
+  寒风龙族: "弓箭",
+  // 治疗职业门派
+  天音寺: "禅杖",
+  南疆古巫: "法杖",
+  万灵宫: "琴",
+  // 封印职业门派
+  合欢门: "短刃",
+  长生堂: "笔",
+};
+
 export const WEAPON_LEVELS = {
   60: {
     physical: 665,

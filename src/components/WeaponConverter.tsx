@@ -4,6 +4,7 @@ import {
   type WeaponLevel,
   type Sect,
   SECTS_BY_PROFESSION,
+  SECT_WEAPON_TYPES,
 } from "../hooks/useWeaponConverter";
 
 const WeaponConverter = () => {
@@ -80,7 +81,7 @@ const WeaponConverter = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                当前门派
+                转换前
               </label>
               <select
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
@@ -92,7 +93,7 @@ const WeaponConverter = () => {
                     <optgroup key={profession} label={profession}>
                       {sects.map((sect) => (
                         <option key={sect} value={sect}>
-                          {sect}
+                          {sect} - {SECT_WEAPON_TYPES[sect]}
                         </option>
                       ))}
                     </optgroup>
@@ -103,7 +104,7 @@ const WeaponConverter = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                目标门派
+                转换后
               </label>
               <select
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
@@ -115,7 +116,7 @@ const WeaponConverter = () => {
                     <optgroup key={profession} label={profession}>
                       {sects.map((sect) => (
                         <option key={sect} value={sect}>
-                          {sect}
+                          {sect} - {SECT_WEAPON_TYPES[sect]}
                         </option>
                       ))}
                     </optgroup>
