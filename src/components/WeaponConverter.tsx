@@ -284,6 +284,11 @@ const WeaponConverter = () => {
                 </div>
               </div>
             </div>
+            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-xs text-blue-700 text-center">
+                温馨提示：转换结果可能与游戏实际数值存在轻微差异，仅供参考
+              </p>
+            </div>
           </div>
         )}
       </div>
