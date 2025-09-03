@@ -15,6 +15,8 @@ const WeaponConverter = () => {
     setCurrentSect,
     targetSect,
     setTargetSect,
+    originalForm,
+    setOriginalForm,
     attributes,
     setAttributes,
     result,
@@ -50,8 +52,15 @@ const WeaponConverter = () => {
     []
   );
 
+  const handleOriginalFormChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setOriginalForm(e.target.value === "无" ? null : e.target.value);
+    },
+    [setOriginalForm]
+  );
+
   return (
-    <div className="w-full max-w-2xl p-4 sm:p-6 bg-white rounded-lg shadow-lg h-screen">
+    <div className="w-full max-w-2xl p-4 sm:p-6 bg-white rounded-lg shadow-lg h-screen overflow-y-auto">
       <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-center">
         梦幻新诛仙
       </h1>
@@ -80,9 +89,34 @@ const WeaponConverter = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* 原造型和武器选择在同一行 */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              原造型
+            </label>
+            <select
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
+              value={originalForm || "无"}
+              onChange={handleOriginalFormChange}
+            >
+              <option value="无">无</option>
+              {Object.entries(SECTS_BY_PROFESSION).map(
+                ([profession, sects]) => (
+                  <optgroup key={profession} label={profession}>
+                    {sects.map((sect) => (
+                      <option key={sect} value={SECT_WEAPON_TYPES[sect]}>
+                        {sect} - {SECT_WEAPON_TYPES[sect]}
+                      </option>
+                    ))}
+                  </optgroup>
+                )
+              )}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               转换前
             </label>
             <select
@@ -105,7 +139,7 @@ const WeaponConverter = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               转换后
             </label>
             <select
@@ -229,6 +263,7 @@ const WeaponConverter = () => {
           </div>
         )}
 
+        {/* 转换按钮 */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
             className="flex-1 bg-indigo-600 text-white py-3 sm:py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-base font-medium"
@@ -236,6 +271,7 @@ const WeaponConverter = () => {
           >
             转换
           </button>
+
           <button
             className="px-4 py-3 sm:py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-base font-medium"
             onClick={resetAttributes}
@@ -250,6 +286,17 @@ const WeaponConverter = () => {
               <h2 className="text-lg font-semibold text-center">转换结果</h2>
             </div>
             <div className="p-4">
+              {/* 转换路径描述 */}
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="text-center">
+                  <span className="text-sm text-blue-700">
+                    {originalForm
+                      ? `${SECT_WEAPON_TYPES[currentSect]} → ${originalForm} → ${SECT_WEAPON_TYPES[targetSect]}`
+                      : `${SECT_WEAPON_TYPES[currentSect]} → ${SECT_WEAPON_TYPES[targetSect]}`}
+                  </span>
+                </div>
+              </div>
+
               <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
                 <div className="text-center">
                   <span className="text-lg font-semibold text-green-700">

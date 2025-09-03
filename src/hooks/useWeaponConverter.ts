@@ -127,10 +127,41 @@ export const convertAttributeValues = (
   ];
 };
 
+// 公共转换逻辑
+export const performAttributeConversion = (
+  attributes: Attributes,
+  fromSect: Sect,
+  toSect: Sect
+): Attributes => {
+  const newAttributes = { ...attributes };
+  const fromEffectiveAttr = getEffectiveAttributeBySect(fromSect);
+  const toEffectiveAttr = getEffectiveAttributeBySect(toSect);
+
+  if (
+    fromEffectiveAttr &&
+    toEffectiveAttr &&
+    fromEffectiveAttr !== toEffectiveAttr
+  ) {
+    // 获取源和目标属性的值
+    const fromAttr = attributes[fromEffectiveAttr];
+    const toAttr = attributes[toEffectiveAttr];
+
+    // 转换属性值
+    const [newFromAttr, newToAttr] = convertAttributeValues(fromAttr, toAttr);
+
+    // 更新属性值
+    newAttributes[fromEffectiveAttr] = newFromAttr;
+    newAttributes[toEffectiveAttr] = newToAttr;
+  }
+
+  return newAttributes;
+};
+
 export const useWeaponConverter = () => {
   const [weaponLevel, _setWeaponLevel] = useState<WeaponLevel>(60);
   const [currentSect, setCurrentSect] = useState<Sect>("鬼王宗");
   const [targetSect, setTargetSect] = useState<Sect>("青云门");
+  const [originalForm, setOriginalForm] = useState<string | null>(null);
   const [attributes, setAttributes] = useState<Attributes>({
     physical: {
       current: undefined as unknown as number,
@@ -157,6 +188,13 @@ export const useWeaponConverter = () => {
       healing: { ...prev.healing, max: maxValues.healing },
     }));
     // 清空转换结果和错误信息
+    setResult(null);
+    setError(null);
+  }, []);
+
+  // 修改原造型时清空结果
+  const setOriginalFormWithReset = useCallback((form: string | null) => {
+    setOriginalForm(form);
     setResult(null);
     setError(null);
   }, []);
@@ -233,42 +271,36 @@ export const useWeaponConverter = () => {
       return;
     }
 
-    // 获取当前门派和目标门派的职业类型
-    const currentProfession = SECT_TO_PROFESSION[currentSect];
-    const targetProfession = SECT_TO_PROFESSION[targetSect];
+    let finalAttributes = { ...attributes };
 
-    // 如果是封印职业相关的转换，直接返回原属性
-    if (currentProfession === "封印" || targetProfession === "封印") {
-      setResult({ ...attributes });
-      return;
-    }
-
-    const newAttributes = { ...attributes };
-    const currentEffectiveAttr = getEffectiveAttributeBySect(currentSect);
-    const targetEffectiveAttr = getEffectiveAttributeBySect(targetSect);
-
-    if (
-      currentEffectiveAttr &&
-      targetEffectiveAttr &&
-      currentEffectiveAttr !== targetEffectiveAttr
-    ) {
-      // 获取当前和目标属性的值
-      const currentAttr = attributes[currentEffectiveAttr];
-      const targetAttr = attributes[targetEffectiveAttr];
-
-      // 转换属性值
-      const [newCurrentAttr, newTargetAttr] = convertAttributeValues(
-        currentAttr,
-        targetAttr
+    if (originalForm) {
+      // 如果选择了原造型，需要两次转换
+      // 第一次：当前造型 → 原造型
+      const firstConversion = performAttributeConversion(
+        finalAttributes,
+        currentSect,
+        getSectByWeaponType(originalForm)
       );
+      finalAttributes = firstConversion;
 
-      // 更新属性值
-      newAttributes[currentEffectiveAttr] = newCurrentAttr;
-      newAttributes[targetEffectiveAttr] = newTargetAttr;
+      // 第二次：原造型 → 目标造型
+      const secondConversion = performAttributeConversion(
+        finalAttributes,
+        getSectByWeaponType(originalForm),
+        targetSect
+      );
+      finalAttributes = secondConversion;
+    } else {
+      // 直接转换
+      finalAttributes = performAttributeConversion(
+        finalAttributes,
+        currentSect,
+        targetSect
+      );
     }
 
-    setResult(newAttributes);
-  }, [attributes, currentSect, targetSect]);
+    setResult(finalAttributes);
+  }, [attributes, currentSect, targetSect, originalForm]);
 
   const resetAttributes = useCallback(() => {
     setAttributes((prev) => ({
@@ -284,6 +316,7 @@ export const useWeaponConverter = () => {
     }));
     setResult(null);
     setError(null);
+    setOriginalForm(null);
   }, []);
 
   return {
@@ -293,6 +326,8 @@ export const useWeaponConverter = () => {
     setCurrentSect: setCurrentSectWithReset,
     targetSect,
     setTargetSect: setTargetSectWithReset,
+    originalForm,
+    setOriginalForm: setOriginalFormWithReset,
     attributes,
     setAttributes: setAttributesWithReset,
     result,
@@ -300,4 +335,14 @@ export const useWeaponConverter = () => {
     convertAttributes,
     resetAttributes,
   };
+};
+
+// 根据武器类型获取门派（用于反向查找）
+const getSectByWeaponType = (weaponType: string): Sect => {
+  for (const [sect, type] of Object.entries(SECT_WEAPON_TYPES)) {
+    if (type === weaponType) {
+      return sect as Sect;
+    }
+  }
+  return "鬼王宗"; // 默认值
 };
