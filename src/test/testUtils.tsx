@@ -1,5 +1,5 @@
-import { ReactElement } from "react";
-import { render, RenderOptions } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { render, type RenderOptions } from "@testing-library/react";
 
 // 自定义渲染函数，可以在这里添加全局的 providers
 const customRender = (

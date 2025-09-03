@@ -4,7 +4,6 @@ import {
   WEAPON_LEVELS,
   SECT_TO_PROFESSION,
   getEffectiveAttributeBySect,
-  convertAttributeValues,
   performAttributeConversion,
 } from "../useWeaponConverter";
 

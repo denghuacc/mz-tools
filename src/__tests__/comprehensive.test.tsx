@@ -260,6 +260,10 @@ describe("综合测试", () => {
         expect(input).toHaveAttribute("type", "number");
       });
 
+      selects.forEach((select) => {
+        expect(select).toBeInTheDocument();
+      });
+
       buttons.forEach((button) => {
         expect(button.textContent).toBeTruthy();
       });
