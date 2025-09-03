@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   useWeaponConverter,
   type WeaponLevel,
@@ -23,7 +23,11 @@ const WeaponConverter = () => {
     error,
     convertAttributes,
     resetAttributes,
+    originalData,
   } = useWeaponConverter();
+
+  // 控制原造型数据展示的状态
+  const [showOriginalData, setShowOriginalData] = useState(false);
 
   // 设置默认武器等级
   useEffect(() => {
@@ -288,14 +292,90 @@ const WeaponConverter = () => {
             <div className="p-4">
               {/* 转换路径描述 */}
               <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="text-center">
+                <div className="flex items-center justify-center space-x-2">
                   <span className="text-sm text-blue-700">
                     {originalForm
                       ? `${SECT_WEAPON_TYPES[currentSect]} → ${originalForm} → ${SECT_WEAPON_TYPES[targetSect]}`
                       : `${SECT_WEAPON_TYPES[currentSect]} → ${SECT_WEAPON_TYPES[targetSect]}`}
                   </span>
+                  {originalForm && (
+                    <button
+                      onClick={() => setShowOriginalData(!showOriginalData)}
+                      className="ml-2 p-1 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                      title="查看原造型数据"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {/* 原造型数据展示 */}
+              {originalForm && showOriginalData && (
+                <div className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-yellow-800">
+                      原造型属性 ({originalForm})
+                    </h3>
+                    <button
+                      onClick={() => setShowOriginalData(false)}
+                      className="text-yellow-600 hover:text-yellow-800"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center py-1 px-2 bg-white rounded text-sm">
+                      <span className="text-yellow-700">物攻</span>
+                      <span className="font-medium text-yellow-800">
+                        {originalData?.physical.current || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 px-2 bg-white rounded text-sm">
+                      <span className="text-yellow-700">法攻</span>
+                      <span className="font-medium text-yellow-800">
+                        {originalData?.magic.current || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 px-2 bg-white rounded text-sm">
+                      <span className="text-yellow-700">治疗</span>
+                      <span className="font-medium text-yellow-800">
+                        {originalData?.healing.current || "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
                 <div className="text-center">

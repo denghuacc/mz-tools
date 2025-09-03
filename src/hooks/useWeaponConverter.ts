@@ -302,6 +302,18 @@ export const useWeaponConverter = () => {
     setResult(finalAttributes);
   }, [attributes, currentSect, targetSect, originalForm]);
 
+  // 计算原造型数据
+  const originalData = useCallback(() => {
+    if (!originalForm) return null;
+
+    // 计算当前造型转换到原造型后的数据
+    return performAttributeConversion(
+      attributes,
+      currentSect,
+      getSectByWeaponType(originalForm)
+    );
+  }, [attributes, currentSect, originalForm]);
+
   const resetAttributes = useCallback(() => {
     setAttributes((prev) => ({
       physical: {
@@ -334,6 +346,7 @@ export const useWeaponConverter = () => {
     error,
     convertAttributes,
     resetAttributes,
+    originalData: originalData(),
   };
 };
 
