@@ -11,7 +11,11 @@
     "start": "node server.js",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "deploy": "bash scripts/deploy.sh",
+    "deploy:prod": "bash scripts/deploy.sh prod",
+    "vercel:build": "pnpm run build",
+    "vercel:config": "bash scripts/get-vercel-config.sh"
   },
   "dependencies": {
     "cors": "^2.8.5",
