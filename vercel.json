@@ -22,11 +22,11 @@
   "framework": "vite",
   "outputDirectory": "dist",
   "env": {
-    "NODE_VERSION": "20"
+    "NODE_VERSION": "22"
   },
   "functions": {
     "app/api/**/*.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "nodejs22.x"
     }
   },
   "headers": [
