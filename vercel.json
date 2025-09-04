@@ -1,15 +1,5 @@
 {
   "version": 2,
-  "name": "mz-tools",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
   "routes": [
     {
       "src": "/(.*)",
@@ -24,11 +14,7 @@
   "env": {
     "NODE_VERSION": "22"
   },
-  "functions": {
-    "app/api/**/*.js": {
-      "runtime": "nodejs22.x"
-    }
-  },
+
   "headers": [
     {
       "source": "/(.*)",
