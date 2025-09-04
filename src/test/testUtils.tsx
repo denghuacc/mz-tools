@@ -5,9 +5,10 @@ import { render, type RenderOptions } from "@testing-library/react";
 const customRender = (
   ui: ReactElement,
   options?: Omit<RenderOptions, "wrapper">
-) => render(ui, { ...options });
+): ReturnType<typeof render> => render(ui, { ...options });
 
 // 重新导出所有测试工具
+// eslint-disable-next-line react-refresh/only-export-components
 export * from "@testing-library/react";
 export { customRender as render };
 
@@ -61,14 +62,18 @@ export const measurePerformance = async (fn: () => void | Promise<void>) => {
 // 内存使用测试工具
 export const getMemoryUsage = () => {
   if ("memory" in performance) {
-    return (performance as any).memory.usedJSHeapSize;
+    return (performance as { memory: { usedJSHeapSize: number } }).memory
+      .usedJSHeapSize;
   }
   return 0;
 };
 
 // 模拟用户输入的工具函数
 export const fillAttributeInputs = async (
-  user: any,
+  user: {
+    clear: (element: Element) => Promise<void>;
+    type: (element: Element, text: string) => Promise<void>;
+  },
   values: { physical?: number; magic?: number; healing?: number }
 ) => {
   const inputs = document.querySelectorAll('input[type="number"]');
