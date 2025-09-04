@@ -36,6 +36,7 @@ jobs:
         run: pnpm run build
 
       - name: Deploy to Vercel
+        id: deploy
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -48,3 +49,10 @@ jobs:
         run: |
           echo "🚀 Successfully deployed to Vercel!"
           echo "✅ Production deployment completed"
+          echo "🌐 Live URL: ${{ steps.deploy.outputs.preview-url }}"
+          echo ""
+          echo "📋 Deployment Details:"
+          echo "   • Project: mz-tools"
+          echo "   • Environment: Production"
+          echo "   • Status: ✅ Success"
+          echo "   • URL: ${{ steps.deploy.outputs.preview-url }}"

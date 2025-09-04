@@ -15,7 +15,8 @@
     "deploy": "bash scripts/deploy.sh",
     "deploy:prod": "bash scripts/deploy.sh prod",
     "vercel:build": "pnpm run build",
-    "vercel:config": "bash scripts/get-vercel-config.sh"
+    "vercel:config": "bash scripts/get-vercel-config.sh",
+    "vercel:url": "bash scripts/get-url.sh"
   },
   "dependencies": {
     "cors": "^2.8.5",
