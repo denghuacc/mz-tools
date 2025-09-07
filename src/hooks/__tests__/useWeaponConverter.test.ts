@@ -1,11 +1,10 @@
 import { renderHook, act } from "@testing-library/react";
+import { useWeaponConverter } from "../useWeaponConverter";
+import { WEAPON_LEVELS, SECT_TO_PROFESSION } from "../../types/constants";
 import {
-  useWeaponConverter,
-  WEAPON_LEVELS,
-  SECT_TO_PROFESSION,
   getEffectiveAttributeBySect,
   performAttributeConversion,
-} from "../useWeaponConverter";
+} from "../../utils/weaponConverter";
 
 describe("useWeaponConverter", () => {
   it("应该正确初始化默认值", () => {

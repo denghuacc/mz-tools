@@ -1,13 +1,15 @@
+import type { Sect } from "../../types";
 import {
   SECT_TO_PROFESSION,
   SECTS_BY_PROFESSION,
   SECT_WEAPON_TYPES,
   WEAPON_LEVELS,
+} from "../../types/constants";
+import {
   getEffectiveAttributeBySect,
   convertAttributeValues,
   performAttributeConversion,
-  type Sect,
-} from "../../hooks/useWeaponConverter";
+} from "../weaponConverter";
 
 describe("武器工具函数测试", () => {
   describe("常量验证", () => {

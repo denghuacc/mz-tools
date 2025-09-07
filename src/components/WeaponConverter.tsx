@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  useWeaponConverter,
-  type WeaponLevel,
-  type Sect,
-  SECTS_BY_PROFESSION,
-  SECT_WEAPON_TYPES,
-} from "../hooks/useWeaponConverter";
+import { useWeaponConverter } from "../hooks/useWeaponConverter";
+import type { WeaponLevel, Sect } from "../types";
+import { SECTS_BY_PROFESSION, SECT_WEAPON_TYPES } from "../types/constants";
 
 const WeaponConverter = () => {
   const {
