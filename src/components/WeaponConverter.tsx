@@ -381,37 +381,147 @@ const WeaponConverter = () => {
                 </div>
               </div>
               <div className="space-y-3">
+                {/* 物攻 */}
                 <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
                   <span className="text-sm font-medium text-gray-700">
                     物攻
                   </span>
-                  <span className="font-semibold text-lg text-gray-900">
-                    {result.physical.current}
-                  </span>
+                  <div className="flex items-center justify-end space-x-3 min-w-0">
+                    <span className="font-semibold text-lg text-gray-900 text-right">
+                      {result.physical.current}
+                    </span>
+                    {(() => {
+                      const change =
+                        result.physical.current - attributes.physical.current;
+                      return (
+                        <span
+                          className={`text-sm font-medium text-right min-w-[3rem] ${
+                            change > 0
+                              ? "text-green-600"
+                              : change < 0
+                              ? "text-red-600"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {change > 0 ? "+" : ""}
+                          {change}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
+
+                {/* 法攻 */}
                 <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
                   <span className="text-sm font-medium text-gray-700">
                     法攻
                   </span>
-                  <span className="font-semibold text-lg text-gray-900">
-                    {result.magic.current}
-                  </span>
+                  <div className="flex items-center justify-end space-x-3 min-w-0">
+                    <span className="font-semibold text-lg text-gray-900 text-right">
+                      {result.magic.current}
+                    </span>
+                    {(() => {
+                      const change =
+                        result.magic.current - attributes.magic.current;
+                      return (
+                        <span
+                          className={`text-sm font-medium text-right min-w-[3rem] ${
+                            change > 0
+                              ? "text-green-600"
+                              : change < 0
+                              ? "text-red-600"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {change > 0 ? "+" : ""}
+                          {change}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
+
+                {/* 治疗 */}
                 <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
                   <span className="text-sm font-medium text-gray-700">
                     治疗
                   </span>
-                  <span className="font-semibold text-lg text-gray-900">
-                    {result.healing.current}
-                  </span>
+                  <div className="flex items-center justify-end space-x-3 min-w-0">
+                    <span className="font-semibold text-lg text-gray-900 text-right">
+                      {result.healing.current}
+                    </span>
+                    {(() => {
+                      const change =
+                        result.healing.current - attributes.healing.current;
+                      return (
+                        <span
+                          className={`text-sm font-medium text-right min-w-[3rem] ${
+                            change > 0
+                              ? "text-green-600"
+                              : change < 0
+                              ? "text-red-600"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {change > 0 ? "+" : ""}
+                          {change}
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-xs text-blue-700 text-center">
-                温馨提示：转换结果可能与游戏实际数值存在轻微差异，仅供参考
-              </p>
-            </div>
+            {(() => {
+              // 计算各属性的变化量
+              const physicalChange =
+                result.physical.current - attributes.physical.current;
+              const magicChange =
+                result.magic.current - attributes.magic.current;
+              const healingChange =
+                result.healing.current - attributes.healing.current;
+
+              // 只有当所有变化都为0时才显示特殊提示
+              const allChangesZero =
+                physicalChange === 0 &&
+                magicChange === 0 &&
+                healingChange === 0;
+
+              return (
+                <>
+                  {allChangesZero && (
+                    <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-shrink-0">
+                          <svg
+                            className="h-5 w-5 text-amber-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-amber-800">
+                            <strong>转换变化较小：</strong>
+                            当前武器的属性比例接近，转换后数值变化不明显。这是正常现象，转换确实已生效。
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-xs text-blue-700 text-center">
+                      温馨提示：转换结果可能与游戏实际数值存在轻微差异，仅供参考
+                    </p>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         )}
       </div>
