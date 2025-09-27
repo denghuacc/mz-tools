@@ -1,6 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import WeaponConverter from "../components/WeaponConverter";
+import type { UserEvent } from "@testing-library/user-event";
 
 describe("原造型属性值显示功能", () => {
   /**
@@ -34,7 +35,10 @@ describe("原造型属性值显示功能", () => {
     healing: 100,
   };
 
-  const setupConversion = async (user: any, weaponData: typeof weaponData1) => {
+  const setupConversion = async (
+    user: UserEvent,
+    weaponData: { physical: number; magic: number; healing: number }
+  ) => {
     // 设置武器数据
     const inputs = screen.getAllByRole("spinbutton");
     await user.clear(inputs[0]);
@@ -54,7 +58,7 @@ describe("原造型属性值显示功能", () => {
     return selects;
   };
 
-  const setupBasicConversion = async (user: any) => {
+  const setupBasicConversion = async (user: UserEvent) => {
     return setupConversion(user, weaponData1);
   };
 

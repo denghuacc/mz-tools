@@ -90,32 +90,7 @@ describe("完整职业转换测试 - 24种组合", () => {
     return result.current.result!;
   };
 
-  // 辅助函数：执行直接转换
-  const performDirectConversion = (
-    weaponData: Attributes,
-    from: string,
-    to: string
-  ) => {
-    const { result } = renderHook(() => useWeaponConverter());
-
-    act(() => {
-      result.current.setWeaponLevelAndMaxValues(60);
-    });
-    act(() => {
-      result.current.setAttributes(weaponData);
-    });
-    act(() => {
-      result.current.setCurrentSect(sectMap[from as keyof typeof sectMap]);
-    });
-    act(() => {
-      result.current.setTargetSect(sectMap[to as keyof typeof sectMap]);
-    });
-    act(() => {
-      result.current.convertAttributes();
-    });
-
-    return result.current.result!;
-  };
+  // ...existing code...
 
   // 测试数据集合
   const testDataSets = [
@@ -269,10 +244,12 @@ describe("完整职业转换测试 - 24种组合", () => {
 
           // 获取预期结果
           const conversionKey = `${from}→${via}→${to}`;
-          const expected =
-            expectedResults[name as keyof typeof expectedResults][
-              conversionKey as keyof (typeof expectedResults)[typeof name]
-            ];
+          const expected = (
+            expectedResults[name as keyof typeof expectedResults] as Record<
+              string,
+              { physical: number; magic: number; healing: number }
+            >
+          )[conversionKey];
 
           // 验证具体数值
           expect(viaResult.physical.current).toBe(expected.physical);
