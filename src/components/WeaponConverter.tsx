@@ -87,7 +87,7 @@ const WeaponConverter = () => {
     );
 
   return (
-    <div className="w-full max-w-2xl p-4 sm:p-6 bg-white rounded-lg shadow-lg h-screen overflow-y-auto">
+    <div className="w-full max-w-2xl p-4 sm:p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
       <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-center">
         梦幻新诛仙
       </h1>
@@ -97,11 +97,15 @@ const WeaponConverter = () => {
 
       <div className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="weapon-level"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             武器等级
           </label>
           <div className="flex items-center gap-2">
             <select
+              id="weapon-level"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-100 text-base"
               value={weaponLevel}
               onChange={(e) =>
@@ -119,10 +123,14 @@ const WeaponConverter = () => {
         {/* 原造型和武器选择在同一行 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="original-form"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               原造型
             </label>
             <select
+              id="original-form"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
               value={originalForm ?? "无"}
               onChange={handleOriginalFormChange}
@@ -133,10 +141,14 @@ const WeaponConverter = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="current-sect"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               转换前
             </label>
             <select
+              id="current-sect"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
               value={currentSect}
               onChange={handleSectChange(setCurrentSect)}
@@ -146,10 +158,14 @@ const WeaponConverter = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="target-sect"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               转换后
             </label>
             <select
+              id="target-sect"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
               value={targetSect}
               onChange={handleSectChange(setTargetSect)}

@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import App from "../App";
 
 describe("App 组件", () => {
@@ -33,5 +34,32 @@ describe("App 组件", () => {
 
     // 验证内容居中
     expect(container).toHaveClass("flex", "justify-center");
+  });
+
+  it("应该渲染工具箱导航并默认打开计算器", () => {
+    render(<App />);
+
+    const navigation = screen.getByRole("navigation", { name: "主导航" });
+    expect(navigation).toBeInTheDocument();
+    expect(within(navigation).getByRole("button", { name: "计算器" })).toHaveAttribute(
+      "aria-current",
+      "page"
+    );
+    expect(screen.getByText("武器数值计算")).toBeInTheDocument();
+  });
+
+  it("应该支持在导航页面之间切换", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const navigation = screen.getByRole("navigation", { name: "主导航" });
+    await user.click(within(navigation).getByRole("button", { name: "首页" }));
+
+    expect(screen.getByRole("heading", { name: "梦幻新诛仙实用工具" })).toBeInTheDocument();
+    expect(screen.queryByText("武器数值计算")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "进入计算器" }));
+
+    expect(screen.getByText("武器数值计算")).toBeInTheDocument();
   });
 });
