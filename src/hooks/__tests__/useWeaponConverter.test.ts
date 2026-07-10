@@ -16,6 +16,11 @@ describe("useWeaponConverter", () => {
     expect(result.current.originalForm).toBeNull();
     expect(result.current.result).toBeNull();
     expect(result.current.error).toBeNull();
+    expect(result.current.attributes).toEqual({
+      physical: { current: null, max: 665 },
+      magic: { current: null, max: 210 },
+      healing: { current: null, max: 192 },
+    });
   });
 
   it("应该正确设置武器等级", () => {
@@ -89,9 +94,9 @@ describe("useWeaponConverter", () => {
     });
 
     expect(result.current.originalForm).toBeNull();
-    expect(result.current.attributes.physical.current).toBeUndefined();
-    expect(result.current.attributes.magic.current).toBeUndefined();
-    expect(result.current.attributes.healing.current).toBeUndefined();
+    expect(result.current.attributes.physical.current).toBeNull();
+    expect(result.current.attributes.magic.current).toBeNull();
+    expect(result.current.attributes.healing.current).toBeNull();
     expect(result.current.result).toBeNull();
     expect(result.current.error).toBeNull();
   });
@@ -105,6 +110,38 @@ describe("useWeaponConverter", () => {
       });
 
       expect(result.current.error).toBe("请完整输入物攻、法攻、治疗数值");
+      expect(result.current.result).toBeNull();
+    });
+
+    it("应该拒绝负数属性值", () => {
+      const { result } = renderHook(() => useWeaponConverter());
+
+      act(() => {
+        result.current.setAttributes({
+          physical: { current: -1, max: 665 },
+          magic: { current: 150, max: 210 },
+          healing: { current: 100, max: 192 },
+        });
+      });
+      act(() => result.current.convertAttributes());
+
+      expect(result.current.error).toBe("物攻值不能小于0");
+      expect(result.current.result).toBeNull();
+    });
+
+    it("应该拒绝非有限数值", () => {
+      const { result } = renderHook(() => useWeaponConverter());
+
+      act(() => {
+        result.current.setAttributes({
+          physical: { current: Number.NaN, max: 665 },
+          magic: { current: 150, max: 210 },
+          healing: { current: 100, max: 192 },
+        });
+      });
+      act(() => result.current.convertAttributes());
+
+      expect(result.current.error).toBe("物攻值必须是有效数字");
       expect(result.current.result).toBeNull();
     });
   });

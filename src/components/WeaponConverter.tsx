@@ -1,7 +1,35 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useWeaponConverter } from "../hooks/useWeaponConverter";
-import type { WeaponLevel, Sect } from "../types";
-import { SECTS_BY_PROFESSION, SECT_WEAPON_TYPES } from "../types/constants";
+import type { AttributeType, Sect, WeaponLevel, WeaponType } from "../types";
+import {
+  ATTRIBUTE_FIELDS,
+  SECTS_BY_PROFESSION,
+  SECT_WEAPON_TYPES,
+} from "../types/constants";
+
+type SectOptionsProps = {
+  valueType: "sect" | "weapon";
+};
+
+const SectOptions = ({ valueType }: SectOptionsProps) =>
+  Object.entries(SECTS_BY_PROFESSION).map(([profession, sects]) => (
+    <optgroup key={profession} label={profession}>
+      {sects.map((sect) => (
+        <option
+          key={sect}
+          value={valueType === "sect" ? sect : SECT_WEAPON_TYPES[sect]}
+        >
+          {sect} - {SECT_WEAPON_TYPES[sect]}
+        </option>
+      ))}
+    </optgroup>
+  ));
+
+const getChangeClassName = (change: number) => {
+  if (change > 0) return "text-green-600";
+  if (change < 0) return "text-red-600";
+  return "text-gray-500";
+};
 
 const WeaponConverter = () => {
   const {
@@ -25,39 +53,38 @@ const WeaponConverter = () => {
   // 控制原造型数据展示的状态
   const [showOriginalData, setShowOriginalData] = useState(false);
 
-  // 设置默认武器等级
-  useEffect(() => {
-    setWeaponLevelAndMaxValues(60);
-  }, [setWeaponLevelAndMaxValues]);
+  const handleAttributeChange = (type: AttributeType, value: string) => {
+    const current = value === "" ? null : Number(value);
+    setAttributes((prev) => ({
+      ...prev,
+      [type]: { ...prev[type], current },
+    }));
+  };
 
-  const handleAttributeChange = useCallback(
-    (type: "physical" | "magic" | "healing", value: string) => {
-      const numValue = value ? Number(value) : (undefined as unknown as number);
-      setAttributes((prev) => ({
-        ...prev,
-        [type]: {
-          ...prev[type],
-          current: numValue,
-        },
-      }));
-    },
-    [setAttributes]
-  );
-
-  const handleSectChange = useCallback(
+  const handleSectChange =
     (setter: typeof setCurrentSect | typeof setTargetSect) =>
-      (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setter(e.target.value as Sect);
-      },
-    []
-  );
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      setter(event.target.value as Sect);
+    };
 
-  const handleOriginalFormChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setOriginalForm(e.target.value === "无" ? null : e.target.value);
-    },
-    [setOriginalForm]
-  );
+  const handleOriginalFormChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const value = event.target.value;
+    setOriginalForm(value === "无" ? null : (value as WeaponType));
+    setShowOriginalData(false);
+  };
+
+  const handleReset = () => {
+    resetAttributes();
+    setShowOriginalData(false);
+  };
+
+  const allChangesZero =
+    result !== null &&
+    ATTRIBUTE_FIELDS.every(
+      ({ type }) => result[type].current === attributes[type].current
+    );
 
   return (
     <div className="w-full max-w-2xl p-4 sm:p-6 bg-white rounded-lg shadow-lg h-screen overflow-y-auto">
@@ -97,21 +124,11 @@ const WeaponConverter = () => {
             </label>
             <select
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
-              value={originalForm || "无"}
+              value={originalForm ?? "无"}
               onChange={handleOriginalFormChange}
             >
               <option value="无">无</option>
-              {Object.entries(SECTS_BY_PROFESSION).map(
-                ([profession, sects]) => (
-                  <optgroup key={profession} label={profession}>
-                    {sects.map((sect) => (
-                      <option key={sect} value={SECT_WEAPON_TYPES[sect]}>
-                        {sect} - {SECT_WEAPON_TYPES[sect]}
-                      </option>
-                    ))}
-                  </optgroup>
-                )
-              )}
+              <SectOptions valueType="weapon" />
             </select>
           </div>
 
@@ -124,17 +141,7 @@ const WeaponConverter = () => {
               value={currentSect}
               onChange={handleSectChange(setCurrentSect)}
             >
-              {Object.entries(SECTS_BY_PROFESSION).map(
-                ([profession, sects]) => (
-                  <optgroup key={profession} label={profession}>
-                    {sects.map((sect) => (
-                      <option key={sect} value={sect}>
-                        {sect} - {SECT_WEAPON_TYPES[sect]}
-                      </option>
-                    ))}
-                  </optgroup>
-                )
-              )}
+              <SectOptions valueType="sect" />
             </select>
           </div>
 
@@ -147,17 +154,7 @@ const WeaponConverter = () => {
               value={targetSect}
               onChange={handleSectChange(setTargetSect)}
             >
-              {Object.entries(SECTS_BY_PROFESSION).map(
-                ([profession, sects]) => (
-                  <optgroup key={profession} label={profession}>
-                    {sects.map((sect) => (
-                      <option key={sect} value={sect}>
-                        {sect} - {SECT_WEAPON_TYPES[sect]}
-                      </option>
-                    ))}
-                  </optgroup>
-                )
-              )}
+              <SectOptions valueType="sect" />
             </select>
           </div>
         </div>
@@ -180,64 +177,45 @@ const WeaponConverter = () => {
             </div>
           </div>
 
-          {/* 物攻 */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center bg-gray-50 p-2 sm:p-3 rounded-lg">
-            <div className="text-sm font-medium text-gray-700 text-center">
-              物攻
-            </div>
-            <input
-              type="number"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base text-center"
-              value={attributes.physical.current || ""}
-              onChange={(e) =>
-                handleAttributeChange("physical", e.target.value)
-              }
-            />
-            <input
-              type="number"
-              className="block w-full rounded-md border-gray-300 bg-gray-50 text-center text-base"
-              value={attributes.physical.max || ""}
-              disabled
-            />
-          </div>
+          {ATTRIBUTE_FIELDS.map(({ type, label }) => {
+            const attribute = attributes[type];
+            const inputId = `${type}-current`;
 
-          {/* 法攻 */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center bg-gray-50 p-2 sm:p-3 rounded-lg">
-            <div className="text-sm font-medium text-gray-700 text-center">
-              法攻
-            </div>
-            <input
-              type="number"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base text-center"
-              value={attributes.magic.current || ""}
-              onChange={(e) => handleAttributeChange("magic", e.target.value)}
-            />
-            <input
-              type="number"
-              className="block w-full rounded-md border-gray-300 bg-gray-50 text-center text-base"
-              value={attributes.magic.max || ""}
-              disabled
-            />
-          </div>
-
-          {/* 治疗 */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center bg-gray-50 p-2 sm:p-3 rounded-lg">
-            <div className="text-sm font-medium text-gray-700 text-center">
-              治疗
-            </div>
-            <input
-              type="number"
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base text-center"
-              value={attributes.healing.current || ""}
-              onChange={(e) => handleAttributeChange("healing", e.target.value)}
-            />
-            <input
-              type="number"
-              className="block w-full rounded-md border-gray-300 bg-gray-50 text-center text-base"
-              value={attributes.healing.max || ""}
-              disabled
-            />
-          </div>
+            return (
+              <div
+                key={type}
+                className="grid grid-cols-3 gap-2 sm:gap-4 items-center bg-gray-50 p-2 sm:p-3 rounded-lg"
+              >
+                <label
+                  htmlFor={inputId}
+                  className="text-sm font-medium text-gray-700 text-center"
+                >
+                  {label}
+                </label>
+                <input
+                  id={inputId}
+                  type="number"
+                  min={0}
+                  max={attribute.max}
+                  step={1}
+                  inputMode="numeric"
+                  aria-label={`${label}当前值`}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base text-center"
+                  value={attribute.current ?? ""}
+                  onChange={(event) =>
+                    handleAttributeChange(type, event.target.value)
+                  }
+                />
+                <input
+                  type="number"
+                  aria-label={`${label}最高值`}
+                  className="block w-full rounded-md border-gray-300 bg-gray-50 text-center text-base"
+                  value={attribute.max}
+                  disabled
+                />
+              </div>
+            );
+          })}
         </div>
 
         {error && (
@@ -274,7 +252,7 @@ const WeaponConverter = () => {
 
           <button
             className="px-4 py-3 sm:py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-base font-medium"
-            onClick={resetAttributes}
+            onClick={handleReset}
           >
             重置
           </button>
@@ -334,6 +312,7 @@ const WeaponConverter = () => {
                     <button
                       onClick={() => setShowOriginalData(false)}
                       className="text-yellow-600 hover:text-yellow-800"
+                      aria-label="关闭原造型属性"
                     >
                       <svg
                         className="w-4 h-4"
@@ -351,24 +330,17 @@ const WeaponConverter = () => {
                     </button>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex justify-between items-center py-1 px-2 bg-white rounded text-sm">
-                      <span className="text-yellow-700">物攻</span>
-                      <span className="font-medium text-yellow-800">
-                        {originalData?.physical.current || "N/A"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-1 px-2 bg-white rounded text-sm">
-                      <span className="text-yellow-700">法攻</span>
-                      <span className="font-medium text-yellow-800">
-                        {originalData?.magic.current || "N/A"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-1 px-2 bg-white rounded text-sm">
-                      <span className="text-yellow-700">治疗</span>
-                      <span className="font-medium text-yellow-800">
-                        {originalData?.healing.current || "N/A"}
-                      </span>
-                    </div>
+                    {ATTRIBUTE_FIELDS.map(({ type, label }) => (
+                      <div
+                        key={type}
+                        className="flex justify-between items-center py-1 px-2 bg-white rounded text-sm"
+                      >
+                        <span className="text-yellow-700">{label}</span>
+                        <span className="font-medium text-yellow-800">
+                          {originalData?.[type].current ?? "N/A"}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -381,147 +353,66 @@ const WeaponConverter = () => {
                 </div>
               </div>
               <div className="space-y-3">
-                {/* 物攻 */}
-                <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
-                  <span className="text-sm font-medium text-gray-700">
-                    物攻
-                  </span>
-                  <div className="flex items-center justify-end space-x-3 min-w-0">
-                    <span className="font-semibold text-lg text-gray-900 text-right">
-                      {result.physical.current}
-                    </span>
-                    {(() => {
-                      const change =
-                        result.physical.current - attributes.physical.current;
-                      return (
-                        <span
-                          className={`text-sm font-medium text-right min-w-[3rem] ${
-                            change > 0
-                              ? "text-green-600"
-                              : change < 0
-                              ? "text-red-600"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          {change > 0 ? "+" : ""}
-                          {change}
-                        </span>
-                      );
-                    })()}
-                  </div>
-                </div>
+                {ATTRIBUTE_FIELDS.map(({ type, label }) => {
+                  const change =
+                    result[type].current - (attributes[type].current ?? 0);
 
-                {/* 法攻 */}
-                <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
-                  <span className="text-sm font-medium text-gray-700">
-                    法攻
-                  </span>
-                  <div className="flex items-center justify-end space-x-3 min-w-0">
-                    <span className="font-semibold text-lg text-gray-900 text-right">
-                      {result.magic.current}
-                    </span>
-                    {(() => {
-                      const change =
-                        result.magic.current - attributes.magic.current;
-                      return (
+                  return (
+                    <div
+                      key={type}
+                      className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md"
+                    >
+                      <span className="text-sm font-medium text-gray-700">
+                        {label}
+                      </span>
+                      <div className="flex items-center justify-end space-x-3 min-w-0">
+                        <span className="font-semibold text-lg text-gray-900 text-right">
+                          {result[type].current}
+                        </span>
                         <span
-                          className={`text-sm font-medium text-right min-w-[3rem] ${
-                            change > 0
-                              ? "text-green-600"
-                              : change < 0
-                              ? "text-red-600"
-                              : "text-gray-500"
-                          }`}
+                          className={`text-sm font-medium text-right min-w-[3rem] ${getChangeClassName(
+                            change
+                          )}`}
                         >
                           {change > 0 ? "+" : ""}
                           {change}
                         </span>
-                      );
-                    })()}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            {allChangesZero && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <div className="flex items-center space-x-2">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-amber-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
                   </div>
-                </div>
-
-                {/* 治疗 */}
-                <div className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md">
-                  <span className="text-sm font-medium text-gray-700">
-                    治疗
-                  </span>
-                  <div className="flex items-center justify-end space-x-3 min-w-0">
-                    <span className="font-semibold text-lg text-gray-900 text-right">
-                      {result.healing.current}
-                    </span>
-                    {(() => {
-                      const change =
-                        result.healing.current - attributes.healing.current;
-                      return (
-                        <span
-                          className={`text-sm font-medium text-right min-w-[3rem] ${
-                            change > 0
-                              ? "text-green-600"
-                              : change < 0
-                              ? "text-red-600"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          {change > 0 ? "+" : ""}
-                          {change}
-                        </span>
-                      );
-                    })()}
+                  <div>
+                    <p className="text-sm text-amber-800">
+                      <strong>转换变化较小：</strong>
+                      当前武器的属性比例接近，转换后数值变化不明显。这是正常现象，转换确实已生效。
+                    </p>
                   </div>
                 </div>
               </div>
+            )}
+            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-xs text-blue-700 text-center">
+                温馨提示：转换结果可能与游戏实际数值存在轻微差异，仅供参考
+              </p>
             </div>
-            {(() => {
-              // 计算各属性的变化量
-              const physicalChange =
-                result.physical.current - attributes.physical.current;
-              const magicChange =
-                result.magic.current - attributes.magic.current;
-              const healingChange =
-                result.healing.current - attributes.healing.current;
-
-              // 只有当所有变化都为0时才显示特殊提示
-              const allChangesZero =
-                physicalChange === 0 &&
-                magicChange === 0 &&
-                healingChange === 0;
-
-              return (
-                <>
-                  {allChangesZero && (
-                    <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
-                      <div className="flex items-center space-x-2">
-                        <div className="flex-shrink-0">
-                          <svg
-                            className="h-5 w-5 text-amber-400"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-sm text-amber-800">
-                            <strong>转换变化较小：</strong>
-                            当前武器的属性比例接近，转换后数值变化不明显。这是正常现象，转换确实已生效。
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
-                    <p className="text-xs text-blue-700 text-center">
-                      温馨提示：转换结果可能与游戏实际数值存在轻微差异，仅供参考
-                    </p>
-                  </div>
-                </>
-              );
-            })()}
           </div>
         )}
       </div>

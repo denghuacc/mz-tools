@@ -1,35 +1,64 @@
 import { useState, useCallback } from "react";
-import type { Sect, WeaponLevel, Attributes } from "../types";
-import { WEAPON_LEVELS } from "../types/constants";
+import type {
+  AttributeInputs,
+  Attributes,
+  Sect,
+  WeaponLevel,
+  WeaponType,
+} from "../types";
+import { ATTRIBUTE_FIELDS, WEAPON_LEVELS } from "../types/constants";
 import {
   performAttributeConversion,
   getSectByWeaponType,
 } from "../utils/weaponConverter";
 
+const DEFAULT_WEAPON_LEVEL: WeaponLevel = 60;
+
+const createEmptyAttributes = (level: WeaponLevel): AttributeInputs => {
+  const maxValues = WEAPON_LEVELS[level];
+
+  return {
+    physical: { current: null, max: maxValues.physical },
+    magic: { current: null, max: maxValues.magic },
+    healing: { current: null, max: maxValues.healing },
+  };
+};
+
+const toCompleteAttributes = (
+  attributes: AttributeInputs
+): Attributes | null => {
+  const { physical, magic, healing } = attributes;
+
+  if (
+    physical.current === null ||
+    magic.current === null ||
+    healing.current === null
+  ) {
+    return null;
+  }
+
+  return {
+    physical: { ...physical, current: physical.current },
+    magic: { ...magic, current: magic.current },
+    healing: { ...healing, current: healing.current },
+  };
+};
+
 export const useWeaponConverter = () => {
-  const [weaponLevel, _setWeaponLevel] = useState<WeaponLevel>(60);
+  const [weaponLevel, setWeaponLevel] = useState<WeaponLevel>(
+    DEFAULT_WEAPON_LEVEL
+  );
   const [currentSect, setCurrentSect] = useState<Sect>("鬼王宗");
   const [targetSect, setTargetSect] = useState<Sect>("青云门");
-  const [originalForm, setOriginalForm] = useState<string | null>(null);
-  const [attributes, setAttributes] = useState<Attributes>({
-    physical: {
-      current: undefined as unknown as number,
-      max: undefined as unknown as number,
-    },
-    magic: {
-      current: undefined as unknown as number,
-      max: undefined as unknown as number,
-    },
-    healing: {
-      current: undefined as unknown as number,
-      max: undefined as unknown as number,
-    },
-  });
+  const [originalForm, setOriginalForm] = useState<WeaponType | null>(null);
+  const [attributes, setAttributes] = useState<AttributeInputs>(() =>
+    createEmptyAttributes(DEFAULT_WEAPON_LEVEL)
+  );
   const [result, setResult] = useState<Attributes | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const setWeaponLevelAndMaxValues = useCallback((level: WeaponLevel) => {
-    _setWeaponLevel(level);
+    setWeaponLevel(level);
     const maxValues = WEAPON_LEVELS[level];
     setAttributes((prev) => ({
       physical: { ...prev.physical, max: maxValues.physical },
@@ -42,7 +71,7 @@ export const useWeaponConverter = () => {
   }, []);
 
   // 修改原造型时清空结果
-  const setOriginalFormWithReset = useCallback((form: string | null) => {
+  const setOriginalFormWithReset = useCallback((form: WeaponType | null) => {
     setOriginalForm(form);
     setResult(null);
     setError(null);
@@ -63,7 +92,11 @@ export const useWeaponConverter = () => {
 
   // 修改属性时清空结果
   const setAttributesWithReset = useCallback(
-    (newAttributes: Attributes | ((prev: Attributes) => Attributes)) => {
+    (
+      newAttributes:
+        | AttributeInputs
+        | ((prev: AttributeInputs) => AttributeInputs)
+    ) => {
       setAttributes(newAttributes);
       setResult(null);
       setError(null);
@@ -75,52 +108,39 @@ export const useWeaponConverter = () => {
     // 清除之前的错误
     setError(null);
 
-    // 验证是否输入了完整的3个属性值
-    const missingAttributes: string[] = [];
-
-    if (attributes.physical.current === undefined) {
-      missingAttributes.push("物攻");
-    }
-    if (attributes.magic.current === undefined) {
-      missingAttributes.push("法攻");
-    }
-    if (attributes.healing.current === undefined) {
-      missingAttributes.push("治疗");
-    }
+    const missingAttributes = ATTRIBUTE_FIELDS.filter(
+      ({ type }) => attributes[type].current === null
+    ).map(({ label }) => label);
 
     if (missingAttributes.length > 0) {
       setError(`请完整输入${missingAttributes.join("、")}数值`);
       return;
     }
 
-    // 验证所有属性值是否超过最大值
-    const validationErrors: string[] = [];
+    const completeAttributes = toCompleteAttributes(attributes);
+    if (!completeAttributes) return;
 
-    if (
-      attributes.physical.current !== undefined &&
-      attributes.physical.current > attributes.physical.max
-    ) {
-      validationErrors.push("物攻值不能超过最大值");
-    }
-    if (
-      attributes.magic.current !== undefined &&
-      attributes.magic.current > attributes.magic.max
-    ) {
-      validationErrors.push("法攻值不能超过最大值");
-    }
-    if (
-      attributes.healing.current !== undefined &&
-      attributes.healing.current > attributes.healing.max
-    ) {
-      validationErrors.push("治疗值不能超过最大值");
-    }
+    const validationErrors = ATTRIBUTE_FIELDS.flatMap(({ type, label }) => {
+      const attribute = completeAttributes[type];
+
+      if (!Number.isFinite(attribute.current)) {
+        return [`${label}值必须是有效数字`];
+      }
+      if (attribute.current < 0) {
+        return [`${label}值不能小于0`];
+      }
+      if (attribute.current > attribute.max) {
+        return [`${label}值不能超过最大值`];
+      }
+      return [];
+    });
 
     if (validationErrors.length > 0) {
       setError(validationErrors.join("，"));
       return;
     }
 
-    let finalAttributes = { ...attributes };
+    let finalAttributes = completeAttributes;
 
     if (originalForm) {
       // 如果选择了原造型，需要两次转换
@@ -151,29 +171,21 @@ export const useWeaponConverter = () => {
     setResult(finalAttributes);
   }, [attributes, currentSect, targetSect, originalForm]);
 
-  // 计算原造型数据
-  const originalData = useCallback(() => {
-    if (!originalForm) return null;
-
-    // 计算当前造型转换到原造型后的数据
-    return performAttributeConversion(
-      attributes,
-      currentSect,
-      getSectByWeaponType(originalForm)
-    );
-  }, [attributes, currentSect, originalForm]);
+  const completeAttributes = toCompleteAttributes(attributes);
+  const originalData =
+    originalForm && completeAttributes
+      ? performAttributeConversion(
+          completeAttributes,
+          currentSect,
+          getSectByWeaponType(originalForm)
+        )
+      : null;
 
   const resetAttributes = useCallback(() => {
     setAttributes((prev) => ({
-      physical: {
-        current: undefined as unknown as number,
-        max: prev.physical.max,
-      },
-      magic: { current: undefined as unknown as number, max: prev.magic.max },
-      healing: {
-        current: undefined as unknown as number,
-        max: prev.healing.max,
-      },
+      physical: { current: null, max: prev.physical.max },
+      magic: { current: null, max: prev.magic.max },
+      healing: { current: null, max: prev.healing.max },
     }));
     setResult(null);
     setError(null);
@@ -195,6 +207,6 @@ export const useWeaponConverter = () => {
     error,
     convertAttributes,
     resetAttributes,
-    originalData: originalData(),
+    originalData,
   };
 };

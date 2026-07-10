@@ -1,4 +1,4 @@
-import type { Sect } from "../../types";
+import type { Sect, WeaponType } from "../../types";
 import {
   SECT_TO_PROFESSION,
   SECTS_BY_PROFESSION,
@@ -7,6 +7,7 @@ import {
 } from "../../types/constants";
 import {
   getEffectiveAttributeBySect,
+  getSectByWeaponType,
   convertAttributeValues,
   performAttributeConversion,
 } from "../weaponConverter";
@@ -121,6 +122,19 @@ describe("武器工具函数测试", () => {
     it("应该为封印门派返回 null", () => {
       expect(getEffectiveAttributeBySect("合欢门")).toBeNull();
       expect(getEffectiveAttributeBySect("长生堂")).toBeNull();
+    });
+  });
+
+  describe("getSectByWeaponType", () => {
+    it("应该根据武器类型返回门派", () => {
+      expect(getSectByWeaponType("剑")).toBe("青云门");
+      expect(getSectByWeaponType("法杖")).toBe("南疆古巫");
+    });
+
+    it("应该在配置不一致时尽早报错", () => {
+      expect(() =>
+        getSectByWeaponType("不存在的武器" as WeaponType)
+      ).toThrow("未知武器类型：不存在的武器");
     });
   });
 

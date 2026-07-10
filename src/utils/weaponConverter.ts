@@ -1,6 +1,15 @@
-import type { Sect, Attributes, AttributeValue } from "../types";
+import type {
+  Sect,
+  Attributes,
+  AttributeValue,
+  WeaponType,
+} from "../types";
 import { SECT_TO_PROFESSION, SECT_WEAPON_TYPES } from "../types/constants";
 import { ProfessionEnum, SectEnum, AttributeTypeEnum } from "../types";
+
+const SECT_BY_WEAPON_TYPE = new Map<WeaponType, Sect>(
+  Object.values(SectEnum).map((sect) => [SECT_WEAPON_TYPES[sect], sect])
+);
 
 // 获取门派的有效属性
 export const getEffectiveAttributeBySect = (
@@ -66,11 +75,10 @@ export const performAttributeConversion = (
 };
 
 // 根据武器类型获取门派（用于反向查找）
-export const getSectByWeaponType = (weaponType: string): Sect => {
-  for (const [sect, type] of Object.entries(SECT_WEAPON_TYPES)) {
-    if (type === weaponType) {
-      return sect as Sect;
-    }
-  }
-  return SectEnum.GHOST_KING; // 默认值
+export const getSectByWeaponType = (weaponType: WeaponType): Sect => {
+  const sect = SECT_BY_WEAPON_TYPE.get(weaponType);
+  if (sect) return sect;
+
+  // 正常 UI 只能传入配置内的武器类型；抛错可以尽早暴露配置不一致。
+  throw new Error(`未知武器类型：${weaponType}`);
 };

@@ -158,6 +158,17 @@ describe("WeaponConverter 组件", () => {
       await user.clear(physicalInput);
       expect(physicalInput).toHaveValue(null);
     });
+
+    it("应该正确显示0值", async () => {
+      const user = userEvent.setup();
+      const physicalInput = screen.getByRole("spinbutton", {
+        name: "物攻当前值",
+      });
+
+      await user.type(physicalInput, "0");
+
+      expect(physicalInput).toHaveValue(0);
+    });
   });
 
   describe("表单验证", () => {

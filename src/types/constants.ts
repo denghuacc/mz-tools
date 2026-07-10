@@ -1,5 +1,15 @@
-import type { Sect, Profession } from "./index";
-import { SectEnum, ProfessionEnum, WeaponTypeEnum } from "./index";
+import type {
+  AttributeType,
+  Profession,
+  Sect,
+  WeaponType,
+} from "./index";
+import {
+  AttributeTypeEnum,
+  SectEnum,
+  ProfessionEnum,
+  WeaponTypeEnum,
+} from "./index";
 
 // 门派与职业的映射关系
 export const SECT_TO_PROFESSION: Record<Sect, Profession> = {
@@ -22,7 +32,7 @@ export const SECT_TO_PROFESSION: Record<Sect, Profession> = {
 };
 
 // 按职业分组的门派
-export const SECTS_BY_PROFESSION: Record<Profession, Sect[]> = {
+export const SECTS_BY_PROFESSION: Record<Profession, readonly Sect[]> = {
   [ProfessionEnum.PHYSICAL]: [
     SectEnum.GHOST_KING,
     SectEnum.HEAVENLY_WAY,
@@ -43,7 +53,7 @@ export const SECTS_BY_PROFESSION: Record<Profession, Sect[]> = {
 };
 
 // 门派武器类型映射
-export const SECT_WEAPON_TYPES: Record<Sect, string> = {
+export const SECT_WEAPON_TYPES: Record<Sect, WeaponType> = {
   // 物理职业门派
   [SectEnum.GHOST_KING]: WeaponTypeEnum.BLADE,
   [SectEnum.HEAVENLY_WAY]: WeaponTypeEnum.SPEAR,
@@ -75,3 +85,10 @@ export const WEAPON_LEVELS = {
     healing: 286,
   },
 } as const;
+
+// 属性展示与校验共享同一份配置，避免新增属性时遗漏某个界面分支。
+export const ATTRIBUTE_FIELDS = [
+  { type: AttributeTypeEnum.PHYSICAL, label: "物攻" },
+  { type: AttributeTypeEnum.MAGIC, label: "法攻" },
+  { type: AttributeTypeEnum.HEALING, label: "治疗" },
+] as const satisfies readonly { type: AttributeType; label: string }[];

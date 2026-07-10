@@ -49,27 +49,14 @@ export enum AttributeTypeEnum {
   HEALING = "healing",
 }
 
-// 门派类型定义（为了向后兼容，保留字符串联合类型）
-export type Sect =
-  // 物理职业门派
-  | "鬼王宗"
-  | "天道府"
-  | "万毒门"
-  // 法师职业门派
-  | "青云门"
-  | "焚香谷"
-  | "鬼道"
-  | "寒风龙族"
-  // 治疗职业门派
-  | "天音寺"
-  | "南疆古巫"
-  | "万灵宫"
-  // 封印职业门派
-  | "合欢门"
-  | "长生堂";
+// 类型直接从枚举派生，新增枚举项时不需要同步维护字符串联合类型。
+export type Sect = `${SectEnum}`;
 
 // 职业类型定义
-export type Profession = "物理" | "法师" | "治疗" | "封印";
+export type Profession = `${ProfessionEnum}`;
+
+// 武器类型定义
+export type WeaponType = `${WeaponTypeEnum}`;
 
 // 武器等级类型定义
 export type WeaponLevel = 60 | 110;
@@ -80,11 +67,23 @@ export type AttributeValue = {
   max: number;
 };
 
+// 表单允许属性值暂未填写，完成校验后再转换为 AttributeValue。
+export type AttributeInputValue = {
+  current: number | null;
+  max: number;
+};
+
 // 属性集合类型定义
 export type Attributes = {
   physical: AttributeValue;
   magic: AttributeValue;
   healing: AttributeValue;
+};
+
+export type AttributeInputs = {
+  physical: AttributeInputValue;
+  magic: AttributeInputValue;
+  healing: AttributeInputValue;
 };
 
 // 属性类型键
