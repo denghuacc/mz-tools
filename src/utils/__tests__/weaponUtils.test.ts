@@ -181,46 +181,58 @@ describe("武器工具函数测试", () => {
   describe("performAttributeConversion", () => {
     const testAttributes = {
       physical: { current: 600, max: 1000 },
-      magic: { current: 300, max: 500 },
+      magic: { current: 150, max: 500 },
       healing: { current: 200, max: 400 },
     };
 
-    it("应该在同职业转换时保持属性不变", () => {
-      const result = performAttributeConversion(
-        testAttributes,
-        "鬼王宗",
-        "天道府"
-      );
+    it.each([
+      {
+        rule: "物理与法术等比例交换物攻和法攻",
+        from: "鬼王宗",
+        to: "青云门",
+        expected: { physical: 300, magic: 300, healing: 200 },
+      },
+      {
+        rule: "物理与辅助等比例交换物攻和治疗",
+        from: "鬼王宗",
+        to: "天音寺",
+        expected: { physical: 500, magic: 150, healing: 240 },
+      },
+      {
+        rule: "法术与辅助等比例交换法攻和治疗",
+        from: "青云门",
+        to: "天音寺",
+        expected: { physical: 600, magic: 250, healing: 120 },
+      },
+      {
+        rule: "封系与其他系别互转时属性保持不变",
+        from: "鬼王宗",
+        to: "合欢门",
+        expected: { physical: 600, magic: 150, healing: 200 },
+      },
+      {
+        rule: "从封系转到其他系别时属性保持不变",
+        from: "合欢门",
+        to: "青云门",
+        expected: { physical: 600, magic: 150, healing: 200 },
+      },
+      {
+        rule: "同系门派互转时属性保持不变",
+        from: "鬼王宗",
+        to: "天道府",
+        expected: { physical: 600, magic: 150, healing: 200 },
+      },
+    ] satisfies readonly {
+      rule: string;
+      from: Sect;
+      to: Sect;
+      expected: Record<"physical" | "magic" | "healing", number>;
+    }[])("$rule", ({ from, to, expected }) => {
+      const result = performAttributeConversion(testAttributes, from, to);
 
-      expect(result.physical.current).toBe(600);
-      expect(result.magic.current).toBe(300);
-      expect(result.healing.current).toBe(200);
-    });
-
-    it("应该正确处理封印门派转换", () => {
-      const result = performAttributeConversion(
-        testAttributes,
-        "鬼王宗",
-        "合欢门"
-      );
-
-      // 物理 -> 封印: 封印没有有效属性，所以保持不变
-      expect(result.physical.current).toBe(600);
-      expect(result.magic.current).toBe(300);
-      expect(result.healing.current).toBe(200);
-    });
-
-    it("应该正确处理从封印门派转换", () => {
-      const result = performAttributeConversion(
-        testAttributes,
-        "合欢门",
-        "青云门"
-      );
-
-      // 封印 -> 法师: 封印没有有效属性，所以保持不变
-      expect(result.physical.current).toBe(600);
-      expect(result.magic.current).toBe(300);
-      expect(result.healing.current).toBe(200);
+      expect(result.physical.current).toBe(expected.physical);
+      expect(result.magic.current).toBe(expected.magic);
+      expect(result.healing.current).toBe(expected.healing);
     });
   });
 

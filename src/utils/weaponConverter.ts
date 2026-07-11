@@ -11,7 +11,7 @@ const SECT_BY_WEAPON_TYPE = new Map<WeaponType, Sect>(
   Object.values(SectEnum).map((sect) => [SECT_WEAPON_TYPES[sect], sect])
 );
 
-// 获取门派的有效属性
+// 获取武器转换时参与等比例互换的属性；封系与其他系别互转时武器属性保持不变。
 export const getEffectiveAttributeBySect = (
   sect: Sect
 ): keyof Attributes | null => {

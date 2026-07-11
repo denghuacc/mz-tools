@@ -185,7 +185,7 @@ describe("原造型属性值显示功能", () => {
     expect(originalSection).toBeInTheDocument();
 
     // 封印武器作为原造型时，属性值应该与输入的原始值相同
-    // 因为封印职业没有有效属性，从天音寺转换到合欢门不会改变属性值
+    // 游戏武器规则：辅助与封系互转时三项属性保持不变。
     const physicalValue = within(originalSection as HTMLElement).getByText(
       "500"
     );

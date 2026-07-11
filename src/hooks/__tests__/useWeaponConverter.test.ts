@@ -270,7 +270,7 @@ describe("工具函数测试", () => {
         "合欢门"
       );
 
-      // 封印门派没有有效属性，所以物攻应该保持不变
+      // 游戏武器规则：封系与其他系别互转时三项属性保持不变。
       expect(result.physical.current).toBe(500);
       expect(result.magic.current).toBe(150);
       expect(result.healing.current).toBe(100);
