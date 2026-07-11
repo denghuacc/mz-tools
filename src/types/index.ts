@@ -4,6 +4,7 @@ export enum SectEnum {
   GHOST_KING = "鬼王宗",
   HEAVENLY_WAY = "天道府",
   POISON_SECT = "万毒门",
+  DEMON_TEMPLE = "魔神殿",
   // 法师职业门派
   QINGYUN = "青云门",
   INCENSE_VALLEY = "焚香谷",
@@ -40,6 +41,7 @@ export enum WeaponTypeEnum {
   QIN = "琴",
   DAGGER = "短刃",
   BRUSH = "笔",
+  AXE = "斧",
 }
 
 // 属性类型枚举

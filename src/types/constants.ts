@@ -17,6 +17,7 @@ export const SECT_TO_PROFESSION: Record<Sect, Profession> = {
   [SectEnum.GHOST_KING]: ProfessionEnum.PHYSICAL,
   [SectEnum.HEAVENLY_WAY]: ProfessionEnum.PHYSICAL,
   [SectEnum.POISON_SECT]: ProfessionEnum.PHYSICAL,
+  [SectEnum.DEMON_TEMPLE]: ProfessionEnum.PHYSICAL,
   // 法师职业门派
   [SectEnum.QINGYUN]: ProfessionEnum.MAGIC,
   [SectEnum.INCENSE_VALLEY]: ProfessionEnum.MAGIC,
@@ -37,6 +38,7 @@ export const SECTS_BY_PROFESSION: Record<Profession, readonly Sect[]> = {
     SectEnum.GHOST_KING,
     SectEnum.HEAVENLY_WAY,
     SectEnum.POISON_SECT,
+    SectEnum.DEMON_TEMPLE,
   ],
   [ProfessionEnum.MAGIC]: [
     SectEnum.QINGYUN,
@@ -58,6 +60,7 @@ export const SECT_WEAPON_TYPES: Record<Sect, WeaponType> = {
   [SectEnum.GHOST_KING]: WeaponTypeEnum.BLADE,
   [SectEnum.HEAVENLY_WAY]: WeaponTypeEnum.SPEAR,
   [SectEnum.POISON_SECT]: WeaponTypeEnum.SICKLE,
+  [SectEnum.DEMON_TEMPLE]: WeaponTypeEnum.AXE,
   // 法师职业门派
   [SectEnum.QINGYUN]: WeaponTypeEnum.SWORD,
   [SectEnum.INCENSE_VALLEY]: WeaponTypeEnum.FAN,

@@ -20,6 +20,7 @@ describe("武器工具函数测试", () => {
         "鬼王宗",
         "天道府",
         "万毒门",
+        "魔神殿",
         // 法师职业
         "青云门",
         "焚香谷",
@@ -38,11 +39,16 @@ describe("武器工具函数测试", () => {
         expect(SECT_TO_PROFESSION).toHaveProperty(sect);
       });
 
-      expect(Object.keys(SECT_TO_PROFESSION)).toHaveLength(12);
+      expect(Object.keys(SECT_TO_PROFESSION)).toHaveLength(13);
     });
 
     it("SECTS_BY_PROFESSION 应该正确分组门派", () => {
-      expect(SECTS_BY_PROFESSION.物理).toEqual(["鬼王宗", "天道府", "万毒门"]);
+      expect(SECTS_BY_PROFESSION.物理).toEqual([
+        "鬼王宗",
+        "天道府",
+        "万毒门",
+        "魔神殿",
+      ]);
       expect(SECTS_BY_PROFESSION.法师).toEqual([
         "青云门",
         "焚香谷",
@@ -61,7 +67,8 @@ describe("武器工具函数测试", () => {
       const expectedWeaponTypes = [
         "刀",
         "枪",
-        "镰刀", // 物理
+        "镰刀",
+        "斧", // 物理
         "剑",
         "扇子",
         "灯",
@@ -78,7 +85,7 @@ describe("武器工具函数测试", () => {
         expect(actualWeaponTypes).toContain(weaponType);
       });
 
-      expect(actualWeaponTypes).toHaveLength(12);
+      expect(actualWeaponTypes).toHaveLength(13);
     });
 
     it("WEAPON_LEVELS 应该包含正确的等级数据", () => {
@@ -118,6 +125,7 @@ describe("武器工具函数测试", () => {
       expect(getEffectiveAttributeBySect("鬼王宗")).toBe("physical");
       expect(getEffectiveAttributeBySect("天道府")).toBe("physical");
       expect(getEffectiveAttributeBySect("万毒门")).toBe("physical");
+      expect(getEffectiveAttributeBySect("魔神殿")).toBe("physical");
     });
 
     it("应该为法师门派返回 magic", () => {
@@ -143,6 +151,7 @@ describe("武器工具函数测试", () => {
     it("应该根据武器类型返回门派", () => {
       expect(getSectByWeaponType("剑")).toBe("青云门");
       expect(getSectByWeaponType("法杖")).toBe("南疆古巫");
+      expect(getSectByWeaponType("斧")).toBe("魔神殿");
     });
 
     it("应该在配置不一致时尽早报错", () => {
@@ -282,7 +291,7 @@ describe("武器工具函数测试", () => {
 
   describe("职业分类验证", () => {
     it("应该正确分类物理职业", () => {
-      const physicalSects = ["鬼王宗", "天道府", "万毒门"];
+      const physicalSects = ["鬼王宗", "天道府", "万毒门", "魔神殿"];
       physicalSects.forEach((sect) => {
         expect(SECT_TO_PROFESSION[sect as Sect]).toBe("物理");
         expect(getEffectiveAttributeBySect(sect as Sect)).toBe("physical");
@@ -319,6 +328,7 @@ describe("武器工具函数测试", () => {
       expect(SECT_WEAPON_TYPES["鬼王宗"]).toBe("刀");
       expect(SECT_WEAPON_TYPES["天道府"]).toBe("枪");
       expect(SECT_WEAPON_TYPES["万毒门"]).toBe("镰刀");
+      expect(SECT_WEAPON_TYPES["魔神殿"]).toBe("斧");
     });
 
     it("应该有正确的法师武器类型", () => {

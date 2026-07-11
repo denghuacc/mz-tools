@@ -222,6 +222,7 @@ describe("工具函数测试", () => {
       expect(getEffectiveAttributeBySect("鬼王宗")).toBe("physical");
       expect(getEffectiveAttributeBySect("天道府")).toBe("physical");
       expect(getEffectiveAttributeBySect("万毒门")).toBe("physical");
+      expect(getEffectiveAttributeBySect("魔神殿")).toBe("physical");
     });
 
     it("应该为法师门派返回magic", () => {
@@ -307,7 +308,7 @@ describe("常量测试", () => {
 
   it("SECT_TO_PROFESSION应该包含所有门派", () => {
     const allSects = Object.keys(SECT_TO_PROFESSION);
-    expect(allSects).toHaveLength(12);
+    expect(allSects).toHaveLength(13);
 
     // 验证每个职业都有对应的门派
     expect(
@@ -315,7 +316,7 @@ describe("常量测试", () => {
         (sect) =>
           SECT_TO_PROFESSION[sect as keyof typeof SECT_TO_PROFESSION] === "物理"
       )
-    ).toHaveLength(3);
+    ).toHaveLength(4);
     expect(
       allSects.filter(
         (sect) =>
