@@ -79,6 +79,16 @@ export const WEAPON_LEVELS = {
     magic: 210,
     healing: 192,
   },
+  "60-standard": {
+    physical: 589,
+    magic: 186,
+    healing: 170,
+  },
+  80: {
+    physical: 744,
+    magic: 232,
+    healing: 217,
+  },
   110: {
     physical: 976,
     magic: 302,

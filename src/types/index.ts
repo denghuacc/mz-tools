@@ -58,8 +58,8 @@ export type Profession = `${ProfessionEnum}`;
 // 武器类型定义
 export type WeaponType = `${WeaponTypeEnum}`;
 
-// 武器等级类型定义
-export type WeaponLevel = 60 | 110;
+// 数字 60 保留为原有的 69 特色服配置，避免现有选择逻辑发生隐式变化。
+export type WeaponLevel = 60 | "60-standard" | 80 | 110;
 
 // 属性值类型定义
 export type AttributeValue = {

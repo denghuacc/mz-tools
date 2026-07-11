@@ -110,11 +110,15 @@ const WeaponConverter = () => {
               value={weaponLevel}
               onChange={(e) =>
                 setWeaponLevelAndMaxValues(
-                  Number(e.target.value) as WeaponLevel
+                  e.target.value === "60-standard"
+                    ? "60-standard"
+                    : (Number(e.target.value) as WeaponLevel)
                 )
               }
             >
-              <option value={60}>60级</option>
+              <option value={60}>60级（69特色服）</option>
+              <option value="60-standard">60级</option>
+              <option value={80}>80级</option>
               <option value={110}>110级</option>
             </select>
           </div>

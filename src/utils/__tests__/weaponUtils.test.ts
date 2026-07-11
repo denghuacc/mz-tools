@@ -83,12 +83,26 @@ describe("武器工具函数测试", () => {
 
     it("WEAPON_LEVELS 应该包含正确的等级数据", () => {
       expect(WEAPON_LEVELS).toHaveProperty("60");
+      expect(WEAPON_LEVELS).toHaveProperty("60-standard");
+      expect(WEAPON_LEVELS).toHaveProperty("80");
       expect(WEAPON_LEVELS).toHaveProperty("110");
 
       expect(WEAPON_LEVELS[60]).toEqual({
         physical: 665,
         magic: 210,
         healing: 192,
+      });
+
+      expect(WEAPON_LEVELS["60-standard"]).toEqual({
+        physical: 589,
+        magic: 186,
+        healing: 170,
+      });
+
+      expect(WEAPON_LEVELS[80]).toEqual({
+        physical: 744,
+        magic: 232,
+        healing: 217,
       });
 
       expect(WEAPON_LEVELS[110]).toEqual({

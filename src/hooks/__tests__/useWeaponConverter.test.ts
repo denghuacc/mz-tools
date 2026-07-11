@@ -286,6 +286,18 @@ describe("常量测试", () => {
       healing: 192,
     });
 
+    expect(WEAPON_LEVELS["60-standard"]).toEqual({
+      physical: 589,
+      magic: 186,
+      healing: 170,
+    });
+
+    expect(WEAPON_LEVELS[80]).toEqual({
+      physical: 744,
+      magic: 232,
+      healing: 217,
+    });
+
     expect(WEAPON_LEVELS[110]).toEqual({
       physical: 976,
       magic: 302,

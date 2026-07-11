@@ -46,6 +46,12 @@ describe("WeaponConverter 组件", () => {
 
       // 验证武器等级初始值
       expect(selects[0]).toHaveValue("60");
+      expect(
+        screen.getByRole("option", { name: "60级（69特色服）" })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: "60级" })
+      ).toBeInTheDocument();
 
       // 验证最大值显示
       expect(inputs[1]).toHaveValue(665); // 物攻最大值
@@ -78,6 +84,36 @@ describe("WeaponConverter 组件", () => {
         expect(inputs[1]).toHaveValue(976); // 物攻最大值
         expect(inputs[3]).toHaveValue(302); // 法攻最大值
         expect(inputs[5]).toHaveValue(286); // 治疗最大值
+      });
+    });
+
+    it("应该支持80级武器属性", async () => {
+      const user = userEvent.setup();
+      const levelSelect = screen.getAllByRole("combobox")[0];
+      const inputs = screen.getAllByRole("spinbutton");
+
+      await user.selectOptions(levelSelect, "80");
+
+      await waitFor(() => {
+        expect(levelSelect).toHaveValue("80");
+        expect(inputs[1]).toHaveValue(744);
+        expect(inputs[3]).toHaveValue(232);
+        expect(inputs[5]).toHaveValue(217);
+      });
+    });
+
+    it("应该支持常规服60级武器属性", async () => {
+      const user = userEvent.setup();
+      const levelSelect = screen.getAllByRole("combobox")[0];
+      const inputs = screen.getAllByRole("spinbutton");
+
+      await user.selectOptions(levelSelect, "60-standard");
+
+      await waitFor(() => {
+        expect(levelSelect).toHaveValue("60-standard");
+        expect(inputs[1]).toHaveValue(589);
+        expect(inputs[3]).toHaveValue(186);
+        expect(inputs[5]).toHaveValue(170);
       });
     });
   });
