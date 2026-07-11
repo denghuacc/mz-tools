@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "dist")));
 
 // 处理前端路由
-app.get("*", (req, res) => {
+app.get("/{*splat}", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
