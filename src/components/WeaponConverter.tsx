@@ -28,7 +28,7 @@ const SectOptions = ({ valueType }: SectOptionsProps) =>
 const getChangeClassName = (change: number) => {
   if (change > 0) return "text-green-600";
   if (change < 0) return "text-red-600";
-  return "text-gray-500";
+  return "text-slate-500";
 };
 
 const WeaponConverter = () => {
@@ -87,26 +87,20 @@ const WeaponConverter = () => {
     );
 
   return (
-    <div className="w-full max-w-2xl p-4 sm:p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-center">
-        梦幻新诛仙
-      </h1>
-      <h2 className="text-lg sm:text-xl font-semibold mb-3 text-center text-gray-600">
-        武器属性转换器
-      </h2>
-
-      <div className="space-y-3">
-        <div>
-          <label
-            htmlFor="weapon-level"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            武器等级
-          </label>
-          <div className="flex items-center gap-2">
+    <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="space-y-5 p-4 sm:p-6">
+        <section className="rounded-xl bg-slate-50/80 p-4 ring-1 ring-inset ring-slate-200/70">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900">转换设置</h2>
+          <div>
+            <label
+              htmlFor="weapon-level"
+              className="mb-1.5 block text-sm font-medium text-slate-700"
+            >
+              武器等级
+            </label>
             <select
               id="weapon-level"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-100 text-base"
+              className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               value={weaponLevel}
               onChange={(e) =>
                 setWeaponLevelAndMaxValues(
@@ -122,77 +116,80 @@ const WeaponConverter = () => {
               <option value={110}>110级</option>
             </select>
           </div>
-        </div>
 
-        {/* 原造型和武器选择在同一行 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label
-              htmlFor="original-form"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              原造型
-            </label>
-            <select
-              id="original-form"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
-              value={originalForm ?? "无"}
-              onChange={handleOriginalFormChange}
-            >
-              <option value="无">无</option>
-              <SectOptions valueType="weapon" />
-            </select>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label
+                htmlFor="original-form"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                原造型
+              </label>
+              <select
+                id="original-form"
+                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                value={originalForm ?? "无"}
+                onChange={handleOriginalFormChange}
+              >
+                <option value="无">无</option>
+                <SectOptions valueType="weapon" />
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="current-sect"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                当前造型
+              </label>
+              <select
+                id="current-sect"
+                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                value={currentSect}
+                onChange={handleSectChange(setCurrentSect)}
+              >
+                <SectOptions valueType="sect" />
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="target-sect"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                目标造型
+              </label>
+              <select
+                id="target-sect"
+                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                value={targetSect}
+                onChange={handleSectChange(setTargetSect)}
+              >
+                <SectOptions valueType="sect" />
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-xl bg-slate-50/80 p-4 ring-1 ring-inset ring-slate-200/70">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">武器属性</h2>
+              <p className="mt-1 text-xs text-slate-500">
+                输入当前值，最高值仅供参考。
+              </p>
+            </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="current-sect"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              转换前
-            </label>
-            <select
-              id="current-sect"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
-              value={currentSect}
-              onChange={handleSectChange(setCurrentSect)}
-            >
-              <SectOptions valueType="sect" />
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor="target-sect"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              转换后
-            </label>
-            <select
-              id="target-sect"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base"
-              value={targetSect}
-              onChange={handleSectChange(setTargetSect)}
-            >
-              <SectOptions valueType="sect" />
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700">
-            武器属性
-          </label>
-
-          {/* 表头 */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 px-2 sm:px-4">
-            <div className="text-center font-medium text-gray-600 text-sm sm:text-base">
+          <div className="grid grid-cols-3 gap-2 px-2 sm:gap-4 sm:px-3">
+            <div className="text-center text-xs font-medium text-slate-500 sm:text-sm">
               属性
             </div>
-            <div className="text-center font-medium text-gray-600 text-sm sm:text-base">
+            <div className="text-center text-xs font-medium text-slate-500 sm:text-sm">
               当前值
             </div>
-            <div className="text-center font-medium text-gray-600 text-sm sm:text-base">
+            <div className="text-center text-xs font-medium text-slate-500 sm:text-sm">
               最高值
             </div>
           </div>
@@ -204,11 +201,11 @@ const WeaponConverter = () => {
             return (
               <div
                 key={type}
-                className="grid grid-cols-3 gap-2 sm:gap-4 items-center bg-gray-50 p-2 sm:p-3 rounded-lg"
+                className="mt-2 grid grid-cols-3 items-center gap-2 rounded-lg bg-white p-2 ring-1 ring-inset ring-slate-200/70 sm:gap-4 sm:p-3"
               >
                 <label
                   htmlFor={inputId}
-                  className="text-sm font-medium text-gray-700 text-center"
+                  className="text-center text-sm font-medium text-slate-700"
                 >
                   {label}
                 </label>
@@ -220,7 +217,7 @@ const WeaponConverter = () => {
                   step={1}
                   inputMode="numeric"
                   aria-label={`${label}当前值`}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base text-center"
+                  className="block h-10 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                   value={attribute.current ?? ""}
                   onChange={(event) =>
                     handleAttributeChange(type, event.target.value)
@@ -229,17 +226,17 @@ const WeaponConverter = () => {
                 <input
                   type="number"
                   aria-label={`${label}最高值`}
-                  className="block w-full rounded-md border-gray-300 bg-gray-50 text-center text-base"
+                  className="block h-10 w-full border-0 bg-transparent px-2 text-center text-sm font-medium text-slate-500 shadow-none disabled:cursor-default disabled:opacity-100"
                   value={attribute.max}
                   disabled
                 />
               </div>
             );
           })}
-        </div>
+        </section>
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <svg
@@ -261,17 +258,18 @@ const WeaponConverter = () => {
           </div>
         )}
 
-        {/* 转换按钮 */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <button
-            className="flex-1 bg-indigo-600 text-white py-3 sm:py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-base font-medium"
+            type="button"
+            className="min-h-11 flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             onClick={convertAttributes}
           >
             转换
           </button>
 
           <button
-            className="px-4 py-3 sm:py-2 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-base font-medium"
+            type="button"
+            className="min-h-11 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
             onClick={handleReset}
           >
             重置
@@ -279,25 +277,27 @@ const WeaponConverter = () => {
         </div>
 
         {result && (
-          <div className="mt-4 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-            <div className="bg-green-600 text-white px-4 py-3">
-              <h2 className="text-lg font-semibold text-center">转换结果</h2>
-            </div>
-            <div className="p-4">
-              {/* 转换路径描述 */}
-              <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center justify-center space-x-2">
-                  <span className="text-sm text-blue-700">
-                    {originalForm
-                      ? `${SECT_WEAPON_TYPES[currentSect]} → ${originalForm} → ${SECT_WEAPON_TYPES[targetSect]}`
-                      : `${SECT_WEAPON_TYPES[currentSect]} → ${SECT_WEAPON_TYPES[targetSect]}`}
-                  </span>
-                  {originalForm && (
-                    <button
-                      onClick={() => setShowOriginalData(!showOriginalData)}
-                      className="ml-2 p-1 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-                      title="查看原造型数据"
-                    >
+          <section className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
+            <div className="flex items-center justify-between gap-4 border-b border-blue-100 bg-blue-50/70 px-4 py-3">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">转换结果</h2>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {currentSect} → {targetSect}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm font-medium text-blue-700">
+                <span>
+                  {originalForm
+                    ? `${SECT_WEAPON_TYPES[currentSect]} → ${originalForm} → ${SECT_WEAPON_TYPES[targetSect]}`
+                    : `${SECT_WEAPON_TYPES[currentSect]} → ${SECT_WEAPON_TYPES[targetSect]}`}
+                </span>
+                {originalForm && (
+                  <button
+                    type="button"
+                    onClick={() => setShowOriginalData(!showOriginalData)}
+                    className="rounded-md p-1 text-blue-600 transition hover:bg-blue-100 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    title="查看原造型数据"
+                  >
                       <svg
                         className="w-4 h-4"
                         fill="none"
@@ -317,21 +317,26 @@ const WeaponConverter = () => {
                           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                         />
                       </svg>
-                    </button>
-                  )}
-                </div>
+                  </button>
+                )}
               </div>
+            </div>
 
-              {/* 原造型数据展示 */}
+            <div className="space-y-4 p-4">
+
               {originalForm && showOriginalData && (
-                <div className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium text-yellow-800">
+                <div
+                  className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+                  data-testid="original-form-attributes"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-slate-700">
                       原造型属性 ({originalForm})
-                    </h3>
+                    </h4>
                     <button
+                      type="button"
                       onClick={() => setShowOriginalData(false)}
-                      className="text-yellow-600 hover:text-yellow-800"
+                      className="rounded p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-800"
                       aria-label="关闭原造型属性"
                     >
                       <svg
@@ -353,10 +358,10 @@ const WeaponConverter = () => {
                     {ATTRIBUTE_FIELDS.map(({ type, label }) => (
                       <div
                         key={type}
-                        className="flex justify-between items-center py-1 px-2 bg-white rounded text-sm"
+                        className="flex items-center justify-between rounded bg-white px-2 py-1 text-sm"
                       >
-                        <span className="text-yellow-700">{label}</span>
-                        <span className="font-medium text-yellow-800">
+                        <span className="text-slate-600">{label}</span>
+                        <span className="font-medium text-slate-900">
                           {originalData?.[type].current ?? "N/A"}
                         </span>
                       </div>
@@ -365,46 +370,52 @@ const WeaponConverter = () => {
                 </div>
               )}
 
-              <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
-                <div className="text-center">
-                  <span className="text-lg font-semibold text-green-700">
-                    {targetSect} - {SECT_WEAPON_TYPES[targetSect]}
-                  </span>
+              <div>
+                <div className="grid grid-cols-[1fr_1.5fr_auto] gap-3 px-3 pb-2 text-xs font-medium text-slate-400">
+                  <span>属性</span>
+                  <span className="text-center">原值 → 新值</span>
+                  <span className="min-w-12 text-right">变化</span>
                 </div>
-              </div>
-              <div className="space-y-3">
-                {ATTRIBUTE_FIELDS.map(({ type, label }) => {
+                <div className="space-y-2">
+                  {ATTRIBUTE_FIELDS.map(({ type, label }) => {
                   const change =
                     result[type].current - (attributes[type].current ?? 0);
 
                   return (
                     <div
                       key={type}
-                      className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-md"
+                      className="grid grid-cols-[1fr_1.5fr_auto] items-center gap-3 rounded-lg bg-slate-50 px-3 py-3"
                     >
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-slate-700">
                         {label}
                       </span>
-                      <div className="flex items-center justify-end space-x-3 min-w-0">
-                        <span className="font-semibold text-lg text-gray-900 text-right">
+                      <div className="flex min-w-0 items-center justify-center gap-2 text-sm">
+                        <span className="text-slate-500">
+                          {attributes[type].current ?? 0}
+                        </span>
+                        <span aria-hidden="true" className="text-slate-300">
+                          →
+                        </span>
+                        <span className="text-base font-semibold text-slate-900">
                           {result[type].current}
                         </span>
-                        <span
-                          className={`text-sm font-medium text-right min-w-[3rem] ${getChangeClassName(
-                            change
-                          )}`}
-                        >
-                          {change > 0 ? "+" : ""}
-                          {change}
-                        </span>
                       </div>
+                      <span
+                        className={`min-w-12 rounded-full bg-white px-2 py-1 text-right text-xs font-semibold ${getChangeClassName(
+                          change
+                        )}`}
+                      >
+                        {change > 0 ? "+" : ""}
+                        {change}
+                      </span>
                     </div>
                   );
-                })}
+                  })}
+                </div>
               </div>
-            </div>
+
             {allChangesZero && (
-              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-md">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                 <div className="flex items-center space-x-2">
                   <div className="flex-shrink-0">
                     <svg
@@ -428,12 +439,13 @@ const WeaponConverter = () => {
                 </div>
               </div>
             )}
-            <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-xs text-blue-700 text-center">
+            <div className="border-t border-slate-100 pt-3">
+              <p className="text-center text-xs leading-5 text-slate-500">
                 温馨提示：转换结果可能与游戏实际数值存在轻微差异，仅供参考
               </p>
             </div>
-          </div>
+            </div>
+          </section>
         )}
       </div>
     </div>

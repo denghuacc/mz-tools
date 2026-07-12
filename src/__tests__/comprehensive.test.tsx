@@ -10,8 +10,9 @@ describe("综合测试", () => {
   describe("应用程序集成", () => {
     it("应该正确渲染完整应用", () => {
       // 验证主要元素存在
-      expect(screen.getByText("梦幻新诛仙")).toBeInTheDocument();
-      expect(screen.getByText("武器属性转换器")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "武器属性转换器" })
+      ).toBeInTheDocument();
 
       // 验证表单元素
       const selects = screen.getAllByRole("combobox");
@@ -104,7 +105,8 @@ describe("综合测试", () => {
     it("应该有响应式设计类名", () => {
       const container = document.querySelector(".w-full.max-w-2xl");
       expect(container).toBeInTheDocument();
-      expect(container).toHaveClass("p-4", "sm:p-6");
+      expect(container).toHaveClass("w-full", "max-w-2xl", "rounded-2xl");
+      expect(container?.querySelector(".p-4.sm\\:p-6")).toBeInTheDocument();
     });
 
     it("应该有正确的布局结构", () => {
@@ -133,8 +135,8 @@ describe("综合测试", () => {
     it("应该有正确的表单标签", () => {
       expect(screen.getByText("武器等级")).toBeInTheDocument();
       expect(screen.getByText("原造型")).toBeInTheDocument();
-      expect(screen.getByText("转换前")).toBeInTheDocument();
-      expect(screen.getByText("转换后")).toBeInTheDocument();
+      expect(screen.getByText("当前造型")).toBeInTheDocument();
+      expect(screen.getByText("目标造型")).toBeInTheDocument();
     });
 
     it("应该支持原造型选择", async () => {
@@ -229,8 +231,8 @@ describe("综合测试", () => {
       const convertButton = screen.getByRole("button", { name: "转换" });
       const resetButton = screen.getByRole("button", { name: "重置" });
 
-      expect(convertButton).toHaveClass("bg-indigo-600", "text-white");
-      expect(resetButton).toHaveClass("bg-gray-100", "text-gray-600");
+      expect(convertButton).toHaveClass("bg-blue-600", "text-white");
+      expect(resetButton).toHaveClass("bg-white", "text-slate-600");
     });
 
     it("应该支持键盘导航", async () => {

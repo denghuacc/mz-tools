@@ -7,9 +7,10 @@ describe("简单测试", () => {
     render(<App />);
   });
 
-  it("应该渲染应用标题", () => {
-    expect(screen.getByText("梦幻新诛仙")).toBeInTheDocument();
-    expect(screen.getByText("武器属性转换器")).toBeInTheDocument();
+  it("应该渲染转换器标题", () => {
+    expect(
+      screen.getByRole("heading", { name: "武器属性转换器" })
+    ).toBeInTheDocument();
   });
 
   it("应该渲染基本UI元素", () => {

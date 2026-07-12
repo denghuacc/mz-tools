@@ -12,7 +12,7 @@ describe("RingConverter 组件", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText("物攻当前值")).not.toHaveAttribute("max");
 
-    await user.selectOptions(screen.getByLabelText("转换前门派"), "天音寺");
+    await user.selectOptions(screen.getByLabelText("当前门派"), "天音寺");
 
     expect(screen.getByLabelText("速度当前值")).not.toHaveAttribute("max");
   });
@@ -21,14 +21,14 @@ describe("RingConverter 组件", () => {
     const user = userEvent.setup();
     render(<RingConverter />);
 
-    await user.selectOptions(screen.getByLabelText("转换后门派"), "天音寺");
+    await user.selectOptions(screen.getByLabelText("目标门派"), "天音寺");
     await user.type(screen.getByLabelText("气血当前值"), "1000");
     await user.type(screen.getByLabelText("物攻当前值"), "14");
     await user.click(screen.getByRole("button", { name: "转换" }));
 
     const result = screen.getByText("转换结果").parentElement?.parentElement;
     expect(result).not.toBeNull();
-    expect(within(result as HTMLElement).getByText("1000")).toBeInTheDocument();
+    expect(within(result as HTMLElement).getAllByText("1000")).toHaveLength(2);
     expect(within(result as HTMLElement).getByText("速度")).toBeInTheDocument();
     expect(within(result as HTMLElement).getByText("5")).toBeInTheDocument();
   });
@@ -37,7 +37,7 @@ describe("RingConverter 组件", () => {
     const user = userEvent.setup();
     render(<RingConverter />);
 
-    await user.selectOptions(screen.getByLabelText("转换后门派"), "天音寺");
+    await user.selectOptions(screen.getByLabelText("目标门派"), "天音寺");
     await user.type(screen.getByLabelText("气血当前值"), "1000");
     await user.type(screen.getByLabelText("物攻当前值"), "44");
     await user.click(screen.getByRole("button", { name: "转换" }));

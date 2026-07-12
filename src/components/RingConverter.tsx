@@ -22,6 +22,12 @@ type RingConversionResult = {
   secondary: number;
 };
 
+const getChangeClassName = (change: number) => {
+  if (change > 0) return "text-green-600";
+  if (change < 0) return "text-red-600";
+  return "text-slate-500";
+};
+
 const RingConverter = () => {
   const [currentSect, setCurrentSect] = useState<Sect>("鬼王宗");
   const [targetSect, setTargetSect] = useState<Sect>("青云门");
@@ -84,72 +90,70 @@ const RingConverter = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-      <h1 className="mb-1 text-center text-2xl font-bold sm:text-3xl">
-        梦幻新诛仙
-      </h1>
-      <h2 className="mb-3 text-center text-lg font-semibold text-gray-600 sm:text-xl">
-        戒指属性转换器
-      </h2>
+    <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="space-y-5 p-4 sm:p-6">
+        <section className="rounded-xl bg-slate-50/80 p-4 ring-1 ring-inset ring-slate-200/70">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900">转换设置</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="ring-current-sect"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                当前门派
+              </label>
+              <select
+                id="ring-current-sect"
+                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                value={currentSect}
+                onChange={(event) => {
+                  setCurrentSect(event.target.value as Sect);
+                  resetFeedback();
+                }}
+              >
+                <SectOptions />
+              </select>
+            </div>
 
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label
-              htmlFor="ring-current-sect"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              转换前门派
-            </label>
-            <select
-              id="ring-current-sect"
-              className="mt-1 block w-full rounded-md border-gray-300 text-base shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              value={currentSect}
-              onChange={(event) => {
-                setCurrentSect(event.target.value as Sect);
-                resetFeedback();
-              }}
-            >
-              <SectOptions />
-            </select>
+            <div>
+              <label
+                htmlFor="ring-target-sect"
+                className="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                目标门派
+              </label>
+              <select
+                id="ring-target-sect"
+                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                value={targetSect}
+                onChange={(event) => {
+                  setTargetSect(event.target.value as Sect);
+                  resetFeedback();
+                }}
+              >
+                <SectOptions />
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-xl bg-slate-50/80 p-4 ring-1 ring-inset ring-slate-200/70">
+          <div className="mb-4">
+            <h2 className="text-sm font-semibold text-slate-900">戒指主属性</h2>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              戒指为全等级装备，属性值会随角色等级自动成长。
+            </p>
           </div>
 
-          <div>
-            <label
-              htmlFor="ring-target-sect"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              转换后门派
-            </label>
-            <select
-              id="ring-target-sect"
-              className="mt-1 block w-full rounded-md border-gray-300 text-base shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              value={targetSect}
-              onChange={(event) => {
-                setTargetSect(event.target.value as Sect);
-                resetFeedback();
-              }}
-            >
-              <SectOptions />
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-gray-700">戒指主属性</p>
-          <p className="text-sm text-gray-500">
-            戒指为全等级装备，属性值会随角色等级自动成长。
-          </p>
-
-          <div className="grid grid-cols-2 gap-2 px-2 text-center text-sm font-medium text-gray-600 sm:gap-4 sm:px-4 sm:text-base">
+          <div className="grid grid-cols-2 gap-2 px-2 text-center text-xs font-medium text-slate-500 sm:gap-4 sm:px-3 sm:text-sm">
             <div>属性</div>
             <div>当前值</div>
           </div>
 
-          <div className="grid grid-cols-2 items-center gap-2 rounded-lg bg-gray-50 p-2 sm:gap-4 sm:p-3">
+          <div className="mt-2 grid grid-cols-2 items-center gap-2 rounded-lg bg-white p-2 ring-1 ring-inset ring-slate-200/70 sm:gap-4 sm:p-3">
             <label
               htmlFor="ring-health"
-              className="text-center text-sm font-medium text-gray-700"
+              className="text-center text-sm font-medium text-slate-700"
             >
               气血
             </label>
@@ -160,7 +164,7 @@ const RingConverter = () => {
               min={0}
               step={1}
               inputMode="numeric"
-              className="block w-full rounded-md border-gray-300 text-center text-base shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="block h-10 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               value={health ?? ""}
               onChange={(event) =>
                 handleNumberChange(event.target.value, setHealth)
@@ -168,10 +172,10 @@ const RingConverter = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 items-center gap-2 rounded-lg bg-gray-50 p-2 sm:gap-4 sm:p-3">
+          <div className="mt-2 grid grid-cols-2 items-center gap-2 rounded-lg bg-white p-2 ring-1 ring-inset ring-slate-200/70 sm:gap-4 sm:p-3">
             <label
               htmlFor="ring-secondary"
-              className="text-center text-sm font-medium text-gray-700"
+              className="text-center text-sm font-medium text-slate-700"
             >
               {currentAttribute.label}
             </label>
@@ -182,17 +186,17 @@ const RingConverter = () => {
               min={0}
               step={1}
               inputMode="numeric"
-              className="block w-full rounded-md border-gray-300 text-center text-base shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="block h-10 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               value={secondary ?? ""}
               onChange={(event) =>
                 handleNumberChange(event.target.value, setSecondary)
               }
             />
           </div>
-        </div>
+        </section>
 
         {error ? (
-          <div className="rounded-md border border-red-200 bg-red-50 p-3">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3">
             <p className="text-sm text-red-700">{error}</p>
           </div>
         ) : null}
@@ -200,14 +204,14 @@ const RingConverter = () => {
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <button
             type="button"
-            className="flex-1 rounded-md bg-indigo-600 px-4 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:py-2"
+            className="min-h-11 flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             onClick={handleConvert}
           >
             转换
           </button>
           <button
             type="button"
-            className="rounded-md bg-gray-100 px-4 py-3 text-base font-medium text-gray-600 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 sm:py-2"
+            className="min-h-11 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
             onClick={handleReset}
           >
             重置
@@ -215,30 +219,70 @@ const RingConverter = () => {
         </div>
 
         {result ? (
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
-            <div className="bg-green-600 px-4 py-3 text-white">
-              <h3 className="text-center text-lg font-semibold">转换结果</h3>
-            </div>
-            <div className="space-y-3 p-4">
-              <p className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-center text-sm text-blue-700">
+          <section className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
+            <div className="border-b border-blue-100 bg-blue-50/70 px-4 py-3">
+              <h2 className="text-base font-semibold text-slate-900">转换结果</h2>
+              <p className="mt-0.5 text-xs text-slate-500">
                 {currentSect} → {targetSect}
               </p>
-              <div className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2">
-                <span className="text-sm font-medium text-gray-700">气血</span>
-                <span className="text-lg font-semibold text-gray-900">
-                  {result.health}
-                </span>
+            </div>
+
+            <div className="space-y-4 p-4">
+              <div>
+                <div className="grid grid-cols-[1fr_1.5fr_auto] gap-3 px-3 pb-2 text-xs font-medium text-slate-400">
+                  <span>属性</span>
+                  <span className="text-center">原值 → 新值</span>
+                  <span className="min-w-12 text-right">变化</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-[1fr_1.5fr_auto] items-center gap-3 rounded-lg bg-slate-50 px-3 py-3">
+                    <span className="text-sm font-medium text-slate-700">气血</span>
+                    <div className="flex min-w-0 items-center justify-center gap-2 text-sm">
+                      <span className="text-slate-500">{health ?? 0}</span>
+                      <span aria-hidden="true" className="text-slate-300">
+                        →
+                      </span>
+                      <span className="text-base font-semibold text-slate-900">
+                        {result.health}
+                      </span>
+                    </div>
+                    <span className="min-w-12 rounded-full bg-white px-2 py-1 text-right text-xs font-semibold text-slate-500">
+                      0
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-[1fr_1.5fr_auto] items-center gap-3 rounded-lg bg-slate-50 px-3 py-3">
+                    <span className="text-sm font-medium text-slate-700">
+                      {targetAttribute.label}
+                    </span>
+                    <div className="flex min-w-0 items-center justify-center gap-2 text-sm">
+                      <span className="text-slate-500">{secondary ?? 0}</span>
+                      <span aria-hidden="true" className="text-slate-300">
+                        →
+                      </span>
+                      <span className="text-base font-semibold text-slate-900">
+                        {result.secondary}
+                      </span>
+                    </div>
+                    <span
+                      className={`min-w-12 rounded-full bg-white px-2 py-1 text-right text-xs font-semibold ${getChangeClassName(
+                        result.secondary - (secondary ?? 0)
+                      )}`}
+                    >
+                      {result.secondary - (secondary ?? 0) > 0 ? "+" : ""}
+                      {result.secondary - (secondary ?? 0)}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2">
-                <span className="text-sm font-medium text-gray-700">
-                  {targetAttribute.label}
-                </span>
-                <span className="text-lg font-semibold text-gray-900">
-                  {result.secondary}
-                </span>
+
+              <div className="border-t border-slate-100 pt-3">
+                <p className="text-center text-xs leading-5 text-slate-500">
+                  温馨提示：转换结果可能与游戏实际数值存在轻微差异，仅供参考
+                </p>
               </div>
             </div>
-          </div>
+          </section>
         ) : null}
       </div>
     </div>

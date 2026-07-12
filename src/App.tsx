@@ -73,7 +73,7 @@ const CalculatorPage = () => {
   const isWeapon = activeTool === "weapon";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div>
         <p className="text-sm font-medium text-blue-600">计算器</p>
         <h1 className="mt-1 text-2xl font-semibold text-slate-900">
@@ -117,6 +117,16 @@ const CalculatorPage = () => {
 
         <aside className="space-y-4 xl:sticky xl:top-24">
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-5 hidden border-b border-slate-100 pb-5 xl:block">
+              <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+                {isWeapon ? "武器属性转换器" : "戒指属性转换器"}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                {isWeapon
+                  ? "设置转换路径，并填写当前武器的三项属性。"
+                  : "选择当前与目标门派，并填写戒指的两项主属性。"}
+              </p>
+            </div>
             <h2 className="text-base font-semibold text-slate-900">工具说明</h2>
             <div className="mt-4 space-y-3 text-sm leading-6 text-slate-500">
               {isWeapon ? (
@@ -212,7 +222,7 @@ function App() {
           </div>
 
           <nav
-            className="flex gap-1 overflow-x-auto border-t border-slate-100 px-3 py-2 md:hidden"
+            className="no-scrollbar flex gap-1 overflow-x-auto border-t border-slate-100 px-3 py-2 md:hidden"
             aria-label="移动端主导航"
           >
             {NAVIGATION_ITEMS.map((item) => (

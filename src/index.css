@@ -34,3 +34,11 @@ input,
 select {
   font: inherit;
 }
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

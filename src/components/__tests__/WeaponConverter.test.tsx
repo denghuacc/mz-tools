@@ -9,8 +9,12 @@ describe("WeaponConverter 组件", () => {
 
   describe("初始渲染", () => {
     it("应该渲染标题", () => {
-      expect(screen.getByText("梦幻新诛仙")).toBeInTheDocument();
-      expect(screen.getByText("武器属性转换器")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "转换设置" })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "武器属性" })
+      ).toBeInTheDocument();
     });
 
     it("应该渲染所有表单元素", () => {
@@ -426,23 +430,21 @@ describe("WeaponConverter 组件", () => {
 
   describe("样式和布局", () => {
     it("应该有正确的标题样式", () => {
-      const mainTitle = screen.getByText("梦幻新诛仙");
-      const subTitle = screen.getByText("武器属性转换器");
+      const title = screen.getByRole("heading", { name: "转换设置" });
 
-      expect(mainTitle).toHaveClass("text-2xl", "sm:text-3xl", "font-bold");
-      expect(subTitle).toHaveClass("text-lg", "sm:text-xl", "font-semibold");
+      expect(title).toHaveClass("text-sm", "font-semibold", "text-slate-900");
     });
 
     it("应该有正确的按钮样式", () => {
       const convertButton = screen.getByRole("button", { name: "转换" });
       const resetButton = screen.getByRole("button", { name: "重置" });
 
-      expect(convertButton).toHaveClass("bg-indigo-600", "text-white");
-      expect(resetButton).toHaveClass("bg-gray-100", "text-gray-600");
+      expect(convertButton).toHaveClass("bg-blue-600", "text-white");
+      expect(resetButton).toHaveClass("bg-white", "text-slate-600");
     });
 
     it("应该有正确的表单布局", () => {
-      const formContainer = document.querySelector(".space-y-3");
+      const formContainer = document.querySelector(".space-y-5");
       expect(formContainer).toBeInTheDocument();
 
       const gridContainer = document.querySelector(
@@ -468,8 +470,8 @@ describe("WeaponConverter 组件", () => {
     it("应该显示正确的表单标签", () => {
       expect(screen.getByText("武器等级")).toBeInTheDocument();
       expect(screen.getByText("原造型")).toBeInTheDocument();
-      expect(screen.getByText("转换前")).toBeInTheDocument();
-      expect(screen.getByText("转换后")).toBeInTheDocument();
+      expect(screen.getByText("当前造型")).toBeInTheDocument();
+      expect(screen.getByText("目标造型")).toBeInTheDocument();
     });
   });
 });

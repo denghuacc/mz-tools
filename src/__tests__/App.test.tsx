@@ -21,8 +21,9 @@ describe("App 组件", () => {
     render(<App />);
 
     // 验证 WeaponConverter 组件的存在
-    expect(screen.getByText("梦幻新诛仙")).toBeInTheDocument();
-    expect(screen.getByText("武器属性转换器")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "武器属性转换器" })
+    ).toBeInTheDocument();
   });
 
   it("应该有正确的布局结构", () => {

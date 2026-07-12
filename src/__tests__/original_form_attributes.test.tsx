@@ -97,7 +97,7 @@ describe("原造型属性值显示功能", () => {
     // 验证原造型区域存在并包含属性值
     const originalSection = screen
       .getByText("原造型属性 (刀)")
-      .closest(".bg-yellow-50");
+      .closest('[data-testid="original-form-attributes"]');
     expect(originalSection).toBeInTheDocument();
 
     // 验证原造型区域内有属性标签
@@ -181,7 +181,7 @@ describe("原造型属性值显示功能", () => {
     // 验证封印武器作为原造型时的属性值
     const originalSection = screen
       .getByText("原造型属性 (短刃)")
-      .closest(".bg-yellow-50");
+      .closest('[data-testid="original-form-attributes"]');
     expect(originalSection).toBeInTheDocument();
 
     // 封印武器作为原造型时，属性值应该与输入的原始值相同
@@ -231,7 +231,7 @@ describe("原造型属性值显示功能", () => {
     // 验证物理武器作为原造型时的属性值
     const originalSection = screen
       .getByText("原造型属性 (刀)")
-      .closest(".bg-yellow-50");
+      .closest('[data-testid="original-form-attributes"]');
     expect(originalSection).toBeInTheDocument();
 
     // 从天音寺转换到鬼王宗：治疗比例(120/192=0.625) → 物攻(665*0.625=416)
@@ -281,7 +281,7 @@ describe("原造型属性值显示功能", () => {
     // 验证法师武器作为原造型时的属性值
     const originalSection = screen
       .getByText("原造型属性 (剑)")
-      .closest(".bg-yellow-50");
+      .closest('[data-testid="original-form-attributes"]');
     expect(originalSection).toBeInTheDocument();
 
     // 从天音寺转换到青云门：治疗比例(120/192=0.625) → 法攻(210*0.625=131)
@@ -524,7 +524,7 @@ describe("原造型属性值显示功能", () => {
               // 验证属性值
               const originalSection = screen
                 .getByText(`原造型属性 (${via})`)
-                .closest(".bg-yellow-50");
+                .closest('[data-testid="original-form-attributes"]');
 
               const expectedData = expected[key as keyof typeof expected];
               const physicalValue = within(

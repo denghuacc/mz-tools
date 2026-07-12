@@ -9,8 +9,9 @@ describe("武器转换器端到端测试", () => {
   describe("基本渲染", () => {
     it("应该渲染主要组件", () => {
       // 验证标题
-      expect(screen.getByText("梦幻新诛仙")).toBeInTheDocument();
-      expect(screen.getByText("武器属性转换器")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "武器属性转换器" })
+      ).toBeInTheDocument();
 
       // 验证基本元素存在
       const selects = screen.getAllByRole("combobox");
