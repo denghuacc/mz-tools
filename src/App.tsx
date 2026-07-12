@@ -1,4 +1,5 @@
 import { useState } from "react";
+import RingConverter from "./components/RingConverter";
 import WeaponConverter from "./components/WeaponConverter";
 
 type PageId =
@@ -32,7 +33,7 @@ const HomePage = ({ onOpenCalculator }: { onOpenCalculator: () => void }) => (
         梦幻新诛仙实用工具
       </h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-        当前已上线武器属性转换功能。后续的计算、数据查询和攻略内容会逐步补充到对应栏目。
+        当前已上线武器与戒指属性转换功能。后续的计算、数据查询和攻略内容会逐步补充到对应栏目。
       </p>
     </section>
 
@@ -40,10 +41,10 @@ const HomePage = ({ onOpenCalculator }: { onOpenCalculator: () => void }) => (
       <article className="rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
         <p className="text-xs font-medium text-blue-600">已上线</p>
         <h2 className="mt-2 text-lg font-semibold text-slate-900">
-          武器属性转换
+          装备属性转换
         </h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          计算不同门派武器转换后的物攻、法攻与治疗属性。
+          计算不同门派武器与戒指转换后的主属性。
         </p>
         <button
           type="button"
@@ -65,46 +66,92 @@ const HomePage = ({ onOpenCalculator }: { onOpenCalculator: () => void }) => (
   </div>
 );
 
-const CalculatorPage = () => (
-  <div className="space-y-4">
-    <div>
-      <p className="text-sm font-medium text-blue-600">计算器</p>
-      <h1 className="mt-1 text-2xl font-semibold text-slate-900">武器数值计算</h1>
-      <p className="mt-2 text-sm text-slate-500">
-        输入当前武器属性，查看转换至目标门派后的数值变化。
-      </p>
+type CalculatorTool = "weapon" | "ring";
+
+const CalculatorPage = () => {
+  const [activeTool, setActiveTool] = useState<CalculatorTool>("weapon");
+  const isWeapon = activeTool === "weapon";
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm font-medium text-blue-600">计算器</p>
+        <h1 className="mt-1 text-2xl font-semibold text-slate-900">
+          装备数值计算
+        </h1>
+        <p className="mt-2 text-sm text-slate-500">
+          输入当前装备属性，查看转换至目标门派后的数值变化。
+        </p>
+      </div>
+
+      <div
+        className="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm"
+        role="tablist"
+        aria-label="装备转换类型"
+      >
+        {(
+          [
+            ["weapon", "武器转换"],
+            ["ring", "戒指转换"],
+          ] as const
+        ).map(([tool, label]) => (
+          <button
+            key={tool}
+            type="button"
+            role="tab"
+            aria-selected={activeTool === tool}
+            className={`rounded-md px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              activeTool === tool
+                ? "bg-blue-600 text-white"
+                : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+            }`}
+            onClick={() => setActiveTool(tool)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,672px)_minmax(260px,1fr)]">
+        {isWeapon ? <WeaponConverter /> : <RingConverter />}
+
+        <aside className="space-y-4 xl:sticky xl:top-24">
+          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-base font-semibold text-slate-900">工具说明</h2>
+            <div className="mt-4 space-y-3 text-sm leading-6 text-slate-500">
+              {isWeapon ? (
+                <>
+                  <p>选择武器等级、当前门派与目标门派，再填写三项武器属性。</p>
+                  <p>如武器经过原造型转换，可选择原造型以计算完整转换路径。</p>
+                </>
+              ) : (
+                <>
+                  <p>戒指第一条主属性固定为气血，转换后数值保持不变。</p>
+                  <p>第二条主属性按门派职业类型和对应最高值等比例转换。</p>
+                </>
+              )}
+              <p>计算结果可能与游戏内实际数值存在轻微差异，仅供参考。</p>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold text-slate-900">后续计划</h2>
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-500">
+                逐步更新
+              </span>
+            </div>
+            <ul className="mt-4 space-y-2 text-sm text-slate-500">
+              <li>更多等级的武器属性</li>
+              <li>戒指副属性转换</li>
+              <li>门派与装备数据查询</li>
+            </ul>
+          </section>
+        </aside>
+      </div>
     </div>
-
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,672px)_minmax(260px,1fr)]">
-      <WeaponConverter />
-
-      <aside className="space-y-4 xl:sticky xl:top-24">
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">工具说明</h2>
-          <div className="mt-4 space-y-3 text-sm leading-6 text-slate-500">
-            <p>选择武器等级、当前门派与目标门派，再填写三项武器属性。</p>
-            <p>如武器经过原造型转换，可选择原造型以计算完整转换路径。</p>
-            <p>计算结果可能与游戏内实际数值存在轻微差异，仅供参考。</p>
-          </div>
-        </section>
-
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-slate-900">后续计划</h2>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-500">
-              逐步更新
-            </span>
-          </div>
-          <ul className="mt-4 space-y-2 text-sm text-slate-500">
-            <li>更多等级的武器属性</li>
-            <li>常用数值计算工具</li>
-            <li>门派与装备数据查询</li>
-          </ul>
-        </section>
-      </aside>
-    </div>
-  </div>
-);
+  );
+};
 
 const PlaceholderPage = ({ item }: { item: NavigationItem }) => (
   <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">

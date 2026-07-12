@@ -45,7 +45,7 @@ describe("App 组件", () => {
       "aria-current",
       "page"
     );
-    expect(screen.getByText("武器数值计算")).toBeInTheDocument();
+    expect(screen.getByText("装备数值计算")).toBeInTheDocument();
   });
 
   it("应该支持在导航页面之间切换", async () => {
@@ -56,10 +56,20 @@ describe("App 组件", () => {
     await user.click(within(navigation).getByRole("button", { name: "首页" }));
 
     expect(screen.getByRole("heading", { name: "梦幻新诛仙实用工具" })).toBeInTheDocument();
-    expect(screen.queryByText("武器数值计算")).not.toBeInTheDocument();
+    expect(screen.queryByText("装备数值计算")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "进入计算器" }));
 
-    expect(screen.getByText("武器数值计算")).toBeInTheDocument();
+    expect(screen.getByText("装备数值计算")).toBeInTheDocument();
+  });
+
+  it("应该支持切换到戒指转换器", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "戒指转换" }));
+
+    expect(screen.getByText("戒指属性转换器")).toBeInTheDocument();
+    expect(screen.queryByText("武器属性转换器")).not.toBeInTheDocument();
   });
 });
