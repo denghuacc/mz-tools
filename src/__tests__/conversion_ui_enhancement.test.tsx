@@ -51,7 +51,7 @@ describe("转换结果UI增强功能", () => {
     expect(changeIndicators.length).toBeGreaterThan(0);
   });
 
-  it("当所有属性变化都为0时应该显示特殊提示", async () => {
+  it("执行换算后结果相同时应该说明换算结果一致", async () => {
     const user = userEvent.setup();
 
     // 输入完全相同比例的属性值（确保变化为0）
@@ -67,9 +67,36 @@ describe("转换结果UI增强功能", () => {
       expect(screen.getByText("转换结果")).toBeInTheDocument();
     });
 
-    // 应该显示零变化提示
-    expect(screen.getByText(/转换变化较小/)).toBeInTheDocument();
-    expect(screen.getByText(/属性比例接近/)).toBeInTheDocument();
+    expect(screen.getByText(/换算结果一致/)).toBeInTheDocument();
+    expect(screen.getByText(/换算过程已执行/)).toBeInTheDocument();
+  });
+
+  it("封印造型导致属性不变时应该说明转换规则", async () => {
+    const user = userEvent.setup();
+    const inputs = screen.getAllByRole("spinbutton");
+    await user.type(inputs[0], "500");
+    await user.type(inputs[2], "150");
+    await user.type(inputs[4], "120");
+    await user.selectOptions(screen.getByLabelText("原造型"), "短刃");
+
+    await user.click(screen.getByRole("button", { name: "转换" }));
+
+    expect(await screen.findByText(/属性保持不变/)).toBeInTheDocument();
+    expect(screen.getByText(/涉及封印造型/)).toBeInTheDocument();
+  });
+
+  it("同属性类型转换时应该说明无需调整数值", async () => {
+    const user = userEvent.setup();
+    const inputs = screen.getAllByRole("spinbutton");
+    await user.type(inputs[0], "500");
+    await user.type(inputs[2], "150");
+    await user.type(inputs[4], "120");
+    await user.selectOptions(screen.getByLabelText("目标造型"), "魔神殿");
+
+    await user.click(screen.getByRole("button", { name: "转换" }));
+
+    expect(await screen.findByText(/属性保持不变/)).toBeInTheDocument();
+    expect(screen.getByText(/同一属性类型/)).toBeInTheDocument();
   });
 
   it("当转换变化明显时应该显示正常提示", async () => {
@@ -88,16 +115,16 @@ describe("转换结果UI增强功能", () => {
       expect(screen.getByText("转换结果")).toBeInTheDocument();
     });
 
-    // 温馨提示应该始终显示
+    // 结果误差提示应该始终显示
     expect(
-      screen.getByText(/转换结果可能与游戏实际数值存在轻微差异/)
+      screen.getByText(/结果可能与游戏实际数值存在少量误差/)
     ).toBeInTheDocument();
 
-    // 不应该显示零变化提示（因为有明显变化）
-    expect(screen.queryByText(/转换变化较小/)).not.toBeInTheDocument();
+    // 数值发生变化时不需要额外解释
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
-  it("变化量为0时应该显示0变化指示器", async () => {
+  it("变化量为0时应该显示无变化指示器", async () => {
     const user = userEvent.setup();
 
     // 输入完全相同比例的属性值（理论上不会有变化）
@@ -113,9 +140,8 @@ describe("转换结果UI增强功能", () => {
       expect(screen.getByText("转换结果")).toBeInTheDocument();
     });
 
-    // 应该显示0变化指示器
-    const zeroChangeIndicators = screen.getAllByText("0");
-    // 至少应该有一些0变化指示器（可能不是所有属性都完全为0）
+    // 应该使用弱化的短横线显示无变化
+    const zeroChangeIndicators = screen.getAllByLabelText("无变化");
     expect(zeroChangeIndicators.length).toBeGreaterThanOrEqual(1);
   });
 });

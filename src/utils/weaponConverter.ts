@@ -7,6 +7,22 @@ import type {
 import { SECT_TO_PROFESSION, SECT_WEAPON_TYPES } from "../types/constants";
 import { ProfessionEnum, SectEnum, AttributeTypeEnum } from "../types";
 
+export type ConversionStepStatus =
+  | "converted"
+  | "seal-rule"
+  | "same-attribute-type";
+
+export type ConversionOutcome =
+  | "changed"
+  | "seal-rule"
+  | "same-attribute-type"
+  | "calculated-same";
+
+type ConversionStepResult = {
+  attributes: Attributes;
+  status: ConversionStepStatus;
+};
+
 const SECT_BY_WEAPON_TYPE = new Map<WeaponType, Sect>(
   Object.values(SectEnum).map((sect) => [SECT_WEAPON_TYPES[sect], sect])
 );
@@ -44,34 +60,60 @@ export const convertAttributeValues = (
   ];
 };
 
-// 公共转换逻辑
-export const performAttributeConversion = (
+/**
+ * 执行单步属性转换，并返回本次转换是否因游戏规则跳过。
+ */
+export const performAttributeConversionStep = (
   attributes: Attributes,
   fromSect: Sect,
   toSect: Sect
-): Attributes => {
+): ConversionStepResult => {
   const newAttributes = { ...attributes };
   const fromEffectiveAttr = getEffectiveAttributeBySect(fromSect);
   const toEffectiveAttr = getEffectiveAttributeBySect(toSect);
 
-  if (
-    fromEffectiveAttr &&
-    toEffectiveAttr &&
-    fromEffectiveAttr !== toEffectiveAttr
-  ) {
-    // 获取源和目标属性的值
-    const fromAttr = attributes[fromEffectiveAttr];
-    const toAttr = attributes[toEffectiveAttr];
-
-    // 转换属性值
-    const [newFromAttr, newToAttr] = convertAttributeValues(fromAttr, toAttr);
-
-    // 更新属性值
-    newAttributes[fromEffectiveAttr] = newFromAttr;
-    newAttributes[toEffectiveAttr] = newToAttr;
+  if (!fromEffectiveAttr || !toEffectiveAttr) {
+    return { attributes: newAttributes, status: "seal-rule" };
   }
 
-  return newAttributes;
+  if (fromEffectiveAttr === toEffectiveAttr) {
+    return { attributes: newAttributes, status: "same-attribute-type" };
+  }
+
+  const fromAttr = attributes[fromEffectiveAttr];
+  const toAttr = attributes[toEffectiveAttr];
+  const [newFromAttr, newToAttr] = convertAttributeValues(fromAttr, toAttr);
+
+  newAttributes[fromEffectiveAttr] = newFromAttr;
+  newAttributes[toEffectiveAttr] = newToAttr;
+
+  return { attributes: newAttributes, status: "converted" };
+};
+
+// 保留只返回属性的公共接口，避免调用方需要了解结果提示逻辑。
+export const performAttributeConversion = (
+  attributes: Attributes,
+  fromSect: Sect,
+  toSect: Sect
+): Attributes =>
+  performAttributeConversionStep(attributes, fromSect, toSect).attributes;
+
+/**
+ * 根据最终数值和每一步的执行状态，给 UI 提供准确的结果说明原因。
+ */
+export const getConversionOutcome = (
+  before: Attributes,
+  after: Attributes,
+  stepStatuses: readonly ConversionStepStatus[]
+): ConversionOutcome => {
+  const hasChanges = (Object.keys(before) as (keyof Attributes)[]).some(
+    (type) => before[type].current !== after[type].current
+  );
+
+  if (hasChanges) return "changed";
+  if (stepStatuses.includes("converted")) return "calculated-same";
+  if (stepStatuses.includes("seal-rule")) return "seal-rule";
+  return "same-attribute-type";
 };
 
 // 根据武器类型获取门派（用于反向查找）

@@ -9,7 +9,13 @@ import type {
 import { ATTRIBUTE_FIELDS, WEAPON_LEVELS } from "../types/constants";
 import {
   performAttributeConversion,
+  performAttributeConversionStep,
+  getConversionOutcome,
   getSectByWeaponType,
+} from "../utils/weaponConverter";
+import type {
+  ConversionOutcome,
+  ConversionStepStatus,
 } from "../utils/weaponConverter";
 
 const DEFAULT_WEAPON_LEVEL: WeaponLevel = 60;
@@ -55,6 +61,8 @@ export const useWeaponConverter = () => {
     createEmptyAttributes(DEFAULT_WEAPON_LEVEL)
   );
   const [result, setResult] = useState<Attributes | null>(null);
+  const [conversionOutcome, setConversionOutcome] =
+    useState<ConversionOutcome | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const setWeaponLevelAndMaxValues = useCallback((level: WeaponLevel) => {
@@ -67,6 +75,7 @@ export const useWeaponConverter = () => {
     }));
     // 清空转换结果和错误信息
     setResult(null);
+    setConversionOutcome(null);
     setError(null);
   }, []);
 
@@ -74,6 +83,7 @@ export const useWeaponConverter = () => {
   const setOriginalFormWithReset = useCallback((form: WeaponType | null) => {
     setOriginalForm(form);
     setResult(null);
+    setConversionOutcome(null);
     setError(null);
   }, []);
 
@@ -81,12 +91,14 @@ export const useWeaponConverter = () => {
   const setCurrentSectWithReset = useCallback((sect: Sect) => {
     setCurrentSect(sect);
     setResult(null);
+    setConversionOutcome(null);
     setError(null);
   }, []);
 
   const setTargetSectWithReset = useCallback((sect: Sect) => {
     setTargetSect(sect);
     setResult(null);
+    setConversionOutcome(null);
     setError(null);
   }, []);
 
@@ -99,6 +111,7 @@ export const useWeaponConverter = () => {
     ) => {
       setAttributes(newAttributes);
       setResult(null);
+      setConversionOutcome(null);
       setError(null);
     },
     []
@@ -107,6 +120,7 @@ export const useWeaponConverter = () => {
   const convertAttributes = useCallback(() => {
     // 清除之前的错误
     setError(null);
+    setConversionOutcome(null);
 
     const missingAttributes = ATTRIBUTE_FIELDS.filter(
       ({ type }) => attributes[type].current === null
@@ -141,34 +155,35 @@ export const useWeaponConverter = () => {
     }
 
     let finalAttributes = completeAttributes;
+    const stepStatuses: ConversionStepStatus[] = [];
+
+    const convertStep = (fromSect: Sect, toSect: Sect) => {
+      const step = performAttributeConversionStep(
+        finalAttributes,
+        fromSect,
+        toSect
+      );
+      finalAttributes = step.attributes;
+      stepStatuses.push(step.status);
+    };
 
     if (originalForm) {
       // 如果选择了原造型，需要两次转换
       // 第一次：当前造型 → 原造型
-      const firstConversion = performAttributeConversion(
-        finalAttributes,
-        currentSect,
-        getSectByWeaponType(originalForm)
-      );
-      finalAttributes = firstConversion;
+      const originalSect = getSectByWeaponType(originalForm);
+      convertStep(currentSect, originalSect);
 
       // 第二次：原造型 → 目标造型
-      const secondConversion = performAttributeConversion(
-        finalAttributes,
-        getSectByWeaponType(originalForm),
-        targetSect
-      );
-      finalAttributes = secondConversion;
+      convertStep(originalSect, targetSect);
     } else {
       // 直接转换
-      finalAttributes = performAttributeConversion(
-        finalAttributes,
-        currentSect,
-        targetSect
-      );
+      convertStep(currentSect, targetSect);
     }
 
     setResult(finalAttributes);
+    setConversionOutcome(
+      getConversionOutcome(completeAttributes, finalAttributes, stepStatuses)
+    );
   }, [attributes, currentSect, targetSect, originalForm]);
 
   const completeAttributes = toCompleteAttributes(attributes);
@@ -188,6 +203,7 @@ export const useWeaponConverter = () => {
       healing: { current: null, max: prev.healing.max },
     }));
     setResult(null);
+    setConversionOutcome(null);
     setError(null);
     setOriginalForm(null);
   }, []);
@@ -204,6 +220,7 @@ export const useWeaponConverter = () => {
     attributes,
     setAttributes: setAttributesWithReset,
     result,
+    conversionOutcome,
     error,
     convertAttributes,
     resetAttributes,

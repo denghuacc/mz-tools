@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import WeaponConverter from "../components/WeaponConverter";
 import type { UserEvent } from "@testing-library/user-event";
@@ -62,6 +62,22 @@ describe("原造型属性值显示功能", () => {
     return setupConversion(user, weaponData1);
   };
 
+  const expectOriginalFormValues = (expected: {
+    physical: number;
+    magic: number;
+    healing: number;
+  }) => {
+    expect(screen.getByTestId("original-form-physical")).toHaveTextContent(
+      `（${expected.physical}）`
+    );
+    expect(screen.getByTestId("original-form-magic")).toHaveTextContent(
+      `（${expected.magic}）`
+    );
+    expect(screen.getByTestId("original-form-healing")).toHaveTextContent(
+      `（${expected.healing}）`
+    );
+  };
+
   it("应该能够显示和隐藏原造型属性区域", async () => {
     render(<WeaponConverter />);
     const user = userEvent.setup();
@@ -82,46 +98,31 @@ describe("原造型属性值显示功能", () => {
       expect(screen.getByText("转换结果")).toBeInTheDocument();
     });
 
-    // 验证查看原造型数据按钮存在
-    const showOriginalDataButton = screen.getByTitle("查看原造型数据");
+    // 验证查看原造型值按钮存在
+    const showOriginalDataButton = screen.getByRole("button", {
+      name: "查看原造型值",
+    });
     expect(showOriginalDataButton).toBeInTheDocument();
 
-    // 点击查看原造型数据按钮
+    // 点击查看原造型值按钮
     await user.click(showOriginalDataButton);
 
-    // 等待原造型数据显示
+    // 等待原造型值列显示
     await waitFor(() => {
-      expect(screen.getByText("原造型属性 (刀)")).toBeInTheDocument();
+      expect(screen.getByTestId("original-form-physical")).toBeInTheDocument();
     });
 
-    // 验证原造型区域存在并包含属性值
-    const originalSection = screen
-      .getByText("原造型属性 (刀)")
-      .closest('[data-testid="original-form-attributes"]');
-    expect(originalSection).toBeInTheDocument();
+    expectOriginalFormValues({ physical: 416, magic: 150, healing: 144 });
 
-    // 验证原造型区域内有属性标签
-    const physicalLabel = within(originalSection as HTMLElement).getByText(
-      "物攻"
-    );
-    const magicLabel = within(originalSection as HTMLElement).getByText("法攻");
-    const healingLabel = within(originalSection as HTMLElement).getByText(
-      "治疗"
-    );
-
-    expect(physicalLabel).toBeInTheDocument();
-    expect(magicLabel).toBeInTheDocument();
-    expect(healingLabel).toBeInTheDocument();
-
-    // 点击关闭按钮
-    const closeButton = within(originalSection as HTMLElement).getByRole(
-      "button"
-    );
+    // 点击收起按钮
+    const closeButton = screen.getByRole("button", { name: "收起原造型值" });
     await user.click(closeButton);
 
-    // 验证原造型区域被隐藏
+    // 验证原造型值列被隐藏
     await waitFor(() => {
-      expect(screen.queryByText("原造型属性 (刀)")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("original-form-physical")
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -145,8 +146,10 @@ describe("原造型属性值显示功能", () => {
       expect(screen.getByText("转换结果")).toBeInTheDocument();
     });
 
-    // 验证查看原造型数据按钮不存在
-    expect(screen.queryByTitle("查看原造型数据")).not.toBeInTheDocument();
+    // 验证查看原造型值按钮不存在
+    expect(
+      screen.queryByRole("button", { name: "查看原造型值" })
+    ).not.toBeInTheDocument();
   });
 
   it("应该正确显示封印武器作为原造型的属性值", async () => {
@@ -169,34 +172,20 @@ describe("原造型属性值显示功能", () => {
       expect(screen.getByText("转换结果")).toBeInTheDocument();
     });
 
-    // 点击查看原造型数据按钮
-    const showOriginalDataButton = screen.getByTitle("查看原造型数据");
+    // 点击查看原造型值按钮
+    const showOriginalDataButton = screen.getByRole("button", {
+      name: "查看原造型值",
+    });
     await user.click(showOriginalDataButton);
 
-    // 等待原造型数据显示
+    // 等待原造型值列显示
     await waitFor(() => {
-      expect(screen.getByText("原造型属性 (短刃)")).toBeInTheDocument();
+      expect(screen.getByTestId("original-form-physical")).toBeInTheDocument();
     });
-
-    // 验证封印武器作为原造型时的属性值
-    const originalSection = screen
-      .getByText("原造型属性 (短刃)")
-      .closest('[data-testid="original-form-attributes"]');
-    expect(originalSection).toBeInTheDocument();
 
     // 封印武器作为原造型时，属性值应该与输入的原始值相同
     // 游戏武器规则：辅助与封系互转时三项属性保持不变。
-    const physicalValue = within(originalSection as HTMLElement).getByText(
-      "500"
-    );
-    const magicValue = within(originalSection as HTMLElement).getByText("150");
-    const healingValue = within(originalSection as HTMLElement).getByText(
-      "120"
-    );
-
-    expect(physicalValue).toBeInTheDocument();
-    expect(magicValue).toBeInTheDocument();
-    expect(healingValue).toBeInTheDocument();
+    expectOriginalFormValues({ physical: 500, magic: 150, healing: 120 });
   });
 
   it("应该正确显示物理武器作为原造型的属性值", async () => {
@@ -219,34 +208,20 @@ describe("原造型属性值显示功能", () => {
       expect(screen.getByText("转换结果")).toBeInTheDocument();
     });
 
-    // 点击查看原造型数据按钮
-    const showOriginalDataButton = screen.getByTitle("查看原造型数据");
+    // 点击查看原造型值按钮
+    const showOriginalDataButton = screen.getByRole("button", {
+      name: "查看原造型值",
+    });
     await user.click(showOriginalDataButton);
 
-    // 等待原造型数据显示
+    // 等待原造型值列显示
     await waitFor(() => {
-      expect(screen.getByText("原造型属性 (刀)")).toBeInTheDocument();
+      expect(screen.getByTestId("original-form-physical")).toBeInTheDocument();
     });
-
-    // 验证物理武器作为原造型时的属性值
-    const originalSection = screen
-      .getByText("原造型属性 (刀)")
-      .closest('[data-testid="original-form-attributes"]');
-    expect(originalSection).toBeInTheDocument();
 
     // 从天音寺转换到鬼王宗：治疗比例(120/192=0.625) → 物攻(665*0.625=416)
     // 其他属性保持不变，治疗值转换为144
-    const physicalValue = within(originalSection as HTMLElement).getByText(
-      "416"
-    );
-    const magicValue = within(originalSection as HTMLElement).getByText("150");
-    const healingValue = within(originalSection as HTMLElement).getByText(
-      "144"
-    );
-
-    expect(physicalValue).toBeInTheDocument();
-    expect(magicValue).toBeInTheDocument();
-    expect(healingValue).toBeInTheDocument();
+    expectOriginalFormValues({ physical: 416, magic: 150, healing: 144 });
   });
 
   it("应该正确显示法师武器作为原造型的属性值", async () => {
@@ -269,34 +244,20 @@ describe("原造型属性值显示功能", () => {
       expect(screen.getByText("转换结果")).toBeInTheDocument();
     });
 
-    // 点击查看原造型数据按钮
-    const showOriginalDataButton = screen.getByTitle("查看原造型数据");
+    // 点击查看原造型值按钮
+    const showOriginalDataButton = screen.getByRole("button", {
+      name: "查看原造型值",
+    });
     await user.click(showOriginalDataButton);
 
-    // 等待原造型数据显示
+    // 等待原造型值列显示
     await waitFor(() => {
-      expect(screen.getByText("原造型属性 (剑)")).toBeInTheDocument();
+      expect(screen.getByTestId("original-form-physical")).toBeInTheDocument();
     });
-
-    // 验证法师武器作为原造型时的属性值
-    const originalSection = screen
-      .getByText("原造型属性 (剑)")
-      .closest('[data-testid="original-form-attributes"]');
-    expect(originalSection).toBeInTheDocument();
 
     // 从天音寺转换到青云门：治疗比例(120/192=0.625) → 法攻(210*0.625=131)
     // 其他属性保持不变，治疗值转换为137
-    const physicalValue = within(originalSection as HTMLElement).getByText(
-      "500"
-    );
-    const magicValue = within(originalSection as HTMLElement).getByText("131");
-    const healingValue = within(originalSection as HTMLElement).getByText(
-      "137"
-    );
-
-    expect(physicalValue).toBeInTheDocument();
-    expect(magicValue).toBeInTheDocument();
-    expect(healingValue).toBeInTheDocument();
+    expectOriginalFormValues({ physical: 500, magic: 131, healing: 137 });
   });
 
   // 使用不同武器数据的详细测试
@@ -510,36 +471,21 @@ describe("原造型属性值显示功能", () => {
                 expect(screen.getByText("转换结果")).toBeInTheDocument();
               });
 
-              // 点击查看原造型数据按钮
-              const showOriginalDataButton =
-                screen.getByTitle("查看原造型数据");
+              // 点击查看原造型值按钮
+              const showOriginalDataButton = screen.getByRole("button", {
+                name: "查看原造型值",
+              });
               await user.click(showOriginalDataButton);
 
               await waitFor(() => {
                 expect(
-                  screen.getByText(`原造型属性 (${via})`)
+                  screen.getByTestId("original-form-physical")
                 ).toBeInTheDocument();
               });
 
-              // 验证属性值
-              const originalSection = screen
-                .getByText(`原造型属性 (${via})`)
-                .closest('[data-testid="original-form-attributes"]');
-
+              // 验证原造型值
               const expectedData = expected[key as keyof typeof expected];
-              const physicalValue = within(
-                originalSection as HTMLElement
-              ).getByText(expectedData.physical.toString());
-              const magicValue = within(
-                originalSection as HTMLElement
-              ).getByText(expectedData.magic.toString());
-              const healingValue = within(
-                originalSection as HTMLElement
-              ).getByText(expectedData.healing.toString());
-
-              expect(physicalValue).toBeInTheDocument();
-              expect(magicValue).toBeInTheDocument();
-              expect(healingValue).toBeInTheDocument();
+              expectOriginalFormValues(expectedData);
             });
           }
         );

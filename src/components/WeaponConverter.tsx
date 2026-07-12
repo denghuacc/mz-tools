@@ -26,8 +26,8 @@ const SectOptions = ({ valueType }: SectOptionsProps) =>
   ));
 
 const getChangeClassName = (change: number) => {
-  if (change > 0) return "text-green-600";
-  if (change < 0) return "text-red-600";
+  if (change > 0) return "bg-green-50 text-green-700";
+  if (change < 0) return "bg-red-50 text-red-700";
   return "text-slate-500";
 };
 
@@ -44,6 +44,7 @@ const WeaponConverter = () => {
     attributes,
     setAttributes,
     result,
+    conversionOutcome,
     error,
     convertAttributes,
     resetAttributes,
@@ -80,11 +81,30 @@ const WeaponConverter = () => {
     setShowOriginalData(false);
   };
 
-  const allChangesZero =
-    result !== null &&
-    ATTRIBUTE_FIELDS.every(
-      ({ type }) => result[type].current === attributes[type].current
-    );
+  const unchangedResultMessage = (() => {
+    switch (conversionOutcome) {
+      case "seal-rule":
+        return {
+          title: "属性保持不变",
+          description:
+            "本次转换涉及封印造型，按转换规则不调整武器属性。",
+        };
+      case "same-attribute-type":
+        return {
+          title: "属性保持不变",
+          description:
+            "本次转换路径中的造型属于同一属性类型，无需调整属性数值。",
+        };
+      case "calculated-same":
+        return {
+          title: "换算结果一致",
+          description:
+            "换算过程已执行，最终数值与当前值一致。这通常由转换路径、属性比例或取整造成。",
+        };
+      default:
+        return null;
+    }
+  })();
 
   return (
     <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -278,172 +298,157 @@ const WeaponConverter = () => {
 
         {result && (
           <section className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
-            <div className="flex items-center justify-between gap-4 border-b border-blue-100 bg-blue-50/70 px-4 py-3">
+            <div className="flex flex-col gap-3 border-b border-blue-100 bg-blue-50/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-base font-semibold text-slate-900">转换结果</h2>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  {currentSect} → {targetSect}
-                </p>
+                <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-600">
+                  <p>
+                    <span className="mr-1.5 text-slate-400">门派</span>
+                    {currentSect} → {targetSect}
+                  </p>
+                  <p>
+                    <span className="mr-1.5 text-slate-400">造型</span>
+                    {originalForm
+                      ? `${SECT_WEAPON_TYPES[currentSect]} → ${originalForm} → ${SECT_WEAPON_TYPES[targetSect]}`
+                      : `${SECT_WEAPON_TYPES[currentSect]} → ${SECT_WEAPON_TYPES[targetSect]}`}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 text-sm font-medium text-blue-700">
-                <span>
-                  {originalForm
-                    ? `${SECT_WEAPON_TYPES[currentSect]} → ${originalForm} → ${SECT_WEAPON_TYPES[targetSect]}`
-                    : `${SECT_WEAPON_TYPES[currentSect]} → ${SECT_WEAPON_TYPES[targetSect]}`}
-                </span>
-                {originalForm && (
-                  <button
-                    type="button"
-                    onClick={() => setShowOriginalData(!showOriginalData)}
-                    className="rounded-md p-1 text-blue-600 transition hover:bg-blue-100 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    title="查看原造型数据"
+              {originalForm && (
+                <button
+                  type="button"
+                  onClick={() => setShowOriginalData((visible) => !visible)}
+                  className="flex min-h-10 items-center gap-1.5 self-start rounded-lg border border-blue-200 bg-white px-3 text-xs font-medium text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:self-auto"
+                  aria-expanded={showOriginalData}
+                  aria-controls="original-form-values"
+                  aria-label={
+                    showOriginalData ? "收起原造型值" : "查看原造型值"
+                  }
+                  title={showOriginalData ? "收起原造型值" : "查看原造型值"}
+                >
+                  <span>原造型值</span>
+                  <svg
+                    aria-hidden="true"
+                    className={`h-4 w-4 transition-transform ${
+                      showOriginalData ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                  </button>
-                )}
-              </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="m6 9 6 6 6-6"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
 
             <div className="space-y-4 p-4">
-
-              {originalForm && showOriginalData && (
+              <div id="original-form-values">
                 <div
-                  className="rounded-lg border border-slate-200 bg-slate-50 p-3"
-                  data-testid="original-form-attributes"
+                  className={`grid items-center gap-1 px-3 pb-2 text-[11px] font-medium text-slate-400 sm:gap-3 sm:text-xs ${
+                    showOriginalData
+                      ? "grid-cols-[minmax(3rem,1fr)_minmax(2.5rem,.75fr)_minmax(3.5rem,1fr)_minmax(2.5rem,.75fr)_auto]"
+                      : "grid-cols-[1fr_1.5fr_auto]"
+                  }`}
                 >
-                  <div className="mb-2 flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-slate-700">
-                      原造型属性 ({originalForm})
-                    </h4>
-                    <button
-                      type="button"
-                      onClick={() => setShowOriginalData(false)}
-                      className="rounded p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-800"
-                      aria-label="关闭原造型属性"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="space-y-2">
-                    {ATTRIBUTE_FIELDS.map(({ type, label }) => (
-                      <div
-                        key={type}
-                        className="flex items-center justify-between rounded bg-white px-2 py-1 text-sm"
-                      >
-                        <span className="text-slate-600">{label}</span>
-                        <span className="font-medium text-slate-900">
-                          {originalData?.[type].current ?? "N/A"}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <div className="grid grid-cols-[1fr_1.5fr_auto] gap-3 px-3 pb-2 text-xs font-medium text-slate-400">
                   <span>属性</span>
-                  <span className="text-center">原值 → 新值</span>
+                  {showOriginalData ? (
+                    <>
+                      <span className="text-center">当前值</span>
+                      <span className="text-center">
+                        原造型值<span className="hidden sm:inline">（{originalForm}）</span>
+                      </span>
+                      <span className="text-center">转换后</span>
+                    </>
+                  ) : (
+                    <span className="text-center">当前值 → 转换后</span>
+                  )}
                   <span className="min-w-12 text-right">变化</span>
                 </div>
                 <div className="space-y-2">
                   {ATTRIBUTE_FIELDS.map(({ type, label }) => {
-                  const change =
-                    result[type].current - (attributes[type].current ?? 0);
+                    const change =
+                      result[type].current - (attributes[type].current ?? 0);
 
-                  return (
-                    <div
-                      key={type}
-                      className="grid grid-cols-[1fr_1.5fr_auto] items-center gap-3 rounded-lg bg-slate-50 px-3 py-3"
-                    >
-                      <span className="text-sm font-medium text-slate-700">
-                        {label}
-                      </span>
-                      <div className="flex min-w-0 items-center justify-center gap-2 text-sm">
-                        <span className="text-slate-500">
-                          {attributes[type].current ?? 0}
+                    return (
+                      <div
+                        key={type}
+                        className={`grid items-center gap-1 rounded-lg bg-slate-50/80 px-3 py-2.5 sm:gap-3 ${
+                          showOriginalData
+                            ? "grid-cols-[minmax(3rem,1fr)_minmax(2.5rem,.75fr)_minmax(3.5rem,1fr)_minmax(2.5rem,.75fr)_auto]"
+                            : "grid-cols-[1fr_1.5fr_auto]"
+                        }`}
+                      >
+                        <span className="text-sm font-medium text-slate-700">
+                          {label}
                         </span>
-                        <span aria-hidden="true" className="text-slate-300">
-                          →
-                        </span>
-                        <span className="text-base font-semibold text-slate-900">
-                          {result[type].current}
+                        {showOriginalData ? (
+                          <>
+                            <span className="text-center text-xs tabular-nums text-slate-500 sm:text-sm">
+                              {attributes[type].current ?? 0}
+                            </span>
+                            <span
+                              className="justify-self-center rounded-md bg-blue-50 px-1.5 py-0.5 text-center text-xs font-medium tabular-nums text-blue-700 ring-1 ring-inset ring-blue-100 sm:text-sm"
+                              data-testid={`original-form-${type}`}
+                            >
+                              （{originalData?.[type].current ?? "N/A"}）
+                            </span>
+                            <span className="text-center text-sm font-semibold tabular-nums text-slate-900 sm:text-base">
+                              {result[type].current}
+                            </span>
+                          </>
+                        ) : (
+                          <div className="flex min-w-0 items-center justify-center gap-2 text-sm tabular-nums">
+                            <span className="text-slate-500">
+                              {attributes[type].current ?? 0}
+                            </span>
+                            <span aria-hidden="true" className="text-slate-300">
+                              →
+                            </span>
+                            <span className="text-base font-semibold text-slate-900">
+                              {result[type].current}
+                            </span>
+                          </div>
+                        )}
+                        <span
+                          className={`min-w-12 rounded-md px-2 py-1 text-right text-xs font-semibold tabular-nums ${getChangeClassName(
+                            change
+                          )}`}
+                          aria-label={change === 0 ? "无变化" : undefined}
+                        >
+                          {change === 0
+                            ? "—"
+                            : `${change > 0 ? "+" : ""}${change}`}
                         </span>
                       </div>
-                      <span
-                        className={`min-w-12 rounded-full bg-white px-2 py-1 text-right text-xs font-semibold ${getChangeClassName(
-                          change
-                        )}`}
-                      >
-                        {change > 0 ? "+" : ""}
-                        {change}
-                      </span>
-                    </div>
-                  );
+                    );
                   })}
                 </div>
               </div>
 
-            {allChangesZero && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-                <div className="flex items-center space-x-2">
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="h-5 w-5 text-amber-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-amber-800">
-                      <strong>转换变化较小：</strong>
-                      当前武器的属性比例接近，转换后数值变化不明显。这是正常现象，转换确实已生效。
-                    </p>
-                  </div>
+              {unchangedResultMessage && (
+                <div
+                  className="rounded-lg border border-blue-100 bg-blue-50/70 px-3 py-2.5"
+                  role="status"
+                >
+                  <p className="text-sm leading-6 text-slate-600">
+                    <strong className="font-semibold text-slate-800">
+                      {unchangedResultMessage.title}：
+                    </strong>
+                    {unchangedResultMessage.description}
+                  </p>
                 </div>
+              )}
+              <div className="border-t border-slate-100 pt-3">
+                <p className="text-left text-xs leading-5 text-slate-400">
+                  结果可能与游戏实际数值存在少量误差，仅供参考。
+                </p>
               </div>
-            )}
-            <div className="border-t border-slate-100 pt-3">
-              <p className="text-center text-xs leading-5 text-slate-500">
-                温馨提示：转换结果可能与游戏实际数值存在轻微差异，仅供参考
-              </p>
-            </div>
             </div>
           </section>
         )}
