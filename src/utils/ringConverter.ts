@@ -7,17 +7,33 @@ export type RingSecondaryAttributeType = "physical" | "magic" | "speed";
 export type RingSecondaryAttributeConfig = {
   type: RingSecondaryAttributeType;
   label: "物攻" | "法攻" | "速度";
-  max: 27 | 10;
+  conversionBase: 27 | 10;
 };
 
 const RING_SECONDARY_ATTRIBUTE_BY_PROFESSION: Record<
   Profession,
   RingSecondaryAttributeConfig
 > = {
-  [ProfessionEnum.PHYSICAL]: { type: "physical", label: "物攻", max: 27 },
-  [ProfessionEnum.MAGIC]: { type: "magic", label: "法攻", max: 27 },
-  [ProfessionEnum.HEALING]: { type: "speed", label: "速度", max: 10 },
-  [ProfessionEnum.SEAL]: { type: "speed", label: "速度", max: 10 },
+  [ProfessionEnum.PHYSICAL]: {
+    type: "physical",
+    label: "物攻",
+    conversionBase: 27,
+  },
+  [ProfessionEnum.MAGIC]: {
+    type: "magic",
+    label: "法攻",
+    conversionBase: 27,
+  },
+  [ProfessionEnum.HEALING]: {
+    type: "speed",
+    label: "速度",
+    conversionBase: 10,
+  },
+  [ProfessionEnum.SEAL]: {
+    type: "speed",
+    label: "速度",
+    conversionBase: 10,
+  },
 };
 
 export const getRingSecondaryAttributeConfig = (
@@ -33,5 +49,8 @@ export const convertRingSecondaryAttribute = (
   const source = getRingSecondaryAttributeConfig(fromSect);
   const target = getRingSecondaryAttributeConfig(toSect);
 
-  return Math.round((current / source.max) * target.max);
+  // 戒指属性会随角色等级成长，这里的基准值只用于换算职业属性比例。
+  return Math.round(
+    (current / source.conversionBase) * target.conversionBase
+  );
 };

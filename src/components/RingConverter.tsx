@@ -61,13 +61,9 @@ const RingConverter = () => {
       return;
     }
 
-    if (
-      !Number.isFinite(secondary) ||
-      secondary < 0 ||
-      secondary > currentAttribute.max
-    ) {
+    if (!Number.isFinite(secondary) || secondary < 0) {
       setResult(null);
-      setError(`${currentAttribute.label}值必须在0到${currentAttribute.max}之间`);
+      setError(`${currentAttribute.label}值必须是大于或等于0的有效数字`);
       return;
     }
 
@@ -141,14 +137,16 @@ const RingConverter = () => {
 
         <div className="space-y-3">
           <p className="text-sm font-medium text-gray-700">戒指主属性</p>
+          <p className="text-sm text-gray-500">
+            戒指为全等级装备，属性值会随角色等级自动成长。
+          </p>
 
-          <div className="grid grid-cols-3 gap-2 px-2 text-center text-sm font-medium text-gray-600 sm:gap-4 sm:px-4 sm:text-base">
+          <div className="grid grid-cols-2 gap-2 px-2 text-center text-sm font-medium text-gray-600 sm:gap-4 sm:px-4 sm:text-base">
             <div>属性</div>
             <div>当前值</div>
-            <div>最高值</div>
           </div>
 
-          <div className="grid grid-cols-3 items-center gap-2 rounded-lg bg-gray-50 p-2 sm:gap-4 sm:p-3">
+          <div className="grid grid-cols-2 items-center gap-2 rounded-lg bg-gray-50 p-2 sm:gap-4 sm:p-3">
             <label
               htmlFor="ring-health"
               className="text-center text-sm font-medium text-gray-700"
@@ -168,10 +166,9 @@ const RingConverter = () => {
                 handleNumberChange(event.target.value, setHealth)
               }
             />
-            <div className="text-center text-sm text-gray-400">固定保留</div>
           </div>
 
-          <div className="grid grid-cols-3 items-center gap-2 rounded-lg bg-gray-50 p-2 sm:gap-4 sm:p-3">
+          <div className="grid grid-cols-2 items-center gap-2 rounded-lg bg-gray-50 p-2 sm:gap-4 sm:p-3">
             <label
               htmlFor="ring-secondary"
               className="text-center text-sm font-medium text-gray-700"
@@ -183,7 +180,6 @@ const RingConverter = () => {
               aria-label={`${currentAttribute.label}当前值`}
               type="number"
               min={0}
-              max={currentAttribute.max}
               step={1}
               inputMode="numeric"
               className="block w-full rounded-md border-gray-300 text-center text-base shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
@@ -191,13 +187,6 @@ const RingConverter = () => {
               onChange={(event) =>
                 handleNumberChange(event.target.value, setSecondary)
               }
-            />
-            <input
-              aria-label={`${currentAttribute.label}最高值`}
-              type="number"
-              className="block w-full rounded-md border-gray-300 bg-gray-50 text-center text-base"
-              value={currentAttribute.max}
-              disabled
             />
           </div>
         </div>
