@@ -1,6 +1,12 @@
-import type { Profession, Sect } from "../types";
+import type { Profession, RuleVerification, Sect } from "../types";
 import { ProfessionEnum } from "../types";
 import { SECT_TO_PROFESSION } from "../types/constants";
+
+export const RING_RULE_VERIFICATION = {
+  status: "needs-review",
+  verifiedAt: null,
+  sourceNote: "历史录入规则",
+} as const satisfies RuleVerification;
 
 export type RingSecondaryAttributeType = "physical" | "magic" | "speed";
 

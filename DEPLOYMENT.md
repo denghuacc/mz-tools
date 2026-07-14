@@ -1,207 +1,59 @@
-# 部署指南 - Deployment Guide
+# 部署指南
 
-## 🚀 Vercel 部署
+项目使用 GitHub Actions 完成质量检查，并在主分支 CI 成功后部署到 Vercel。
 
-### 快速部署
+## 本地发布前检查
 
-1. **Fork 或 Clone 项目**
-
-   ```bash
-   git clone https://github.com/alanwhy/mz-tools.git
-   cd mz-tools
-   ```
-
-2. **安装依赖**
-
-   ```bash
-   pnpm install
-   ```
-
-3. **本地测试**
-
-   ```bash
-   pnpm run test
-   pnpm run build
-   pnpm run preview
-   ```
-
-4. **部署到 Vercel**
-
-   - 方式一：通过 Vercel Dashboard
-
-     - 访问 [vercel.com](https://vercel.com)
-     - 导入 GitHub 仓库
-     - 自动部署
-
-   - 方式二：通过 CLI
-     ```bash
-     npm install -g vercel
-     vercel login
-     pnpm run deploy
-     ```
-
-### 环境配置
-
-#### GitHub Secrets 配置
-
-在 GitHub 仓库的 Settings > Secrets and variables > Actions 中添加：
-
-```
-VERCEL_TOKEN=your_vercel_token
-VERCEL_ORG_ID=your_org_id
-VERCEL_PROJECT_ID=your_project_id
-CODECOV_TOKEN=your_codecov_token (可选)
-```
-
-#### 获取 Vercel 配置信息
-
-1. **VERCEL_TOKEN**
-
-   - 访问 [Vercel Dashboard](https://vercel.com/account/tokens)
-   - 创建新的 Token
-
-2. **VERCEL_ORG_ID & VERCEL_PROJECT_ID**
-   ```bash
-   vercel link
-   cat .vercel/project.json
-   ```
-
-### 自动化部署流程
-
-#### CI/CD 流程
-
-- ✅ **代码检查** - ESLint 静态分析
-- ✅ **单元测试** - Vitest 测试套件
-- ✅ **覆盖率报告** - 代码覆盖率统计
-- ✅ **构建验证** - 生产环境构建
-- ✅ **预览部署** - PR 自动预览
-- ✅ **生产部署** - master 分支自动部署
-
-#### 分支策略
-
-- `master/main` → 生产环境自动部署
-- `develop` → 开发环境自动部署
-- `feature/*` → PR 预览部署
-
-### 部署命令
+环境要求以 `package.json` 为准：Node.js 22.13 以上、pnpm 11。`pnpm/action-setup` 会直接读取 `packageManager`，工作流不再维护第二份 pnpm 版本。
 
 ```bash
-# 本地开发
-pnpm run dev
-
-# 运行测试
-pnpm run test
-pnpm run test:coverage
-
-# 构建项目
-pnpm run build
-
-# 预览构建
-pnpm run preview
-
-# 部署到预览环境
-pnpm run deploy
-
-# 部署到生产环境
-pnpm run deploy:prod
+pnpm install --frozen-lockfile
+pnpm lint
+pnpm test -- --run
+pnpm test:coverage -- --run
+pnpm build
 ```
 
-### 性能优化
+以上命令必须全部成功。覆盖率门槛为语句、分支、函数和行各 95%。
 
-#### 构建优化
+## 自动化流程
 
-- ✅ Tree Shaking - 自动移除未使用代码
-- ✅ 代码分割 - 按需加载组件
-- ✅ 资源压缩 - Gzip/Brotli 压缩
-- ✅ 缓存策略 - 静态资源长期缓存
+### CI
 
-#### Vercel 优化
+`.github/workflows/ci.yml` 在以下情况运行：
 
-- ✅ Edge Functions - 边缘计算
-- ✅ CDN 加速 - 全球内容分发
-- ✅ 自动 HTTPS - SSL 证书自动配置
-- ✅ 域名配置 - 自定义域名支持
+- 推送到 `master`、`main` 或 `develop`。
+- 创建或更新面向 `master`、`main` 的 Pull Request。
 
-### 监控和分析
+CI 按顺序执行依赖安装、ESLint、覆盖率测试、生产构建，并保存 `dist/` 构建产物。当前没有单独的 PR 预览部署工作流。
 
-#### Vercel Analytics
+### 生产部署
+
+`.github/workflows/deploy.yml` 监听主分支 CI 结果。只有 CI 成功时才会构建并部署到 Vercel；失败或取消的 CI 不会触发生产发布。
+
+仓库需要配置以下 GitHub Actions Secrets：
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+- `CODECOV_TOKEN`（可选，上传失败不会阻断 CI）
+
+详细的 Vercel 项目关联方式见 [VERCEL_SETUP.md](./VERCEL_SETUP.md)。
+
+## 手动部署
+
+需要预览环境或紧急手动验证时，可以使用现有脚本：
 
 ```bash
-npm install @vercel/analytics
+pnpm deploy       # 预览部署
+pnpm deploy:prod  # 生产部署
 ```
 
-#### 性能监控
+手动生产部署会绕过 GitHub 的“CI 成功后再部署”编排，仅应在本地完整检查通过后使用。
 
-- Core Web Vitals 监控
-- 实时性能指标
-- 用户体验分析
+## 故障排查
 
-### 故障排除
-
-#### 常见问题
-
-1. **构建失败**
-
-   ```bash
-   # 检查依赖
-   pnpm install
-
-   # 本地构建测试
-   pnpm run build
-   ```
-
-2. **测试失败**
-
-   ```bash
-   # 运行测试
-   pnpm run test
-
-   # 查看详细报告
-   pnpm run test:ui
-   ```
-
-3. **部署失败**
-
-   ```bash
-   # 检查 Vercel 配置
-   vercel whoami
-   vercel ls
-
-   # 重新链接项目
-   vercel link
-   ```
-
-#### 日志查看
-
-```bash
-# Vercel 部署日志
-vercel logs
-
-# GitHub Actions 日志
-# 访问 GitHub > Actions 标签页
-```
-
-### 安全配置
-
-#### 环境变量
-
-- 敏感信息使用环境变量
-- 生产环境独立配置
-- 定期轮换 Token
-
-#### 安全头部
-
-- X-Content-Type-Options
-- X-Frame-Options
-- X-XSS-Protection
-- Content Security Policy
-
----
-
-## 📞 支持
-
-如果遇到部署问题，请：
-
-1. 检查 [GitHub Actions](https://github.com/alanwhy/mz-tools/actions) 日志
-2. 查看 [Vercel Dashboard](https://vercel.com/dashboard) 状态
-3. 提交 [Issue](https://github.com/alanwhy/mz-tools/issues) 报告问题
+- pnpm 版本冲突：确认工作流没有重新声明 `version`，并检查 `package.json#packageManager`。
+- 覆盖率失败：运行 `pnpm test:coverage -- --run`，根据报告补充用户行为测试，不降低门槛。
+- Vercel 鉴权失败：核对三个 Vercel Secrets 与项目归属，不要在日志或文档中输出 Secret 内容。
+- 生产验证：检查 [GitHub Actions](https://github.com/denghuacc/mz-tools/actions) 和 [线上站点](https://mz-converter.denghua.cc)。

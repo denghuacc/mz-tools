@@ -153,6 +153,8 @@ describe("WeaponConverter 组件", () => {
         const originalFormSelect = selects[1]; // 原造型
         await user.selectOptions(originalFormSelect, "剑");
         expect(originalFormSelect).toHaveValue("剑");
+        await user.selectOptions(originalFormSelect, "无");
+        expect(originalFormSelect).toHaveValue("无");
       }
     });
   });
@@ -455,6 +457,12 @@ describe("WeaponConverter 组件", () => {
   });
 
   describe("数据显示", () => {
+    it("应该如实显示规则数据待复核", () => {
+      expect(
+        screen.getByText(/数据依据：历史录入数据.*最近核验：待复核/)
+      ).toBeInTheDocument();
+    });
+
     it("应该显示正确的属性标签", () => {
       expect(screen.getByText("物攻")).toBeInTheDocument();
       expect(screen.getByText("法攻")).toBeInTheDocument();

@@ -1,6 +1,11 @@
 import { useState } from "react";
 import RingConverter from "./components/RingConverter";
 import WeaponConverter from "./components/WeaponConverter";
+import {
+  loadPreferences,
+  updatePreferences,
+} from "./utils/preferences";
+import type { CalculatorTool } from "./utils/preferences";
 
 type PageId =
   | "home"
@@ -66,11 +71,16 @@ const HomePage = ({ onOpenCalculator }: { onOpenCalculator: () => void }) => (
   </div>
 );
 
-type CalculatorTool = "weapon" | "ring";
-
 const CalculatorPage = () => {
-  const [activeTool, setActiveTool] = useState<CalculatorTool>("weapon");
+  const [activeTool, setActiveTool] = useState<CalculatorTool>(
+    () => loadPreferences().activeTool
+  );
   const isWeapon = activeTool === "weapon";
+
+  const handleToolChange = (tool: CalculatorTool) => {
+    setActiveTool(tool);
+    updatePreferences({ activeTool: tool });
+  };
 
   return (
     <div className="space-y-3">
@@ -105,7 +115,7 @@ const CalculatorPage = () => {
                 ? "bg-blue-600 text-white"
                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
             }`}
-            onClick={() => setActiveTool(tool)}
+            onClick={() => handleToolChange(tool)}
           >
             {label}
           </button>
@@ -153,7 +163,7 @@ const CalculatorPage = () => {
               </span>
             </div>
             <ul className="mt-4 space-y-2 text-sm text-slate-500">
-              <li>更多等级的武器属性</li>
+              <li>规则数据持续核验</li>
               <li>戒指副属性转换</li>
               <li>门派与装备数据查询</li>
             </ul>

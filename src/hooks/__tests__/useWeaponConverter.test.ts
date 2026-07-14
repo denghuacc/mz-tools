@@ -5,6 +5,7 @@ import {
   getEffectiveAttributeBySect,
   performAttributeConversion,
 } from "../../utils/weaponConverter";
+import { updatePreferences } from "../../utils/preferences";
 
 describe("useWeaponConverter", () => {
   it("应该正确初始化默认值", () => {
@@ -99,6 +100,21 @@ describe("useWeaponConverter", () => {
     expect(result.current.attributes.healing.current).toBeNull();
     expect(result.current.result).toBeNull();
     expect(result.current.error).toBeNull();
+  });
+
+  it("应该从本地偏好恢复等级和门派", () => {
+    updatePreferences({
+      weaponLevel: 110,
+      weaponCurrentSect: "天音寺",
+      weaponTargetSect: "合欢门",
+    });
+
+    const { result } = renderHook(() => useWeaponConverter());
+
+    expect(result.current.weaponLevel).toBe(110);
+    expect(result.current.currentSect).toBe("天音寺");
+    expect(result.current.targetSect).toBe("合欢门");
+    expect(result.current.attributes.physical.max).toBe(976);
   });
 
   describe("convertAttributes", () => {

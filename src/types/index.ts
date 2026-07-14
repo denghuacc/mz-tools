@@ -63,6 +63,23 @@ export type WeaponType = `${WeaponTypeEnum}`;
 // 数字 60 保留为原有的 69 特色服配置，避免现有选择逻辑发生隐式变化。
 export type WeaponLevel = 60 | "60-standard" | 80 | 110;
 
+/** 规则数据的核验状态与维护依据。 */
+export type RuleVerification = {
+  status: "verified" | "needs-review";
+  verifiedAt: string | null;
+  sourceNote: string;
+};
+
+export type WeaponMaxValues = Record<AttributeTypeEnum, number>;
+
+/** 武器等级选择、属性上限与核验信息的单一配置来源。 */
+export type WeaponLevelConfig = {
+  id: WeaponLevel;
+  label: string;
+  maxValues: WeaponMaxValues;
+  verification: RuleVerification;
+};
+
 // 属性值类型定义
 export type AttributeValue = {
   current: number;

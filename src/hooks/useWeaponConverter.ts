@@ -6,7 +6,11 @@ import type {
   WeaponLevel,
   WeaponType,
 } from "../types";
-import { ATTRIBUTE_FIELDS, WEAPON_LEVELS } from "../types/constants";
+import {
+  ATTRIBUTE_FIELDS,
+  WEAPON_LEVEL_CONFIGS,
+} from "../types/constants";
+import { loadPreferences, updatePreferences } from "../utils/preferences";
 import {
   performAttributeConversion,
   performAttributeConversionStep,
@@ -18,10 +22,8 @@ import type {
   ConversionStepStatus,
 } from "../utils/weaponConverter";
 
-const DEFAULT_WEAPON_LEVEL: WeaponLevel = 60;
-
 const createEmptyAttributes = (level: WeaponLevel): AttributeInputs => {
-  const maxValues = WEAPON_LEVELS[level];
+  const maxValues = WEAPON_LEVEL_CONFIGS[level].maxValues;
 
   return {
     physical: { current: null, max: maxValues.physical },
@@ -51,14 +53,19 @@ const toCompleteAttributes = (
 };
 
 export const useWeaponConverter = () => {
+  const [initialPreferences] = useState(loadPreferences);
   const [weaponLevel, setWeaponLevel] = useState<WeaponLevel>(
-    DEFAULT_WEAPON_LEVEL
+    initialPreferences.weaponLevel
   );
-  const [currentSect, setCurrentSect] = useState<Sect>("鬼王宗");
-  const [targetSect, setTargetSect] = useState<Sect>("青云门");
+  const [currentSect, setCurrentSect] = useState<Sect>(
+    initialPreferences.weaponCurrentSect
+  );
+  const [targetSect, setTargetSect] = useState<Sect>(
+    initialPreferences.weaponTargetSect
+  );
   const [originalForm, setOriginalForm] = useState<WeaponType | null>(null);
   const [attributes, setAttributes] = useState<AttributeInputs>(() =>
-    createEmptyAttributes(DEFAULT_WEAPON_LEVEL)
+    createEmptyAttributes(initialPreferences.weaponLevel)
   );
   const [result, setResult] = useState<Attributes | null>(null);
   const [conversionOutcome, setConversionOutcome] =
@@ -67,7 +74,7 @@ export const useWeaponConverter = () => {
 
   const setWeaponLevelAndMaxValues = useCallback((level: WeaponLevel) => {
     setWeaponLevel(level);
-    const maxValues = WEAPON_LEVELS[level];
+    const maxValues = WEAPON_LEVEL_CONFIGS[level].maxValues;
     setAttributes((prev) => ({
       physical: { ...prev.physical, max: maxValues.physical },
       magic: { ...prev.magic, max: maxValues.magic },
@@ -77,6 +84,7 @@ export const useWeaponConverter = () => {
     setResult(null);
     setConversionOutcome(null);
     setError(null);
+    updatePreferences({ weaponLevel: level });
   }, []);
 
   // 修改原造型时清空结果
@@ -93,6 +101,7 @@ export const useWeaponConverter = () => {
     setResult(null);
     setConversionOutcome(null);
     setError(null);
+    updatePreferences({ weaponCurrentSect: sect });
   }, []);
 
   const setTargetSectWithReset = useCallback((sect: Sect) => {
@@ -100,6 +109,7 @@ export const useWeaponConverter = () => {
     setResult(null);
     setConversionOutcome(null);
     setError(null);
+    updatePreferences({ weaponTargetSect: sect });
   }, []);
 
   // 修改属性时清空结果
@@ -122,17 +132,14 @@ export const useWeaponConverter = () => {
     setError(null);
     setConversionOutcome(null);
 
-    const missingAttributes = ATTRIBUTE_FIELDS.filter(
-      ({ type }) => attributes[type].current === null
-    ).map(({ label }) => label);
-
-    if (missingAttributes.length > 0) {
+    const completeAttributes = toCompleteAttributes(attributes);
+    if (!completeAttributes) {
+      const missingAttributes = ATTRIBUTE_FIELDS.filter(
+        ({ type }) => attributes[type].current === null
+      ).map(({ label }) => label);
       setError(`请完整输入${missingAttributes.join("、")}数值`);
       return;
     }
-
-    const completeAttributes = toCompleteAttributes(attributes);
-    if (!completeAttributes) return;
 
     const validationErrors = ATTRIBUTE_FIELDS.flatMap(({ type, label }) => {
       const attribute = completeAttributes[type];

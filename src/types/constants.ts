@@ -1,7 +1,10 @@
 import type {
   AttributeType,
   Profession,
+  RuleVerification,
   Sect,
+  WeaponLevel,
+  WeaponLevelConfig,
   WeaponType,
 } from "./index";
 import {
@@ -75,29 +78,51 @@ export const SECT_WEAPON_TYPES: Record<Sect, WeaponType> = {
   [SectEnum.LONGEVITY_HALL]: WeaponTypeEnum.BRUSH,
 };
 
-// 武器等级配置
-export const WEAPON_LEVELS = {
+const HISTORICAL_WEAPON_DATA_VERIFICATION = {
+  status: "needs-review",
+  verifiedAt: null,
+  sourceNote: "历史录入数据",
+} as const satisfies RuleVerification;
+
+// 选择项、属性上限与核验状态共享同一份配置，避免界面和计算逻辑漂移。
+export const WEAPON_LEVEL_CONFIGS: Record<WeaponLevel, WeaponLevelConfig> = {
   60: {
-    physical: 665,
-    magic: 210,
-    healing: 192,
+    id: 60,
+    label: "60级（69特色服）",
+    maxValues: { physical: 665, magic: 210, healing: 192 },
+    verification: HISTORICAL_WEAPON_DATA_VERIFICATION,
   },
   "60-standard": {
-    physical: 589,
-    magic: 186,
-    healing: 170,
+    id: "60-standard",
+    label: "60级",
+    maxValues: { physical: 589, magic: 186, healing: 170 },
+    verification: HISTORICAL_WEAPON_DATA_VERIFICATION,
   },
   80: {
-    physical: 744,
-    magic: 232,
-    healing: 217,
+    id: 80,
+    label: "80级",
+    maxValues: { physical: 744, magic: 232, healing: 217 },
+    verification: HISTORICAL_WEAPON_DATA_VERIFICATION,
   },
   110: {
-    physical: 976,
-    magic: 302,
-    healing: 286,
+    id: 110,
+    label: "110级",
+    maxValues: { physical: 976, magic: 302, healing: 286 },
+    verification: HISTORICAL_WEAPON_DATA_VERIFICATION,
   },
-} as const;
+};
+
+export const WEAPON_LEVEL_OPTIONS = ([60, "60-standard", 80, 110] as const).map(
+  (level) => WEAPON_LEVEL_CONFIGS[level]
+);
+
+// 保留原有数值映射接口，值仍由 WeaponLevelConfig 派生。
+export const WEAPON_LEVELS = {
+  60: WEAPON_LEVEL_CONFIGS[60].maxValues,
+  "60-standard": WEAPON_LEVEL_CONFIGS["60-standard"].maxValues,
+  80: WEAPON_LEVEL_CONFIGS[80].maxValues,
+  110: WEAPON_LEVEL_CONFIGS[110].maxValues,
+};
 
 // 属性展示与校验共享同一份配置，避免新增属性时遗漏某个界面分支。
 export const ATTRIBUTE_FIELDS = [

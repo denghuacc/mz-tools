@@ -5,20 +5,20 @@
 ```markdown
 # MZ Tools
 
-[![CI/CD](https://github.com/alanwhy/mz-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/alanwhy/mz-tools/actions/workflows/ci.yml)
-[![Deploy](https://github.com/alanwhy/mz-tools/actions/workflows/deploy.yml/badge.svg)](https://github.com/alanwhy/mz-tools/actions/workflows/deploy.yml)
-[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel&link=https://mz-tools.vercel.app)](https://mz-tools.vercel.app)
-[![Test Coverage](https://codecov.io/gh/alanwhy/mz-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/alanwhy/mz-tools)
+[![CI/CD](https://github.com/denghuacc/mz-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/denghuacc/mz-tools/actions/workflows/ci.yml)
+[![Deploy](https://github.com/denghuacc/mz-tools/actions/workflows/deploy.yml/badge.svg)](https://github.com/denghuacc/mz-tools/actions/workflows/deploy.yml)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel&link=https://mz-converter.denghua.cc)](https://mz-converter.denghua.cc)
+[![Test Coverage](https://codecov.io/gh/denghuacc/mz-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/denghuacc/mz-tools)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green?logo=node.js)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?logo=typescript)](https://www.typescriptlang.org)
+[![Node.js](https://img.shields.io/badge/Node.js-22%2B-green?logo=node.js)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-blue?logo=typescript)](https://www.typescriptlang.org)
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://reactjs.org)
-[![Vite](https://img.shields.io/badge/Vite-7-purple?logo=vite)](https://vitejs.dev)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-blue?logo=tailwind-css)](https://tailwindcss.com)
+[![Vite](https://img.shields.io/badge/Vite-8-purple?logo=vite)](https://vitejs.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-blue?logo=tailwind-css)](https://tailwindcss.com)
 
 ## 🚀 在线访问
 
-**生产环境**: [https://mz-tools.vercel.app](https://mz-tools.vercel.app)
+**生产环境**: [https://mz-converter.denghua.cc](https://mz-converter.denghua.cc)
 
 > 💡 如果上述链接不可用，请运行 `pnpm run vercel:url` 获取实际部署网址
 ```

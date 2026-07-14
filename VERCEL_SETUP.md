@@ -118,7 +118,7 @@ Value: [从 .vercel/project.json 获取的 projectId]
 
 ### 触发条件
 
-- **CI**: 所有分支的 push 和 PR
+- **CI**: `master`、`main`、`develop` 分支的 push，以及面向 `master`、`main` 的 PR
 - **部署**: 仅 `master`/`main` 分支且 CI 成功
 
 ## 🛠️ 故障排除
@@ -161,10 +161,10 @@ vercel --prod
 
 如果遇到问题：
 
-1. 检查 [GitHub Actions](https://github.com/alanwhy/mz-tools/actions) 日志
+1. 检查 [GitHub Actions](https://github.com/denghuacc/mz-tools/actions) 日志
 2. 查看 [Vercel Dashboard](https://vercel.com/dashboard) 状态
 3. 参考 [Vercel 文档](https://vercel.com/docs)
-4. 提交 [Issue](https://github.com/alanwhy/mz-tools/issues)
+4. 提交 [Issue](https://github.com/denghuacc/mz-tools/issues)
 
 ---
 

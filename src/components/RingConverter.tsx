@@ -4,7 +4,9 @@ import { SECTS_BY_PROFESSION } from "../types/constants";
 import {
   convertRingSecondaryAttribute,
   getRingSecondaryAttributeConfig,
+  RING_RULE_VERIFICATION,
 } from "../utils/ringConverter";
+import { loadPreferences, updatePreferences } from "../utils/preferences";
 
 const SectOptions = () =>
   Object.entries(SECTS_BY_PROFESSION).map(([profession, sects]) => (
@@ -18,8 +20,8 @@ const SectOptions = () =>
   ));
 
 type RingConversionResult = {
-  health: number;
-  secondary: number;
+  health: { before: number; after: number };
+  secondary: { before: number; after: number };
 };
 
 const getChangeClassName = (change: number) => {
@@ -29,8 +31,13 @@ const getChangeClassName = (change: number) => {
 };
 
 const RingConverter = () => {
-  const [currentSect, setCurrentSect] = useState<Sect>("鬼王宗");
-  const [targetSect, setTargetSect] = useState<Sect>("青云门");
+  const [initialPreferences] = useState(loadPreferences);
+  const [currentSect, setCurrentSect] = useState<Sect>(
+    initialPreferences.ringCurrentSect
+  );
+  const [targetSect, setTargetSect] = useState<Sect>(
+    initialPreferences.ringTargetSect
+  );
   const [health, setHealth] = useState<number | null>(null);
   const [secondary, setSecondary] = useState<number | null>(null);
   const [result, setResult] = useState<RingConversionResult | null>(null);
@@ -74,12 +81,15 @@ const RingConverter = () => {
     }
 
     setResult({
-      health,
-      secondary: convertRingSecondaryAttribute(
-        secondary,
-        currentSect,
-        targetSect
-      ),
+      health: { before: health, after: health },
+      secondary: {
+        before: secondary,
+        after: convertRingSecondaryAttribute(
+          secondary,
+          currentSect,
+          targetSect
+        ),
+      },
     });
   };
 
@@ -87,6 +97,18 @@ const RingConverter = () => {
     setHealth(null);
     setSecondary(null);
     resetFeedback();
+  };
+
+  const handleCurrentSectChange = (sect: Sect) => {
+    setCurrentSect(sect);
+    resetFeedback();
+    updatePreferences({ ringCurrentSect: sect });
+  };
+
+  const handleTargetSectChange = (sect: Sect) => {
+    setTargetSect(sect);
+    resetFeedback();
+    updatePreferences({ ringTargetSect: sect });
   };
 
   return (
@@ -107,8 +129,7 @@ const RingConverter = () => {
                 className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 value={currentSect}
                 onChange={(event) => {
-                  setCurrentSect(event.target.value as Sect);
-                  resetFeedback();
+                  handleCurrentSectChange(event.target.value as Sect);
                 }}
               >
                 <SectOptions />
@@ -127,14 +148,14 @@ const RingConverter = () => {
                 className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 value={targetSect}
                 onChange={(event) => {
-                  setTargetSect(event.target.value as Sect);
-                  resetFeedback();
+                  handleTargetSectChange(event.target.value as Sect);
                 }}
               >
                 <SectOptions />
               </select>
             </div>
           </div>
+
         </section>
 
         <section className="rounded-xl bg-slate-50/80 p-4 ring-1 ring-inset ring-slate-200/70">
@@ -193,6 +214,11 @@ const RingConverter = () => {
               }
             />
           </div>
+
+          <p className="mt-3 text-xs leading-5 text-slate-500">
+            数据依据：{RING_RULE_VERIFICATION.sourceNote} · 最近核验：
+            {RING_RULE_VERIFICATION.verifiedAt ?? "待复核"}
+          </p>
         </section>
 
         {error ? (
@@ -238,12 +264,14 @@ const RingConverter = () => {
                   <div className="grid grid-cols-[1fr_1.5fr_auto] items-center gap-3 rounded-lg bg-slate-50 px-3 py-3">
                     <span className="text-sm font-medium text-slate-700">气血</span>
                     <div className="flex min-w-0 items-center justify-center gap-2 text-sm">
-                      <span className="text-slate-500">{health ?? 0}</span>
+                      <span className="text-slate-500">
+                        {result.health.before}
+                      </span>
                       <span aria-hidden="true" className="text-slate-300">
                         →
                       </span>
                       <span className="text-base font-semibold text-slate-900">
-                        {result.health}
+                        {result.health.after}
                       </span>
                     </div>
                     <span className="min-w-12 rounded-full bg-white px-2 py-1 text-right text-xs font-semibold text-slate-500">
@@ -256,28 +284,32 @@ const RingConverter = () => {
                       {targetAttribute.label}
                     </span>
                     <div className="flex min-w-0 items-center justify-center gap-2 text-sm">
-                      <span className="text-slate-500">{secondary ?? 0}</span>
+                      <span className="text-slate-500">
+                        {result.secondary.before}
+                      </span>
                       <span aria-hidden="true" className="text-slate-300">
                         →
                       </span>
                       <span className="text-base font-semibold text-slate-900">
-                        {result.secondary}
+                        {result.secondary.after}
                       </span>
                     </div>
                     <span
                       className={`min-w-12 rounded-full bg-white px-2 py-1 text-right text-xs font-semibold ${getChangeClassName(
-                        result.secondary - (secondary ?? 0)
+                        result.secondary.after - result.secondary.before
                       )}`}
                     >
-                      {result.secondary - (secondary ?? 0) > 0 ? "+" : ""}
-                      {result.secondary - (secondary ?? 0)}
+                      {result.secondary.after - result.secondary.before > 0
+                        ? "+"
+                        : ""}
+                      {result.secondary.after - result.secondary.before}
                     </span>
                   </div>
                 </div>
               </div>
 
               <div className="border-t border-slate-100 pt-3">
-                <p className="text-center text-xs leading-5 text-slate-500">
+                <p className="text-left text-xs leading-5 text-slate-500">
                   温馨提示：转换结果可能与游戏实际数值存在轻微差异，仅供参考
                 </p>
               </div>

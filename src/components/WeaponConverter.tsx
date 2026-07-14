@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useWeaponConverter } from "../hooks/useWeaponConverter";
-import type { AttributeType, Sect, WeaponLevel, WeaponType } from "../types";
+import type { AttributeType, Sect, WeaponType } from "../types";
 import {
   ATTRIBUTE_FIELDS,
   SECTS_BY_PROFESSION,
   SECT_WEAPON_TYPES,
+  WEAPON_LEVEL_CONFIGS,
+  WEAPON_LEVEL_OPTIONS,
 } from "../types/constants";
 
 type SectOptionsProps = {
@@ -53,6 +55,7 @@ const WeaponConverter = () => {
 
   // 控制原造型数据展示的状态
   const [showOriginalData, setShowOriginalData] = useState(false);
+  const levelVerification = WEAPON_LEVEL_CONFIGS[weaponLevel].verification;
 
   const handleAttributeChange = (type: AttributeType, value: string) => {
     const current = value === "" ? null : Number(value);
@@ -121,19 +124,18 @@ const WeaponConverter = () => {
             <select
               id="weapon-level"
               className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              value={weaponLevel}
-              onChange={(e) =>
+              value={String(weaponLevel)}
+              onChange={(event) =>
                 setWeaponLevelAndMaxValues(
-                  e.target.value === "60-standard"
-                    ? "60-standard"
-                    : (Number(e.target.value) as WeaponLevel)
+                  WEAPON_LEVEL_OPTIONS[event.target.selectedIndex].id
                 )
               }
             >
-              <option value={60}>60级（69特色服）</option>
-              <option value="60-standard">60级</option>
-              <option value={80}>80级</option>
-              <option value={110}>110级</option>
+              {WEAPON_LEVEL_OPTIONS.map((option) => (
+                <option key={option.id} value={String(option.id)}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -190,6 +192,7 @@ const WeaponConverter = () => {
               </select>
             </div>
           </div>
+
         </section>
 
         <section className="rounded-xl bg-slate-50/80 p-4 ring-1 ring-inset ring-slate-200/70">
@@ -253,6 +256,11 @@ const WeaponConverter = () => {
               </div>
             );
           })}
+
+          <p className="mt-3 text-xs leading-5 text-slate-500">
+            数据依据：{levelVerification.sourceNote} · 最近核验：
+            {levelVerification.verifiedAt ?? "待复核"}
+          </p>
         </section>
 
         {error && (

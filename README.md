@@ -6,6 +6,9 @@
 
 - [x] 武器属性转换器：计算不同门派武器转换后的属性值。
 - [x] 戒指属性转换器：计算不同职业戒指主属性转换后的数值。
+- [x] 常用工具、等级和门派选择保存在当前浏览器中。
+
+当前规则与数据核验状态见 [RULES.md](./RULES.md)。
 
 ## 快速开始
 
@@ -17,7 +20,14 @@ pnpm install
 pnpm dev
 
 # 运行测试
-pnpm test
+pnpm test -- --run
+
+# 运行 CI 使用的覆盖率门禁
+pnpm test:coverage -- --run
+
+# 静态检查与生产构建
+pnpm lint
+pnpm build
 ```
 
 ## 贡献与维护

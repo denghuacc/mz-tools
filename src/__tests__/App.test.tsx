@@ -1,6 +1,10 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../App";
+import {
+  loadPreferences,
+  updatePreferences,
+} from "../utils/preferences";
 
 describe("App 组件", () => {
   it("应该渲染主应用", () => {
@@ -72,5 +76,43 @@ describe("App 组件", () => {
 
     expect(screen.getByText("戒指属性转换器")).toBeInTheDocument();
     expect(screen.queryByText("武器属性转换器")).not.toBeInTheDocument();
+    expect(loadPreferences().activeTool).toBe("ring");
+  });
+
+  it("应该从本地偏好恢复上次使用的工具", () => {
+    updatePreferences({ activeTool: "ring" });
+
+    render(<App />);
+
+    expect(screen.getByRole("tab", { name: "戒指转换" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    expect(screen.getByText("戒指属性转换器")).toBeInTheDocument();
+  });
+
+  it("应该支持桌面和移动导航打开占位栏目", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const desktopNavigation = screen.getByRole("navigation", {
+      name: "主导航",
+    });
+    await user.click(
+      within(desktopNavigation).getByRole("button", { name: "数据查询" })
+    );
+    expect(
+      screen.getByRole("heading", { name: "数据查询" })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/门派、装备与灵兽资料/)).toBeInTheDocument();
+
+    const mobileNavigation = screen.getByRole("navigation", {
+      name: "移动端主导航",
+    });
+    await user.click(
+      within(mobileNavigation).getByRole("button", { name: "攻略" })
+    );
+    expect(screen.getByRole("heading", { name: "攻略" })).toBeInTheDocument();
+    expect(screen.getByText(/玩法攻略与实用技巧/)).toBeInTheDocument();
   });
 });
