@@ -90,3 +90,13 @@ export const updatePreferences = (
 
   return preferences;
 };
+
+export const resetPreferences = (): UserPreferences => {
+  try {
+    window.localStorage.removeItem(PREFERENCES_STORAGE_KEY);
+  } catch {
+    // 存储不可用时仍返回默认值，调用方可以继续更新当前界面。
+  }
+
+  return DEFAULT_PREFERENCES;
+};

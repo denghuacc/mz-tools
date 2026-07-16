@@ -3,6 +3,7 @@ import {
   DEFAULT_PREFERENCES,
   loadPreferences,
   PREFERENCES_STORAGE_KEY,
+  resetPreferences,
   updatePreferences,
 } from "../preferences";
 
@@ -93,5 +94,19 @@ describe("用户偏好存储", () => {
 
     expect(updatePreferences({ activeTool: "ring" }).activeTool).toBe("ring");
     setItem.mockRestore();
+  });
+
+  it("应该清除偏好并在删除失败时返回默认值", () => {
+    updatePreferences({ activeTool: "ring" });
+    expect(resetPreferences()).toEqual(DEFAULT_PREFERENCES);
+    expect(window.localStorage.getItem(PREFERENCES_STORAGE_KEY)).toBeNull();
+
+    const removeItem = vi
+      .spyOn(Storage.prototype, "removeItem")
+      .mockImplementation(() => {
+        throw new Error("storage disabled");
+      });
+    expect(resetPreferences()).toEqual(DEFAULT_PREFERENCES);
+    removeItem.mockRestore();
   });
 });

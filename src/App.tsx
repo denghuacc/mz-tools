@@ -1,11 +1,22 @@
 import { useState } from "react";
 import RingConverter from "./components/RingConverter";
 import WeaponConverter from "./components/WeaponConverter";
+import DataPage from "./pages/DataPage";
+import FavoritesPage from "./pages/FavoritesPage";
+import GuidePage from "./pages/GuidePage";
+import SettingsPage from "./pages/SettingsPage";
 import {
   loadPreferences,
+  resetPreferences,
   updatePreferences,
 } from "./utils/preferences";
 import type { CalculatorTool } from "./utils/preferences";
+import {
+  clearFavorites,
+  loadFavorites,
+  toggleFavorite,
+} from "./utils/favorites";
+import type { FavoriteKind } from "./utils/favorites";
 
 type PageId =
   | "home"
@@ -30,7 +41,15 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
   { id: "settings", label: "设置", description: "个性化工具箱体验" },
 ];
 
-const HomePage = ({ onOpenCalculator }: { onOpenCalculator: () => void }) => (
+const HomePage = ({
+  onOpenCalculator,
+  onOpenData,
+  onOpenGuide,
+}: {
+  onOpenCalculator: () => void;
+  onOpenData: () => void;
+  onOpenGuide: () => void;
+}) => (
   <div className="space-y-6">
     <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       <p className="mb-2 text-sm font-medium text-blue-600">欢迎回来</p>
@@ -38,7 +57,7 @@ const HomePage = ({ onOpenCalculator }: { onOpenCalculator: () => void }) => (
         梦幻新诛仙实用工具
       </h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-        当前已上线武器与戒指属性转换功能。后续的计算、数据查询和攻略内容会逐步补充到对应栏目。
+        当前已上线装备属性转换、门派资料查询和官方攻略索引，资料均保留原文链接与核验日期。
       </p>
     </section>
 
@@ -60,12 +79,34 @@ const HomePage = ({ onOpenCalculator }: { onOpenCalculator: () => void }) => (
         </button>
       </article>
 
-      <article className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
-        <p className="text-xs font-medium text-slate-400">持续建设中</p>
-        <h2 className="mt-2 text-lg font-semibold text-slate-700">更多实用工具</h2>
+      <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p className="text-xs font-medium text-blue-600">官网资料</p>
+        <h2 className="mt-2 text-lg font-semibold text-slate-900">门派资料查询</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          新功能会在这里展示，也会同步加入左侧对应栏目。
+          查询现有 13 个门派的基础战斗定位，并查看官网出处。
         </p>
+        <button
+          type="button"
+          className="mt-5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          onClick={onOpenData}
+        >
+          查询门派
+        </button>
+      </article>
+
+      <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p className="text-xs font-medium text-blue-600">官方内容</p>
+        <h2 className="mt-2 text-lg font-semibold text-slate-900">攻略与版本资料</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-500">
+          按主题浏览官方攻略、门派说明和近期版本公告。
+        </p>
+        <button
+          type="button"
+          className="mt-5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          onClick={onOpenGuide}
+        >
+          浏览攻略
+        </button>
       </article>
     </section>
   </div>
@@ -164,8 +205,8 @@ const CalculatorPage = () => {
             </div>
             <ul className="mt-4 space-y-2 text-sm text-slate-500">
               <li>规则数据持续核验</li>
-              <li>戒指副属性转换</li>
-              <li>门派与装备数据查询</li>
+              <li>装备与灵兽资料扩充</li>
+              <li>官方攻略索引持续更新</li>
             </ul>
           </section>
         </aside>
@@ -174,34 +215,61 @@ const CalculatorPage = () => {
   );
 };
 
-const PlaceholderPage = ({ item }: { item: NavigationItem }) => (
-  <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-    <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
-      功能规划中
-    </span>
-    <h1 className="mt-4 text-2xl font-semibold text-slate-900">{item.label}</h1>
-    <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
-      {item.description}。当前栏目暂未开放，后续内容会在这里逐步补充。
-    </p>
-  </section>
-);
-
 function App() {
   const [activePage, setActivePage] = useState<PageId>("calculator");
+  const [favorites, setFavorites] = useState(loadFavorites);
   const activeItem =
     NAVIGATION_ITEMS.find((item) => item.id === activePage) ??
     NAVIGATION_ITEMS[0];
 
+  const handleToggleFavorite = (kind: FavoriteKind, id: string) => {
+    setFavorites((current) => toggleFavorite(current, kind, id));
+  };
+
   const renderPage = () => {
-    if (activePage === "home") {
-      return <HomePage onOpenCalculator={() => setActivePage("calculator")} />;
+    switch (activePage) {
+      case "home":
+        return (
+          <HomePage
+            onOpenCalculator={() => setActivePage("calculator")}
+            onOpenData={() => setActivePage("data")}
+            onOpenGuide={() => setActivePage("guide")}
+          />
+        );
+      case "calculator":
+        return <CalculatorPage />;
+      case "data":
+        return (
+          <DataPage
+            favorites={favorites}
+            onToggleFavorite={(id) => handleToggleFavorite("sect", id)}
+          />
+        );
+      case "guide":
+        return (
+          <GuidePage
+            favorites={favorites}
+            onToggleFavorite={(id) => handleToggleFavorite("guide", id)}
+          />
+        );
+      case "favorites":
+        return (
+          <FavoritesPage
+            favorites={favorites}
+            onToggleSect={(id) => handleToggleFavorite("sect", id)}
+            onToggleGuide={(id) => handleToggleFavorite("guide", id)}
+            onBrowseData={() => setActivePage("data")}
+          />
+        );
+      case "settings":
+        return (
+          <SettingsPage
+            favoriteCount={favorites.items.length}
+            onResetPreferences={resetPreferences}
+            onClearFavorites={() => setFavorites(clearFavorites())}
+          />
+        );
     }
-
-    if (activePage === "calculator") {
-      return <CalculatorPage />;
-    }
-
-    return <PlaceholderPage item={activeItem} />;
   };
 
   return (
