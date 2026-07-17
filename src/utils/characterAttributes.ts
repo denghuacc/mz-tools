@@ -126,9 +126,18 @@ export const CHARACTER_DIRECT_BONUS_ATTRIBUTE_KEYS = [
 export type CharacterDirectBonusAttribute =
   (typeof CHARACTER_DIRECT_BONUS_ATTRIBUTE_KEYS)[number];
 
+export const CHARACTER_ADVANCED_BONUS_ATTRIBUTE_KEYS = [
+  "healingPower",
+  "sealHit",
+] as const;
+
+export type CharacterAdvancedBonusAttribute =
+  (typeof CHARACTER_ADVANCED_BONUS_ATTRIBUTE_KEYS)[number];
+
 export const CHARACTER_BONUS_ATTRIBUTE_KEYS = [
   ...PRIMARY_ATTRIBUTE_KEYS,
   ...CHARACTER_DIRECT_BONUS_ATTRIBUTE_KEYS,
+  ...CHARACTER_ADVANCED_BONUS_ATTRIBUTE_KEYS,
 ] as const;
 
 export type CharacterBonusAttribute =
@@ -149,6 +158,8 @@ export const createEmptyCharacterAttributeBonuses =
     strength: 0,
     endurance: 0,
     agility: 0,
+    healingPower: 0,
+    sealHit: 0,
   });
 
 /** 魂器只能重新分配五维，体、灵、力、耐、敏的带符号增减总和必须为零。 */
@@ -264,6 +275,7 @@ export type EffectiveCharacterAttributes = {
     Exclude<CharacterDirectBonusAttribute, "health" | "mana">,
     number
   >;
+  advanced: AdvancedAttributes;
 };
 
 /** 潜力属性先参与派生公式，直接属性再叠加到最终结果。 */
@@ -320,6 +332,13 @@ export const applyCharacterAttributeBonuses = (
       speed: roundAttribute(
         calculated.derived.speed + speedFromPotential + bonuses.speed
       ),
+    },
+    advanced: {
+      ...calculated.advanced,
+      healingPower: roundAttribute(
+        calculated.advanced.healingPower + bonuses.healingPower
+      ),
+      sealHit: roundAttribute(calculated.advanced.sealHit + bonuses.sealHit),
     },
   };
 };

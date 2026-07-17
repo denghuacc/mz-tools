@@ -64,6 +64,23 @@ const SOUL_ARTIFACT_BONUS_FIELDS = [
   { attribute: "speed", label: "速度" },
 ] as const;
 
+const TEMPORARY_TALISMAN_BONUS_FIELDS = [
+  { attribute: "constitution", label: "体" },
+  { attribute: "spirit", label: "灵" },
+  { attribute: "strength", label: "力" },
+  { attribute: "endurance", label: "耐" },
+  { attribute: "agility", label: "敏" },
+  { attribute: "physicalAttack", label: "物攻" },
+  { attribute: "magicAttack", label: "法攻" },
+  { attribute: "physicalDefense", label: "物防" },
+  { attribute: "magicDefense", label: "法防" },
+  { attribute: "speed", label: "速度" },
+  { attribute: "health", label: "气血" },
+  { attribute: "mana", label: "法力" },
+  { attribute: "sealHit", label: "封印命中" },
+  { attribute: "healingPower", label: "治疗强度" },
+] as const;
+
 const CHARM_BONUS_MAX_VALUE = 120;
 
 const GUILD_BLESSING_FIELDS = [
@@ -98,6 +115,7 @@ type EditorId =
   | "satin"
   | "guildBlessing"
   | "starBlessing"
+  | "temporaryTalisman"
   | "skill";
 type AttributeBonusSourceId = Exclude<EditorId, "allocation">;
 type EditorDefinition = {
@@ -213,6 +231,9 @@ const CharacterAttributeCalculator = () => {
   const [skillBonuses, setSkillBonuses] = useState(
     createEmptyCharacterAttributeBonuses
   );
+  const [temporaryTalismanBonuses, setTemporaryTalismanBonuses] = useState(
+    createEmptyCharacterAttributeBonuses
+  );
   const [soulArtifactBonuses, setSoulArtifactBonuses] = useState(
     createEmptyCharacterAttributeBonuses
   );
@@ -319,7 +340,8 @@ const CharacterAttributeCalculator = () => {
         charmBonuses,
         satinBonuses,
         guildBlessingBonuses,
-        starBlessingBonuses
+        starBlessingBonuses,
+        temporaryTalismanBonuses
       ),
     [
       skillBonuses,
@@ -329,6 +351,7 @@ const CharacterAttributeCalculator = () => {
       satinBonuses,
       guildBlessingBonuses,
       starBlessingBonuses,
+      temporaryTalismanBonuses,
       areSoulArtifactBonusesValid,
     ]
   );
@@ -376,6 +399,10 @@ const CharacterAttributeCalculator = () => {
     SKILL_BONUS_FIELDS,
     skillBonuses
   );
+  const temporaryTalismanSummaryItems = createBonusSummaryItems(
+    TEMPORARY_TALISMAN_BONUS_FIELDS,
+    temporaryTalismanBonuses
+  );
   const guildBlessingSummaryItems = createBonusSummaryItems(
     GUILD_BLESSING_FIELDS,
     guildBlessingBonuses
@@ -401,6 +428,16 @@ const CharacterAttributeCalculator = () => {
     value: number
   ) => {
     setSkillBonuses((current) => ({ ...current, [attribute]: value }));
+  };
+
+  const updateTemporaryTalismanBonus = (
+    attribute: CharacterBonusAttribute,
+    value: number
+  ) => {
+    setTemporaryTalismanBonuses((current) => ({
+      ...current,
+      [attribute]: value,
+    }));
   };
 
   const updateSoulArtifactBonus = (
@@ -510,6 +547,25 @@ const CharacterAttributeCalculator = () => {
       ),
     },
     {
+      id: "temporaryTalisman",
+      title: "临时符",
+      items: temporaryTalismanSummaryItems,
+      renderContent: (title) => (
+        <AttributeBonusCard
+          title={title}
+          description="可填写基础属性、气血、法力、封印命中与治疗强度的实际加成。"
+          fields={TEMPORARY_TALISMAN_BONUS_FIELDS}
+          values={temporaryTalismanBonuses}
+          onChange={updateTemporaryTalismanBonus}
+          onReset={() =>
+            setTemporaryTalismanBonuses(
+              createEmptyCharacterAttributeBonuses()
+            )
+          }
+        />
+      ),
+    },
+    {
       id: "skill",
       title: "技能属性加成",
       items: skillSummaryItems,
@@ -563,7 +619,7 @@ const CharacterAttributeCalculator = () => {
               </span>
             </div>
             <p className="mt-1.5 text-sm leading-6 text-slate-500">
-              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器、赛季神器、魅灵、缎纹、祝福与门派技能；不含装备与临时符。
+              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器、赛季神器、魅灵、缎纹、祝福、临时符与门派技能；不含装备。
             </p>
           </div>
         </div>
@@ -643,6 +699,11 @@ const CharacterAttributeCalculator = () => {
                           +魂器 {formatAttribute(soulArtifactBonuses.health)}
                         </span>
                       )}
+                    {temporaryTalismanBonuses.health > 0 && (
+                      <span className="ml-2 text-xs text-violet-600">
+                        +临时符 {formatAttribute(temporaryTalismanBonuses.health)}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-emerald-100">
@@ -656,11 +717,22 @@ const CharacterAttributeCalculator = () => {
                     <strong className="text-sm text-blue-700">
                       {formatAttribute(effectiveAttributes.status.mana)}
                     </strong>
-                    <span className="ml-2 text-xs text-slate-400">
-                      {skillBonuses.mana > 0
-                        ? `+技能 ${formatAttribute(skillBonuses.mana)}`
-                        : "1 级基准 · 成长待补"}
-                    </span>
+                    {skillBonuses.mana > 0 && (
+                      <span className="ml-2 text-xs text-blue-600">
+                        +技能 {formatAttribute(skillBonuses.mana)}
+                      </span>
+                    )}
+                    {temporaryTalismanBonuses.mana > 0 && (
+                      <span className="ml-2 text-xs text-violet-600">
+                        +临时符 {formatAttribute(temporaryTalismanBonuses.mana)}
+                      </span>
+                    )}
+                    {skillBonuses.mana === 0 &&
+                      temporaryTalismanBonuses.mana === 0 && (
+                        <span className="ml-2 text-xs text-slate-400">
+                          1 级基准 · 成长待补
+                        </span>
+                      )}
                   </div>
                 </div>
                 <div className="mt-2 h-1.5 rounded-full bg-blue-100" />
@@ -789,6 +861,11 @@ const CharacterAttributeCalculator = () => {
                               帮派 {formatBonus(guildBlessingBonuses[attribute])}
                             </span>
                           )}
+                          {temporaryTalismanBonuses[attribute] > 0 && (
+                            <span className="ml-1 text-[11px] text-violet-600">
+                              临时符 {formatBonus(temporaryTalismanBonuses[attribute])}
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -850,6 +927,11 @@ const CharacterAttributeCalculator = () => {
                               祈福 {formatBonus(starBlessingBonuses[attribute])}
                             </span>
                           )}
+                          {temporaryTalismanBonuses[attribute] > 0 && (
+                            <span className="ml-1 text-[11px] text-violet-600">
+                              临时符 {formatBonus(temporaryTalismanBonuses[attribute])}
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -896,7 +978,7 @@ const CharacterAttributeCalculator = () => {
                                   : "text-slate-900"
                               }`}
                             >
-                              {calculated.advanced[attribute.attribute]}
+                              {effectiveAttributes.advanced[attribute.attribute]}
                               {attribute.unit}
                             </strong>
                             {"growsWithLevel" in attribute && (
@@ -906,6 +988,15 @@ const CharacterAttributeCalculator = () => {
                                   LEVEL_ONE_ADVANCED_ATTRIBUTES.sealHit}
                               </span>
                             )}
+                            {(attribute.attribute === "healingPower" ||
+                              attribute.attribute === "sealHit") &&
+                              temporaryTalismanBonuses[attribute.attribute] > 0 && (
+                                <span className="ml-1 text-[11px] text-violet-600">
+                                  临时符 {formatBonus(
+                                    temporaryTalismanBonuses[attribute.attribute]
+                                  )}
+                                </span>
+                              )}
                           </div>
                         </div>
                       ))}

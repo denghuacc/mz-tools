@@ -37,8 +37,8 @@ describe("角色属性计算", () => {
 
   it("应该合并多个来源的直接属性和潜力属性加成", () => {
     const combined = combineCharacterAttributeBonuses(
-      { health: 100, strength: 5 },
-      { health: 50, strength: 7, speed: 3 }
+      { health: 100, strength: 5, healingPower: 20 },
+      { health: 50, strength: 7, speed: 3, sealHit: 10 }
     );
 
     expect(combined).toEqual({
@@ -46,6 +46,8 @@ describe("角色属性计算", () => {
       health: 150,
       strength: 12,
       speed: 3,
+      healingPower: 20,
+      sealHit: 10,
     });
   });
 
@@ -71,8 +73,27 @@ describe("角色属性计算", () => {
       magicDefense: 184.4,
       speed: 136,
     });
+    expect(effective.advanced).toEqual(calculated.advanced);
     expect(calculated.allocatedPoints).toBe(0);
     expect(calculated.remainingPoints).toBe(TOTAL_POTENTIAL_POINTS);
+  });
+
+  it("应该把临时符的治疗强度和封印命中计入进阶属性", () => {
+    const calculated = calculateCharacterAttributes(
+      EMPTY_CHARACTER_ALLOCATION
+    );
+    const bonuses = {
+      ...createEmptyCharacterAttributeBonuses(),
+      healingPower: 36,
+      sealHit: 42,
+    };
+    const effective = applyCharacterAttributeBonuses(calculated, bonuses);
+
+    expect(effective.advanced).toEqual({
+      ...calculated.advanced,
+      healingPower: 36,
+      sealHit: 190,
+    });
   });
 
   it("应该支持技能直接减少速度", () => {

@@ -428,6 +428,53 @@ describe("CharacterAttributeCalculator", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("应该通过临时符叠加基础、状态条和进阶属性", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const talismanDialog = await openBonusEditor(user, "临时符");
+
+    expect(
+      TEMPORARY_TALISMAN_INPUT_LABELS.map((label) =>
+        within(talismanDialog).getByRole("spinbutton", { name: label })
+      )
+    ).toHaveLength(14);
+
+    for (const [label, value] of [
+      ["临时符：力", "10"],
+      ["临时符：物攻", "20"],
+      ["临时符：气血", "100"],
+      ["临时符：法力", "50"],
+      ["临时符：封印命中", "42"],
+      ["临时符：治疗强度", "36"],
+    ] as const) {
+      await user.type(
+        within(talismanDialog).getByRole("spinbutton", { name: label }),
+        value
+      );
+    }
+
+    const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
+    const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
+    expect(within(derivedColumn).getByText("531")).toBeInTheDocument();
+    expect(within(potentialColumn).getByText("858")).toBeInTheDocument();
+    expect(screen.getByText("742")).toBeInTheDocument();
+    expect(screen.getByText("207")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "进阶属性" }));
+    expect(screen.getByText("190")).toBeInTheDocument();
+    expect(screen.getByText("36")).toBeInTheDocument();
+    expect(screen.getByText("临时符 +42")).toBeInTheDocument();
+    expect(screen.getByText("临时符 +36")).toBeInTheDocument();
+
+    const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
+      .getByRole("heading", { name: "临时符" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    expect(within(summaryCard!).getByText("力 +10")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("封印命中 +42")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("治疗强度 +36")).toBeInTheDocument();
+  });
+
   it("应该只提供当前阶段允许的七种加点方案", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
@@ -490,7 +537,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).getByText("物攻 +122")).toBeInTheDocument();
     expect(within(summaryCard!).queryByText("3 项变更")).not.toBeInTheDocument();
     expect(within(summaryCard!).queryByText("另 1 项")).not.toBeInTheDocument();
-    expect(screen.getByText("已配置 1 / 7")).toBeInTheDocument();
+    expect(screen.getByText("已配置 1 / 8")).toBeInTheDocument();
   });
 });
 
@@ -513,4 +560,21 @@ const SKILL_INPUT_LABELS = [
   "技能属性加成：物防",
   "技能属性加成：法防",
   "技能属性加成：速度",
+];
+
+const TEMPORARY_TALISMAN_INPUT_LABELS = [
+  "临时符：体",
+  "临时符：灵",
+  "临时符：力",
+  "临时符：耐",
+  "临时符：敏",
+  "临时符：物攻",
+  "临时符：法攻",
+  "临时符：物防",
+  "临时符：法防",
+  "临时符：速度",
+  "临时符：气血",
+  "临时符：法力",
+  "临时符：封印命中",
+  "临时符：治疗强度",
 ];
