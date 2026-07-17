@@ -4,9 +4,14 @@ import AttributeBonusCard from "./AttributeBonusCard";
 import AttributeBonusSummaryPanel from "./AttributeBonusSummaryPanel";
 import type { AttributeBonusSummarySource } from "./AttributeBonusSummaryPanel";
 import EditorDialog from "./EditorDialog";
+import GuildBlessingBonusControl from "./GuildBlessingBonusControl";
 import PotentialAllocationControl from "./PotentialAllocationControl";
 import SatinAttributeBonusControl from "./SatinAttributeBonusControl";
 import SinglePrimaryAttributeBonusControl from "./SinglePrimaryAttributeBonusControl";
+import StarBlessingBonusControl, {
+  STAR_BLESSING_ATTRIBUTE_COUNT,
+} from "./StarBlessingBonusControl";
+import type { StarBlessingBonusValue } from "./StarBlessingBonusControl";
 import type {
   SatinBonusAttribute,
   SatinBonusSelection,
@@ -61,6 +66,13 @@ const SOUL_ARTIFACT_BONUS_FIELDS = [
 
 const CHARM_BONUS_MAX_VALUE = 120;
 
+const GUILD_BLESSING_FIELDS = [
+  { attribute: "physicalAttack", label: "物攻", value: 20 },
+  { attribute: "physicalDefense", label: "物防", value: 20 },
+  { attribute: "magicAttack", label: "法攻", value: 16 },
+  { attribute: "magicDefense", label: "法防", value: 16 },
+] as const;
+
 const DERIVED_ATTRIBUTES = [
   ["magicAttack", "法攻"],
   ["magicDefense", "法防"],
@@ -84,6 +96,8 @@ type EditorId =
   | "seasonArtifact"
   | "charm"
   | "satin"
+  | "guildBlessing"
+  | "starBlessing"
   | "skill";
 type AttributeBonusSourceId = Exclude<EditorId, "allocation">;
 type EditorDefinition = {
@@ -164,6 +178,33 @@ const createSatinBonuses = (
   return bonuses;
 };
 
+const createGuildBlessingBonuses = (enabled: boolean) => {
+  const bonuses = createEmptyCharacterAttributeBonuses();
+
+  if (enabled) {
+    for (const { attribute, value } of GUILD_BLESSING_FIELDS) {
+      bonuses[attribute] = value;
+    }
+  }
+
+  return bonuses;
+};
+
+const createStarBlessingBonuses = (
+  attributes: readonly PrimaryAttribute[],
+  value: StarBlessingBonusValue
+) => {
+  const bonuses = createEmptyCharacterAttributeBonuses();
+
+  if (attributes.length === STAR_BLESSING_ATTRIBUTE_COUNT) {
+    for (const attribute of attributes) {
+      bonuses[attribute] = value;
+    }
+  }
+
+  return bonuses;
+};
+
 const CharacterAttributeCalculator = () => {
   const [selectedPresetId, setSelectedPresetId] =
     useState<CharacterAllocationPresetId>(CHARACTER_ALLOCATION_PRESETS[0].id);
@@ -184,6 +225,12 @@ const CharacterAttributeCalculator = () => {
   const [satinSelections, setSatinSelections] = useState<
     readonly SatinBonusSelection[]
   >([]);
+  const [isGuildBlessingEnabled, setIsGuildBlessingEnabled] = useState(false);
+  const [starBlessingAttributes, setStarBlessingAttributes] = useState<
+    readonly PrimaryAttribute[]
+  >([]);
+  const [starBlessingValue, setStarBlessingValue] =
+    useState<StarBlessingBonusValue>(18);
   const [activeEditorId, setActiveEditorId] = useState<EditorId | null>(null);
   const [leftAttributePanelHeight, setLeftAttributePanelHeight] = useState(0);
   const leftAttributePanelRef = useRef<HTMLElement>(null);
@@ -232,6 +279,15 @@ const CharacterAttributeCalculator = () => {
     () => createSatinBonuses(satinSelections),
     [satinSelections]
   );
+  const guildBlessingBonuses = useMemo(
+    () => createGuildBlessingBonuses(isGuildBlessingEnabled),
+    [isGuildBlessingEnabled]
+  );
+  const starBlessingBonuses = useMemo(
+    () =>
+      createStarBlessingBonuses(starBlessingAttributes, starBlessingValue),
+    [starBlessingAttributes, starBlessingValue]
+  );
   const selectedPreset =
     CHARACTER_ALLOCATION_PRESETS.find(({ id }) => id === selectedPresetId) ??
     CHARACTER_ALLOCATION_PRESETS[0];
@@ -261,7 +317,9 @@ const CharacterAttributeCalculator = () => {
         areSoulArtifactBonusesValid ? soulArtifactBonuses : {},
         seasonArtifactBonuses,
         charmBonuses,
-        satinBonuses
+        satinBonuses,
+        guildBlessingBonuses,
+        starBlessingBonuses
       ),
     [
       skillBonuses,
@@ -269,6 +327,8 @@ const CharacterAttributeCalculator = () => {
       seasonArtifactBonuses,
       charmBonuses,
       satinBonuses,
+      guildBlessingBonuses,
+      starBlessingBonuses,
       areSoulArtifactBonusesValid,
     ]
   );
@@ -316,6 +376,19 @@ const CharacterAttributeCalculator = () => {
     SKILL_BONUS_FIELDS,
     skillBonuses
   );
+  const guildBlessingSummaryItems = createBonusSummaryItems(
+    GUILD_BLESSING_FIELDS,
+    guildBlessingBonuses
+  );
+  const starBlessingSummaryItems = starBlessingAttributes.map((attribute) => ({
+    label: PRIMARY_ATTRIBUTE_SHORT_LABELS[attribute],
+    value: starBlessingValue,
+  }));
+  const starBlessingValidationError =
+    starBlessingAttributes.length > 0 &&
+    starBlessingAttributes.length !== STAR_BLESSING_ATTRIBUTE_COUNT
+      ? `星运祈福必须选择 ${STAR_BLESSING_ATTRIBUTE_COUNT} 项属性后才计入结果。`
+      : null;
   const rightRailStyle =
     leftAttributePanelHeight > 0
       ? ({
@@ -409,6 +482,34 @@ const CharacterAttributeCalculator = () => {
       ),
     },
     {
+      id: "guildBlessing",
+      title: "帮派祝福",
+      items: guildBlessingSummaryItems,
+      renderContent: (title) => (
+        <GuildBlessingBonusControl
+          title={title}
+          enabled={isGuildBlessingEnabled}
+          items={GUILD_BLESSING_FIELDS}
+          onEnabledChange={setIsGuildBlessingEnabled}
+        />
+      ),
+    },
+    {
+      id: "starBlessing",
+      title: "星运祈福",
+      items: starBlessingSummaryItems,
+      validationError: starBlessingValidationError,
+      renderContent: (title) => (
+        <StarBlessingBonusControl
+          title={title}
+          selectedAttributes={starBlessingAttributes}
+          bonusValue={starBlessingValue}
+          onSelectedAttributesChange={setStarBlessingAttributes}
+          onBonusValueChange={setStarBlessingValue}
+        />
+      ),
+    },
+    {
       id: "skill",
       title: "技能属性加成",
       items: skillSummaryItems,
@@ -462,7 +563,7 @@ const CharacterAttributeCalculator = () => {
               </span>
             </div>
             <p className="mt-1.5 text-sm leading-6 text-slate-500">
-              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器、赛季神器、魅灵、缎纹与门派技能；不含装备与临时符。
+              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器、赛季神器、魅灵、缎纹、祝福与门派技能；不含装备与临时符。
             </p>
           </div>
         </div>
@@ -683,6 +784,11 @@ const CharacterAttributeCalculator = () => {
                               缎纹 {formatBonus(satinBonuses[attribute])}
                             </span>
                           )}
+                          {guildBlessingBonuses[attribute] > 0 && (
+                            <span className="ml-1 text-[11px] text-cyan-600">
+                              帮派 {formatBonus(guildBlessingBonuses[attribute])}
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -737,6 +843,11 @@ const CharacterAttributeCalculator = () => {
                           {charmBonuses[attribute] > 0 && (
                             <span className="ml-1 text-[11px] text-fuchsia-600">
                               魅灵 {formatBonus(charmBonuses[attribute])}
+                            </span>
+                          )}
+                          {starBlessingBonuses[attribute] > 0 && (
+                            <span className="ml-1 text-[11px] text-cyan-600">
+                              祈福 {formatBonus(starBlessingBonuses[attribute])}
                             </span>
                           )}
                         </div>

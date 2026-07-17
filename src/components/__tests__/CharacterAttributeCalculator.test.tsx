@@ -302,6 +302,89 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(derivedColumn).getByText("506")).toBeInTheDocument();
   });
 
+  it("应该整组启用固定的帮派祝福属性", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const guildDialog = await openBonusEditor(user, "帮派祝福");
+
+    const enableButton = within(guildDialog).getByRole("button", {
+      name: "启用",
+    });
+    expect(enableButton).toHaveAttribute("aria-pressed", "false");
+    expect(within(guildDialog).getAllByText("+20")).toHaveLength(2);
+    expect(within(guildDialog).getAllByText("+16")).toHaveLength(2);
+
+    await user.click(enableButton);
+
+    expect(
+      within(guildDialog).getByRole("button", { name: "已启用" })
+    ).toHaveAttribute("aria-pressed", "true");
+    const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
+      .getByRole("heading", { name: "帮派祝福" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    expect(within(summaryCard!).getByText("物攻 +20")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("物防 +20")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("法攻 +16")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("法防 +16")).toBeInTheDocument();
+
+    const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
+    expect(within(derivedColumn).getByText("526")).toBeInTheDocument();
+    expect(within(derivedColumn).getByText("209")).toBeInTheDocument();
+    expect(within(derivedColumn).getAllByText("帮派 +20")).toHaveLength(2);
+    expect(within(derivedColumn).getAllByText("帮派 +16")).toHaveLength(2);
+  });
+
+  it("应该为星运祈福选择三项五维并切换 18 或 25 档", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const starDialog = await openBonusEditor(user, "星运祈福");
+    const attributeGroup = within(starDialog).getByRole("group", {
+      name: "星运祈福属性选择",
+    });
+    const constitutionOption = within(attributeGroup).getByRole("button", {
+      name: "体力",
+    });
+    const spiritOption = within(attributeGroup).getByRole("button", {
+      name: "灵力",
+    });
+    const strengthOption = within(attributeGroup).getByRole("button", {
+      name: "力量",
+    });
+    const enduranceOption = within(attributeGroup).getByRole("button", {
+      name: "耐力",
+    });
+
+    await user.click(constitutionOption);
+    expect(screen.getByText("数值待调整")).toBeInTheDocument();
+    const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
+    expect(within(potentialColumn).getAllByText("158")).toHaveLength(4);
+
+    await user.click(spiritOption);
+    await user.click(strengthOption);
+
+    expect(screen.getByText("已选 3 / 3 项")).toBeInTheDocument();
+    expect(enduranceOption).toBeDisabled();
+    expect(screen.queryByText("数值待调整")).not.toBeInTheDocument();
+
+    const valueGroup = within(starDialog).getByRole("radiogroup", {
+      name: "星运祈福加成档位",
+    });
+    await user.click(within(valueGroup).getByRole("radio", { name: "+25" }));
+
+    expect(within(potentialColumn).getAllByText("183")).toHaveLength(2);
+    expect(within(potentialColumn).getByText("873")).toBeInTheDocument();
+    expect(within(potentialColumn).getAllByText("祈福 +25")).toHaveLength(3);
+
+    const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
+      .getByRole("heading", { name: "星运祈福" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    expect(within(summaryCard!).getByText("体 +25")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("灵 +25")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("力 +25")).toBeInTheDocument();
+  });
+
   it("应该按照游戏布局左侧显示派生属性、右侧显示潜力属性", () => {
     render(<CharacterAttributeCalculator />);
 
@@ -407,7 +490,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).getByText("物攻 +122")).toBeInTheDocument();
     expect(within(summaryCard!).queryByText("3 项变更")).not.toBeInTheDocument();
     expect(within(summaryCard!).queryByText("另 1 项")).not.toBeInTheDocument();
-    expect(screen.getByText("已配置 1 / 5")).toBeInTheDocument();
+    expect(screen.getByText("已配置 1 / 7")).toBeInTheDocument();
   });
 });
 
