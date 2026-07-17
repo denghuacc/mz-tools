@@ -129,15 +129,37 @@ export type CharacterDirectBonusAttribute =
 export const CHARACTER_ADVANCED_BONUS_ATTRIBUTE_KEYS = [
   "healingPower",
   "sealHit",
+  "sealResistance",
 ] as const;
 
 export type CharacterAdvancedBonusAttribute =
   (typeof CHARACTER_ADVANCED_BONUS_ATTRIBUTE_KEYS)[number];
 
+export const CHARACTER_PERCENTAGE_BONUS_ATTRIBUTE_KEYS = [
+  "speedPercent",
+] as const;
+
+export type CharacterPercentageBonusAttribute =
+  (typeof CHARACTER_PERCENTAGE_BONUS_ATTRIBUTE_KEYS)[number];
+
+export const AFFINITY_BONUS_FIELDS = [
+  { attribute: "fireAffinity", label: "火系亲和" },
+  { attribute: "iceAffinity", label: "冰系亲和" },
+  { attribute: "electricAffinity", label: "电系亲和" },
+  { attribute: "poisonAffinity", label: "毒系亲和" },
+  { attribute: "waterAffinity", label: "水系亲和" },
+  { attribute: "windAffinity", label: "风系亲和" },
+] as const;
+
+export type CharacterAffinityBonusAttribute =
+  (typeof AFFINITY_BONUS_FIELDS)[number]["attribute"];
+
 export const CHARACTER_BONUS_ATTRIBUTE_KEYS = [
   ...PRIMARY_ATTRIBUTE_KEYS,
   ...CHARACTER_DIRECT_BONUS_ATTRIBUTE_KEYS,
   ...CHARACTER_ADVANCED_BONUS_ATTRIBUTE_KEYS,
+  ...CHARACTER_PERCENTAGE_BONUS_ATTRIBUTE_KEYS,
+  ...AFFINITY_BONUS_FIELDS.map(({ attribute }) => attribute),
 ] as const;
 
 export type CharacterBonusAttribute =
@@ -160,6 +182,14 @@ export const createEmptyCharacterAttributeBonuses =
     agility: 0,
     healingPower: 0,
     sealHit: 0,
+    sealResistance: 0,
+    speedPercent: 0,
+    fireAffinity: 0,
+    iceAffinity: 0,
+    electricAffinity: 0,
+    poisonAffinity: 0,
+    waterAffinity: 0,
+    windAffinity: 0,
   });
 
 /** 魂器只能重新分配五维，体、灵、力、耐、敏的带符号增减总和必须为零。 */
@@ -221,15 +251,6 @@ export const LEVEL_69_ADVANCED_ATTRIBUTES: AdvancedAttributes = {
     CHARACTER_UPGRADE_COUNT * SEAL_HIT_POINTS_PER_UPGRADE,
 };
 
-export const AFFINITY_LABELS = [
-  "火系亲和",
-  "冰系亲和",
-  "电系亲和",
-  "毒系亲和",
-  "水系亲和",
-  "风系亲和",
-] as const;
-
 export const FIXED_PRIMARY_ATTRIBUTES: CharacterAllocation = {
   constitution:
     LEVEL_ONE_PRIMARY_ATTRIBUTES.constitution +
@@ -276,6 +297,7 @@ export type EffectiveCharacterAttributes = {
     number
   >;
   advanced: AdvancedAttributes;
+  affinity: Record<CharacterAffinityBonusAttribute, number>;
 };
 
 /** 潜力属性先参与派生公式，直接属性再叠加到最终结果。 */
@@ -294,6 +316,8 @@ export const applyCharacterAttributeBonuses = (
     bonuses.strength * 0.1 +
     bonuses.endurance * 0.1 +
     bonuses.agility * 0.5;
+  const speedBeforePercentage =
+    calculated.derived.speed + speedFromPotential + bonuses.speed;
 
   return {
     primary: {
@@ -330,7 +354,7 @@ export const applyCharacterAttributeBonuses = (
           bonuses.magicDefense
       ),
       speed: roundAttribute(
-        calculated.derived.speed + speedFromPotential + bonuses.speed
+        speedBeforePercentage * (1 + bonuses.speedPercent / 100)
       ),
     },
     advanced: {
@@ -339,6 +363,17 @@ export const applyCharacterAttributeBonuses = (
         calculated.advanced.healingPower + bonuses.healingPower
       ),
       sealHit: roundAttribute(calculated.advanced.sealHit + bonuses.sealHit),
+      sealResistance: roundAttribute(
+        calculated.advanced.sealResistance + bonuses.sealResistance
+      ),
+    },
+    affinity: {
+      fireAffinity: bonuses.fireAffinity,
+      iceAffinity: bonuses.iceAffinity,
+      electricAffinity: bonuses.electricAffinity,
+      poisonAffinity: bonuses.poisonAffinity,
+      waterAffinity: bonuses.waterAffinity,
+      windAffinity: bonuses.windAffinity,
     },
   };
 };

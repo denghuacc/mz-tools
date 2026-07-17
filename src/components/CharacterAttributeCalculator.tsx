@@ -11,13 +11,16 @@ import SinglePrimaryAttributeBonusControl from "./SinglePrimaryAttributeBonusCon
 import StarBlessingBonusControl, {
   STAR_BLESSING_ATTRIBUTE_COUNT,
 } from "./StarBlessingBonusControl";
+import TianshuBonusControl from "./TianshuBonusControl";
+import UniformAttributeBonusControl from "./UniformAttributeBonusControl";
+import type { TianshuBonusControlOption } from "./TianshuBonusControl";
 import type { StarBlessingBonusValue } from "./StarBlessingBonusControl";
 import type {
   SatinBonusAttribute,
   SatinBonusSelection,
 } from "./SatinAttributeBonusControl";
 import {
-  AFFINITY_LABELS,
+  AFFINITY_BONUS_FIELDS,
   applyCharacterAttributeBonuses,
   arePrimaryAttributeBonusesBalanced,
   calculatePresetAllocation,
@@ -64,6 +67,14 @@ const SOUL_ARTIFACT_BONUS_FIELDS = [
   { attribute: "speed", label: "速度" },
 ] as const;
 
+const DIVINE_SOUL_BONUS_FIELDS = [
+  { attribute: "physicalAttack", label: "物攻" },
+  { attribute: "magicAttack", label: "法攻" },
+  { attribute: "physicalDefense", label: "物防" },
+  { attribute: "magicDefense", label: "法防" },
+  { attribute: "health", label: "气血" },
+] as const;
+
 const TEMPORARY_TALISMAN_BONUS_FIELDS = [
   { attribute: "constitution", label: "体" },
   { attribute: "spirit", label: "灵" },
@@ -90,6 +101,127 @@ const GUILD_BLESSING_FIELDS = [
   { attribute: "magicDefense", label: "法防", value: 16 },
 ] as const;
 
+type TianshuBonusOption = TianshuBonusControlOption & {
+  attribute: CharacterBonusAttribute;
+  value: number;
+};
+
+const TIANSHU_BONUS_OPTIONS = [
+  {
+    id: "constitution-20",
+    title: "20体",
+    effectLabel: "+20 体",
+    attribute: "constitution",
+    value: 20,
+  },
+  {
+    id: "spirit-20",
+    title: "20灵",
+    effectLabel: "+20 灵",
+    attribute: "spirit",
+    value: 20,
+  },
+  {
+    id: "strength-20",
+    title: "20力",
+    effectLabel: "+20 力",
+    attribute: "strength",
+    value: 20,
+  },
+  {
+    id: "endurance-20",
+    title: "20耐",
+    effectLabel: "+20 耐",
+    attribute: "endurance",
+    value: 20,
+  },
+  {
+    id: "agility-20",
+    title: "20敏",
+    effectLabel: "+20 敏",
+    attribute: "agility",
+    value: 20,
+  },
+  {
+    id: "health-level-1",
+    title: "等级 × 1 气血",
+    effectLabel: `+${CHARACTER_LEVEL} 气血`,
+    attribute: "health",
+    value: CHARACTER_LEVEL,
+  },
+  {
+    id: "magic-attack-level-02",
+    title: "等级 × 0.2 法攻",
+    effectLabel: `+${CHARACTER_LEVEL * 0.2} 法攻`,
+    attribute: "magicAttack",
+    value: CHARACTER_LEVEL * 0.2,
+  },
+  {
+    id: "magic-attack-level-03",
+    title: "等级 × 0.3 法攻",
+    effectLabel: `+${CHARACTER_LEVEL * 0.3} 法攻`,
+    attribute: "magicAttack",
+    value: CHARACTER_LEVEL * 0.3,
+  },
+  {
+    id: "physical-attack-level-02",
+    title: "等级 × 0.2 物攻",
+    effectLabel: `+${CHARACTER_LEVEL * 0.2} 物攻`,
+    attribute: "physicalAttack",
+    value: CHARACTER_LEVEL * 0.2,
+  },
+  {
+    id: "physical-attack-level-03",
+    title: "等级 × 0.3 物攻",
+    effectLabel: `+${CHARACTER_LEVEL * 0.3} 物攻`,
+    attribute: "physicalAttack",
+    value: CHARACTER_LEVEL * 0.3,
+  },
+  {
+    id: "seal-hit-2",
+    title: "2封印命中",
+    effectLabel: "+2 封印命中",
+    attribute: "sealHit",
+    value: 2,
+  },
+  {
+    id: "seal-resistance-2",
+    title: "2封印抵抗",
+    effectLabel: "+2 封印抵抗",
+    attribute: "sealResistance",
+    value: 2,
+  },
+  {
+    id: "speed-percent-2",
+    title: "2%速度",
+    effectLabel: "+2% 速度",
+    attribute: "speedPercent",
+    value: 2,
+  },
+  ...AFFINITY_BONUS_FIELDS.map(({ attribute, label }) => ({
+    id: `${attribute}-2`,
+    title: `2点${label}`,
+    effectLabel: `+2 ${label}`,
+    attribute,
+    value: 2,
+  })),
+] satisfies readonly TianshuBonusOption[];
+
+const TIANSHU_BONUS_SUMMARY_FIELDS = [
+  { attribute: "constitution", label: "体" },
+  { attribute: "spirit", label: "灵" },
+  { attribute: "strength", label: "力" },
+  { attribute: "endurance", label: "耐" },
+  { attribute: "agility", label: "敏" },
+  { attribute: "health", label: "气血" },
+  { attribute: "magicAttack", label: "法攻" },
+  { attribute: "physicalAttack", label: "物攻" },
+  { attribute: "sealHit", label: "封印命中" },
+  { attribute: "sealResistance", label: "封印抵抗" },
+  { attribute: "speedPercent", label: "速度", unit: "%" },
+  ...AFFINITY_BONUS_FIELDS,
+] as const;
+
 const DERIVED_ATTRIBUTES = [
   ["magicAttack", "法攻"],
   ["magicDefense", "法防"],
@@ -110,6 +242,8 @@ type AttributeTab = "basic" | "advanced";
 type EditorId =
   | "allocation"
   | "soulArtifact"
+  | "divineSoul"
+  | "tianshu"
   | "seasonArtifact"
   | "charm"
   | "satin"
@@ -177,14 +311,16 @@ const createBonusSummaryItems = (
   fields: readonly {
     attribute: CharacterBonusAttribute;
     label: string;
+    unit?: string;
   }[],
   values: Partial<Record<CharacterBonusAttribute, number>>
 ) =>
   fields
     .filter(({ attribute }) => (values[attribute] ?? 0) !== 0)
-    .map(({ attribute, label }) => ({
+    .map(({ attribute, label, unit }) => ({
       label,
       value: values[attribute] ?? 0,
+      unit,
     }));
 
 const createSinglePrimaryAttributeBonuses = (
@@ -224,6 +360,26 @@ const createGuildBlessingBonuses = (enabled: boolean) => {
   return bonuses;
 };
 
+const createDivineSoulBonuses = (value: number) => {
+  const bonuses = createEmptyCharacterAttributeBonuses();
+
+  for (const { attribute } of DIVINE_SOUL_BONUS_FIELDS) {
+    bonuses[attribute] = value;
+  }
+
+  return bonuses;
+};
+
+const createTianshuBonuses = (counts: Readonly<Record<string, number>>) => {
+  const bonuses = createEmptyCharacterAttributeBonuses();
+
+  for (const option of TIANSHU_BONUS_OPTIONS) {
+    bonuses[option.attribute] += option.value * (counts[option.id] ?? 0);
+  }
+
+  return bonuses;
+};
+
 const createStarBlessingBonuses = (
   attributes: readonly PrimaryAttribute[],
   value: StarBlessingBonusValue
@@ -254,6 +410,10 @@ const CharacterAttributeCalculator = () => {
   const [soulArtifactBonuses, setSoulArtifactBonuses] = useState(
     createEmptyCharacterAttributeBonuses
   );
+  const [divineSoulValue, setDivineSoulValue] = useState(0);
+  const [tianshuBonusCounts, setTianshuBonusCounts] = useState<
+    Readonly<Record<string, number>>
+  >({});
   const [seasonArtifactAttribute, setSeasonArtifactAttribute] =
     useState<PrimaryAttribute | null>(null);
   const [seasonArtifactValue, setSeasonArtifactValue] = useState(0);
@@ -309,6 +469,14 @@ const CharacterAttributeCalculator = () => {
       ),
     [seasonArtifactAttribute, seasonArtifactValue]
   );
+  const divineSoulBonuses = useMemo(
+    () => createDivineSoulBonuses(divineSoulValue),
+    [divineSoulValue]
+  );
+  const tianshuBonuses = useMemo(
+    () => createTianshuBonuses(tianshuBonusCounts),
+    [tianshuBonusCounts]
+  );
   const charmBonuses = useMemo(
     () => createSinglePrimaryAttributeBonuses(charmAttribute, charmValue),
     [charmAttribute, charmValue]
@@ -353,6 +521,8 @@ const CharacterAttributeCalculator = () => {
       combineCharacterAttributeBonuses(
         skillBonuses,
         areSoulArtifactBonusesValid ? soulArtifactBonuses : {},
+        divineSoulBonuses,
+        tianshuBonuses,
         seasonArtifactBonuses,
         charmBonuses,
         satinBonuses,
@@ -363,6 +533,8 @@ const CharacterAttributeCalculator = () => {
     [
       skillBonuses,
       soulArtifactBonuses,
+      divineSoulBonuses,
+      tianshuBonuses,
       seasonArtifactBonuses,
       charmBonuses,
       satinBonuses,
@@ -387,6 +559,14 @@ const CharacterAttributeCalculator = () => {
   const soulArtifactSummaryItems = createBonusSummaryItems(
     SOUL_ARTIFACT_BONUS_FIELDS,
     soulArtifactBonuses
+  );
+  const divineSoulSummaryItems = createBonusSummaryItems(
+    DIVINE_SOUL_BONUS_FIELDS,
+    divineSoulBonuses
+  );
+  const tianshuSummaryItems = createBonusSummaryItems(
+    TIANSHU_BONUS_SUMMARY_FIELDS,
+    tianshuBonuses
   );
   const seasonArtifactSummaryItems =
     seasonArtifactAttribute && seasonArtifactValue !== 0
@@ -464,6 +644,20 @@ const CharacterAttributeCalculator = () => {
     setSoulArtifactBonuses((current) => ({ ...current, [attribute]: value }));
   };
 
+  const updateTianshuBonusCount = (optionId: string, count: number) => {
+    setTianshuBonusCounts((current) => {
+      const nextCounts = { ...current };
+
+      if (count > 0) {
+        nextCounts[optionId] = count;
+      } else {
+        delete nextCounts[optionId];
+      }
+
+      return nextCounts;
+    });
+  };
+
   const attributeBonusSources: readonly AttributeBonusSource[] = [
     {
       id: "soulArtifact",
@@ -481,6 +675,35 @@ const CharacterAttributeCalculator = () => {
             setSoulArtifactBonuses(createEmptyCharacterAttributeBonuses())
           }
           validationError={soulArtifactValidationError}
+        />
+      ),
+    },
+    {
+      id: "divineSoul",
+      title: "神魂",
+      items: divineSoulSummaryItems,
+      renderContent: (title) => (
+        <UniformAttributeBonusControl
+          title={title}
+          description="物攻、法攻、物防、法防和气血使用同一个加成数值。"
+          attributeLabels={DIVINE_SOUL_BONUS_FIELDS.map(({ label }) => label)}
+          value={divineSoulValue}
+          onValueChange={setDivineSoulValue}
+          onReset={() => setDivineSoulValue(0)}
+        />
+      ),
+    },
+    {
+      id: "tianshu",
+      title: "天书",
+      items: tianshuSummaryItems,
+      renderContent: (title) => (
+        <TianshuBonusControl
+          title={title}
+          options={TIANSHU_BONUS_OPTIONS}
+          counts={tianshuBonusCounts}
+          onCountChange={updateTianshuBonusCount}
+          onReset={() => setTianshuBonusCounts({})}
         />
       ),
     },
@@ -636,7 +859,7 @@ const CharacterAttributeCalculator = () => {
               </span>
             </div>
             <p className="mt-1.5 text-sm leading-6 text-slate-500">
-              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器、赛季神器、魅灵、缎纹、祝福、临时符与门派技能；不含装备。
+              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器、神魂、天书、赛季神器、魅灵、缎纹、祝福、临时符与门派技能；不含装备。
             </p>
           </div>
         </div>
@@ -718,6 +941,16 @@ const CharacterAttributeCalculator = () => {
                                 +魂器 {formatAttribute(soulArtifactBonuses.health)}
                               </span>
                             )}
+                          {divineSoulBonuses.health > 0 && (
+                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-teal-600">
+                              +神魂 {formatAttribute(divineSoulBonuses.health)}
+                            </span>
+                          )}
+                          {tianshuBonuses.health > 0 && (
+                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-orange-600">
+                              +天书 {formatAttribute(tianshuBonuses.health)}
+                            </span>
+                          )}
                           {temporaryTalismanBonuses.health > 0 && (
                             <span className="ml-2 inline-block whitespace-nowrap text-xs text-violet-600">
                               +临时符 {formatAttribute(temporaryTalismanBonuses.health)}
@@ -907,6 +1140,22 @@ const CharacterAttributeCalculator = () => {
                                       魂器 {formatBonus(soulArtifactBonuses[attribute])}
                                     </span>
                                   )}
+                                {divineSoulBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-teal-600">
+                                    神魂 {formatBonus(divineSoulBonuses[attribute])}
+                                  </span>
+                                )}
+                                {tianshuBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-orange-600">
+                                    天书 {formatBonus(tianshuBonuses[attribute])}
+                                  </span>
+                                )}
+                                {attribute === "speed" &&
+                                  tianshuBonuses.speedPercent > 0 && (
+                                    <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-orange-600">
+                                      天书 +{formatAttribute(tianshuBonuses.speedPercent)}%
+                                    </span>
+                                  )}
                                 {satinBonuses[attribute] > 0 && (
                                   <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-amber-600">
                                     缎纹 {formatBonus(satinBonuses[attribute])}
@@ -970,6 +1219,11 @@ const CharacterAttributeCalculator = () => {
                                       魂器 {formatBonus(soulArtifactBonuses[attribute])}
                                     </span>
                                   )}
+                                {tianshuBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-orange-600">
+                                    天书 {formatBonus(tianshuBonuses[attribute])}
+                                  </span>
+                                )}
                                 {seasonArtifactBonuses[attribute] > 0 && (
                                   <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-violet-600">
                                     神器 {formatBonus(seasonArtifactBonuses[attribute])}
@@ -1066,6 +1320,15 @@ const CharacterAttributeCalculator = () => {
                                         )}
                                       </span>
                                     )}
+                                  {(attribute.attribute === "sealHit" ||
+                                    attribute.attribute === "sealResistance") &&
+                                    tianshuBonuses[attribute.attribute] > 0 && (
+                                      <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-orange-600">
+                                        天书 {formatBonus(
+                                          tianshuBonuses[attribute.attribute]
+                                        )}
+                                      </span>
+                                    )}
                                 </>
                               ) : null
                             }
@@ -1094,13 +1357,20 @@ const CharacterAttributeCalculator = () => {
                     <span className="text-xs text-slate-400">潜力点不影响</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                    {AFFINITY_LABELS.map((affinity) => (
+                    {AFFINITY_BONUS_FIELDS.map(({ attribute, label }) => (
                       <div
-                        key={affinity}
+                        key={attribute}
                         className="rounded-lg bg-slate-50 px-2 py-3 text-center"
                       >
-                        <p className="text-xs text-slate-500">{affinity}</p>
-                        <strong className="mt-1 block text-sm text-slate-800">0</strong>
+                        <p className="text-xs text-slate-500">{label}</p>
+                        {areBonusDetailsVisible && tianshuBonuses[attribute] > 0 && (
+                          <span className="mt-1 block whitespace-nowrap text-[10px] font-medium text-orange-600">
+                            天书 {formatBonus(tianshuBonuses[attribute])}
+                          </span>
+                        )}
+                        <strong className="mt-1 block text-sm text-slate-800">
+                          {effectiveAttributes.affinity[attribute]}
+                        </strong>
                       </div>
                     ))}
                   </div>

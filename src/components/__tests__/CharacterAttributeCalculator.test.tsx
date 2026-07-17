@@ -218,6 +218,98 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(potentialColumn).queryByText("魂器 +10")).not.toBeInTheDocument();
   });
 
+  it("应该为神魂五项属性应用同一个加成值", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const divineSoulDialog = await openBonusEditor(user, "神魂");
+
+    expect(within(divineSoulDialog).getAllByRole("spinbutton")).toHaveLength(1);
+    const valueInput = within(divineSoulDialog).getByRole("spinbutton", {
+      name: "神魂：五项统一加成",
+    });
+    await user.type(valueInput, "30");
+
+    const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
+      .getByRole("heading", { name: "神魂" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    for (const label of ["物攻", "法攻", "物防", "法防", "气血"]) {
+      expect(within(summaryCard!).getByText(`${label} +30`)).toBeInTheDocument();
+    }
+
+    const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
+    expect(within(derivedColumn).getAllByText("神魂 +30")).toHaveLength(4);
+    expect(screen.getByText("+神魂 30")).toBeInTheDocument();
+  });
+
+  it("应该重复选择天书固定加成并支持速度百分比和亲和", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const tianshuDialog = await openBonusEditor(user, "天书");
+
+    expect(
+      within(tianshuDialog).getAllByRole("button", { name: /^增加天书：/ })
+    ).toHaveLength(19);
+
+    for (const optionTitle of [
+      "20体",
+      "20体",
+      "等级 × 1 气血",
+      "等级 × 0.2 法攻",
+      "等级 × 0.2 法攻",
+      "等级 × 0.3 法攻",
+      "2封印抵抗",
+      "2%速度",
+      "2点火系亲和",
+      "2点火系亲和",
+    ]) {
+      await user.click(
+        within(tianshuDialog).getByRole("button", {
+          name: `增加天书：${optionTitle}`,
+        })
+      );
+    }
+
+    expect(
+      within(tianshuDialog).getByLabelText("20体已选次数")
+    ).toHaveTextContent("×2");
+    expect(
+      within(tianshuDialog).getByLabelText("天书已选择 10 次")
+    ).toBeInTheDocument();
+
+    const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
+      .getByRole("heading", { name: "天书" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    for (const summary of [
+      "体 +40",
+      "气血 +69",
+      "法攻 +48.3",
+      "封印抵抗 +2",
+      "速度 +2%",
+      "火系亲和 +4",
+    ]) {
+      expect(within(summaryCard!).getByText(summary)).toBeInTheDocument();
+    }
+
+    const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
+    const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
+    expect(within(derivedColumn).getByText("天书 +48.3")).toBeInTheDocument();
+    expect(within(derivedColumn).getByText("天书 +2%")).toBeInTheDocument();
+    expect(within(potentialColumn).getByText("天书 +40")).toBeInTheDocument();
+    expect(screen.getByText("+天书 69")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "进阶属性" }));
+    const sealResistanceRow = screen.getByText("封印抵抗").closest("div");
+    const fireAffinityCard = screen.getByText("火系亲和").closest("div");
+    expect(sealResistanceRow).not.toBeNull();
+    expect(fireAffinityCard).not.toBeNull();
+    expect(within(sealResistanceRow!).getByText("天书 +2")).toBeInTheDocument();
+    expect(within(sealResistanceRow!).getByText("4")).toBeInTheDocument();
+    expect(within(fireAffinityCard!).getByText("天书 +4")).toBeInTheDocument();
+    expect(within(fireAffinityCard!).getByText("4")).toBeInTheDocument();
+  });
+
   it("应该单选赛季神器属性并填写本次实际潜能点", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
@@ -589,7 +681,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).getByText("物攻 +122")).toBeInTheDocument();
     expect(within(summaryCard!).queryByText("3 项变更")).not.toBeInTheDocument();
     expect(within(summaryCard!).queryByText("另 1 项")).not.toBeInTheDocument();
-    expect(screen.getByText("已配置 1 / 8")).toBeInTheDocument();
+    expect(screen.getByText("已配置 1 / 10")).toBeInTheDocument();
   });
 });
 

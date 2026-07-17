@@ -1,6 +1,7 @@
 export type AttributeBonusSummaryItem = {
   label: string;
   value: number;
+  unit?: string;
 };
 
 type AttributeBonusSummaryCardProps = {
@@ -10,12 +11,12 @@ type AttributeBonusSummaryCardProps = {
   validationError?: string | null;
 };
 
-const formatValue = (value: number) => {
+const formatValue = (value: number, unit = "") => {
   const formatted = Number.isInteger(value)
     ? String(value)
     : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 
-  return `${value > 0 ? "+" : ""}${formatted}`;
+  return `${value > 0 ? "+" : ""}${formatted}${unit}`;
 };
 
 /** 紧凑展示一类属性来源的已配置变更，完整录入交给独立编辑弹层。 */
@@ -55,7 +56,7 @@ const AttributeBonusSummaryCard = ({
                 item.value < 0 ? "text-rose-600" : "text-blue-600"
               }`}
             >
-              {item.label} {formatValue(item.value)}
+              {item.label} {formatValue(item.value, item.unit)}
             </span>
           ))
         ) : (
