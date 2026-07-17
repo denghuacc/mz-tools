@@ -3,6 +3,7 @@ import AttributeBonusCard from "./AttributeBonusCard";
 import {
   AFFINITY_LABELS,
   applyCharacterAttributeBonuses,
+  arePrimaryAttributeBonusesBalanced,
   calculatePresetAllocation,
   calculateCharacterAttributes,
   CHARACTER_ALLOCATION_PRESETS,
@@ -10,6 +11,7 @@ import {
   CHARACTER_UPGRADE_COUNT,
   combineCharacterAttributeBonuses,
   createEmptyCharacterAttributeBonuses,
+  getPrimaryAttributeBonusTotal,
   LEVEL_ONE_ADVANCED_ATTRIBUTES,
   LEVEL_ONE_STATUS_ATTRIBUTES,
   PRIMARY_ATTRIBUTE_KEYS,
@@ -30,6 +32,20 @@ const SKILL_BONUS_FIELDS = [
   { attribute: "physicalDefense", label: "物防" },
   { attribute: "magicDefense", label: "法防" },
   { attribute: "speed", label: "速度", allowNegative: true },
+] as const;
+
+const SOUL_ARTIFACT_BONUS_FIELDS = [
+  { attribute: "constitution", label: "体", allowNegative: true },
+  { attribute: "spirit", label: "灵", allowNegative: true },
+  { attribute: "strength", label: "力", allowNegative: true },
+  { attribute: "endurance", label: "耐", allowNegative: true },
+  { attribute: "agility", label: "敏", allowNegative: true },
+  { attribute: "health", label: "气血" },
+  { attribute: "physicalAttack", label: "物攻" },
+  { attribute: "magicAttack", label: "法攻" },
+  { attribute: "physicalDefense", label: "物防" },
+  { attribute: "magicDefense", label: "法防" },
+  { attribute: "speed", label: "速度" },
 ] as const;
 
 const DERIVED_ATTRIBUTES = [
@@ -79,6 +95,9 @@ const CharacterAttributeCalculator = () => {
   const [skillBonuses, setSkillBonuses] = useState(
     createEmptyCharacterAttributeBonuses
   );
+  const [soulArtifactBonuses, setSoulArtifactBonuses] = useState(
+    createEmptyCharacterAttributeBonuses
+  );
   const selectedPreset =
     CHARACTER_ALLOCATION_PRESETS.find(({ id }) => id === selectedPresetId) ??
     CHARACTER_ALLOCATION_PRESETS[0];
@@ -90,9 +109,24 @@ const CharacterAttributeCalculator = () => {
     () => calculateCharacterAttributes(allocation),
     [allocation]
   );
+  const soulArtifactPrimaryTotal = getPrimaryAttributeBonusTotal(
+    soulArtifactBonuses
+  );
+  const areSoulArtifactBonusesValid = arePrimaryAttributeBonusesBalanced(
+    soulArtifactBonuses
+  );
+  const soulArtifactValidationError = areSoulArtifactBonusesValid
+    ? null
+    : `魂器的体/灵/力/耐/敏增减合计必须为 0，当前合计为 ${formatBonus(
+        soulArtifactPrimaryTotal
+      )}；本组属性暂未计入结果。`;
   const totalBonuses = useMemo(
-    () => combineCharacterAttributeBonuses(skillBonuses),
-    [skillBonuses]
+    () =>
+      combineCharacterAttributeBonuses(
+        skillBonuses,
+        areSoulArtifactBonusesValid ? soulArtifactBonuses : {}
+      ),
+    [skillBonuses, soulArtifactBonuses, areSoulArtifactBonusesValid]
   );
   const effectiveAttributes = useMemo(
     () => applyCharacterAttributeBonuses(calculated, totalBonuses),
@@ -114,6 +148,13 @@ const CharacterAttributeCalculator = () => {
     setSkillBonuses((current) => ({ ...current, [attribute]: value }));
   };
 
+  const updateSoulArtifactBonus = (
+    attribute: CharacterBonusAttribute,
+    value: number
+  ) => {
+    setSoulArtifactBonuses((current) => ({ ...current, [attribute]: value }));
+  };
+
   return (
     <div className="space-y-5">
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -131,7 +172,7 @@ const CharacterAttributeCalculator = () => {
               </span>
             </div>
             <p className="mt-1.5 text-sm leading-6 text-slate-500">
-              从刚创建的 1 级角色裸值开始计算，不含装备、魂器、神器与临时符。
+              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器与门派技能；不含装备、神器与临时符。
             </p>
           </div>
         </div>
@@ -208,6 +249,18 @@ const CharacterAttributeCalculator = () => {
           </section>
 
           <AttributeBonusCard
+            title="魂器属性"
+            description="体/灵/力/耐/敏可增可减，五项增减合计必须为 0；其余属性只能增加。"
+            fields={SOUL_ARTIFACT_BONUS_FIELDS}
+            values={soulArtifactBonuses}
+            onChange={updateSoulArtifactBonus}
+            onReset={() =>
+              setSoulArtifactBonuses(createEmptyCharacterAttributeBonuses())
+            }
+            validationError={soulArtifactValidationError}
+          />
+
+          <AttributeBonusCard
             title="技能属性加成"
             description="不同门派的技能加成不同，请按实际数值填写；速度减少时填负数。"
             fields={SKILL_BONUS_FIELDS}
@@ -244,6 +297,12 @@ const CharacterAttributeCalculator = () => {
                         +技能 {formatAttribute(skillBonuses.health)}
                       </span>
                     )}
+                    {areSoulArtifactBonusesValid &&
+                      soulArtifactBonuses.health > 0 && (
+                        <span className="ml-2 text-xs text-blue-600">
+                          +魂器 {formatAttribute(soulArtifactBonuses.health)}
+                        </span>
+                      )}
                   </div>
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-emerald-100">
@@ -352,6 +411,12 @@ const CharacterAttributeCalculator = () => {
                               {formatBonus(skillBonuses[attribute])}
                             </span>
                           )}
+                          {areSoulArtifactBonusesValid &&
+                            soulArtifactBonuses[attribute] !== 0 && (
+                              <span className="ml-1 text-[11px] text-blue-600">
+                                魂器 {formatBonus(soulArtifactBonuses[attribute])}
+                              </span>
+                            )}
                         </div>
                       </div>
                     ))}
@@ -386,6 +451,18 @@ const CharacterAttributeCalculator = () => {
                               +加成 {formatAttribute(skillBonuses[attribute])}
                             </span>
                           )}
+                          {areSoulArtifactBonusesValid &&
+                            soulArtifactBonuses[attribute] !== 0 && (
+                              <span
+                                className={`ml-1 text-[11px] ${
+                                  soulArtifactBonuses[attribute] > 0
+                                    ? "text-blue-600"
+                                    : "text-rose-600"
+                                }`}
+                              >
+                                魂器 {formatBonus(soulArtifactBonuses[attribute])}
+                              </span>
+                            )}
                         </div>
                       </div>
                     ))}

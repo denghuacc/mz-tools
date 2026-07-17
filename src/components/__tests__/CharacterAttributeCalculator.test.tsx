@@ -56,7 +56,11 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("531")).toBeInTheDocument();
     expect(screen.getByText("+技能 100")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "清空" }));
+    const skillCard = screen
+      .getByRole("heading", { name: "技能属性加成" })
+      .closest("section");
+    expect(skillCard).not.toBeNull();
+    await user.click(within(skillCard!).getByRole("button", { name: "清空" }));
 
     expect(screen.queryByText("742")).not.toBeInTheDocument();
     expect(screen.queryByText("531")).not.toBeInTheDocument();
@@ -76,7 +80,69 @@ describe("CharacterAttributeCalculator", () => {
     expect(speedInput).toHaveValue(-30);
     expect(screen.getByText("172.6")).toBeInTheDocument();
     expect(screen.getByText("-30")).toHaveClass("text-rose-600");
-    expect(screen.getByRole("button", { name: "清空" })).toBeEnabled();
+    const skillCard = screen
+      .getByRole("heading", { name: "技能属性加成" })
+      .closest("section");
+    expect(skillCard).not.toBeNull();
+    expect(
+      within(skillCard!).getByRole("button", { name: "清空" })
+    ).toBeEnabled();
+  });
+
+  it("应该叠加总和为零的魂器五维和直接属性", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    await user.type(
+      screen.getByRole("spinbutton", { name: "魂器属性：力" }),
+      "10"
+    );
+    await user.type(
+      screen.getByRole("spinbutton", { name: "魂器属性：灵" }),
+      "-8"
+    );
+    await user.type(
+      screen.getByRole("spinbutton", { name: "魂器属性：体" }),
+      "-2"
+    );
+    await user.type(
+      screen.getByRole("spinbutton", { name: "魂器属性：物攻" }),
+      "20"
+    );
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
+    const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
+    expect(within(potentialColumn).getByText("858")).toBeInTheDocument();
+    expect(within(potentialColumn).getByText("150")).toBeInTheDocument();
+    expect(within(potentialColumn).getByText("156")).toBeInTheDocument();
+    expect(within(derivedColumn).getByText("531")).toBeInTheDocument();
+    expect(within(derivedColumn).getByText("魂器 +20")).toBeInTheDocument();
+  });
+
+  it("应该阻止五维增减总和不为零的魂器属性参与计算", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    await user.type(
+      screen.getByRole("spinbutton", { name: "魂器属性：力" }),
+      "10"
+    );
+    await user.type(
+      screen.getByRole("spinbutton", { name: "魂器属性：灵" }),
+      "-7"
+    );
+    await user.type(
+      screen.getByRole("spinbutton", { name: "魂器属性：体" }),
+      "-2"
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "增减合计必须为 0，当前合计为 +1；本组属性暂未计入结果"
+    );
+    const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
+    expect(within(potentialColumn).getByText("848")).toBeInTheDocument();
+    expect(within(potentialColumn).queryByText("魂器 +10")).not.toBeInTheDocument();
   });
 
   it("应该按照游戏布局左侧显示派生属性、右侧显示潜力属性", () => {

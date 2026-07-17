@@ -16,6 +16,7 @@ type AttributeBonusCardProps = {
   values: CharacterAttributeBonuses;
   onChange: (attribute: CharacterBonusAttribute, value: number) => void;
   onReset: () => void;
+  validationError?: string | null;
 };
 
 /** 可配置为单属性或多属性，用于录入技能、装备等来源的直接或潜力属性加成。 */
@@ -26,6 +27,7 @@ const AttributeBonusCard = ({
   values,
   onChange,
   onReset,
+  validationError,
 }: AttributeBonusCardProps) => {
   const hasBonus = fields.some(({ attribute }) => values[attribute] !== 0);
 
@@ -89,6 +91,15 @@ const AttributeBonusCard = ({
           </label>
         ))}
       </div>
+
+      {validationError && (
+        <p
+          className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700"
+          role="alert"
+        >
+          {validationError}
+        </p>
+      )}
     </section>
   );
 };

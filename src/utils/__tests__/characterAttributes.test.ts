@@ -1,5 +1,6 @@
 import {
   applyCharacterAttributeBonuses,
+  arePrimaryAttributeBonusesBalanced,
   calculatePresetAllocation,
   calculateCharacterAttributes,
   CHARACTER_ALLOCATION_PRESETS,
@@ -8,6 +9,7 @@ import {
   createEmptyCharacterAttributeBonuses,
   EMPTY_CHARACTER_ALLOCATION,
   FIXED_PRIMARY_ATTRIBUTES,
+  getPrimaryAttributeBonusTotal,
   LEVEL_69_ADVANCED_ATTRIBUTES,
   LEVEL_ONE_ADVANCED_ATTRIBUTES,
   SEAL_HIT_POINTS_PER_UPGRADE,
@@ -15,6 +17,24 @@ import {
 } from "../characterAttributes";
 
 describe("角色属性计算", () => {
+  it("应该校验魂器五维属性的带符号增减总和为零", () => {
+    const balancedBonuses = {
+      strength: 10,
+      spirit: -8,
+      constitution: -2,
+    };
+    const unbalancedBonuses = {
+      strength: 10,
+      spirit: -7,
+      constitution: -2,
+    };
+
+    expect(getPrimaryAttributeBonusTotal(balancedBonuses)).toBe(0);
+    expect(arePrimaryAttributeBonusesBalanced(balancedBonuses)).toBe(true);
+    expect(getPrimaryAttributeBonusTotal(unbalancedBonuses)).toBe(1);
+    expect(arePrimaryAttributeBonusesBalanced(unbalancedBonuses)).toBe(false);
+  });
+
   it("应该合并多个来源的直接属性和潜力属性加成", () => {
     const combined = combineCharacterAttributeBonuses(
       { health: 100, strength: 5 },

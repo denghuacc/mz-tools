@@ -151,6 +151,19 @@ export const createEmptyCharacterAttributeBonuses =
     agility: 0,
   });
 
+/** 魂器只能重新分配五维，体、灵、力、耐、敏的带符号增减总和必须为零。 */
+export const getPrimaryAttributeBonusTotal = (
+  bonuses: Partial<CharacterAttributeBonuses>
+): number =>
+  PRIMARY_ATTRIBUTE_KEYS.reduce(
+    (total, attribute) => total + (bonuses[attribute] ?? 0),
+    0
+  );
+
+export const arePrimaryAttributeBonusesBalanced = (
+  bonuses: Partial<CharacterAttributeBonuses>
+): boolean => Math.abs(getPrimaryAttributeBonusTotal(bonuses)) < 1e-9;
+
 /** 合并技能、装备等多个来源的最终属性加成。 */
 export const combineCharacterAttributeBonuses = (
   ...bonusSources: readonly Partial<CharacterAttributeBonuses>[]
