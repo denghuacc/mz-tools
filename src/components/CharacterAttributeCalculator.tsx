@@ -1,31 +1,36 @@
 import { useMemo, useState } from "react";
+import AttributeBonusCard from "./AttributeBonusCard";
 import {
   AFFINITY_LABELS,
+  applyCharacterAttributeBonuses,
+  calculatePresetAllocation,
   calculateCharacterAttributes,
+  CHARACTER_ALLOCATION_PRESETS,
   CHARACTER_LEVEL,
   CHARACTER_UPGRADE_COUNT,
-  EMPTY_CHARACTER_ALLOCATION,
-  FIXED_ATTRIBUTE_POINTS_PER_LEVEL,
+  combineCharacterAttributeBonuses,
+  createEmptyCharacterAttributeBonuses,
   LEVEL_ONE_ADVANCED_ATTRIBUTES,
   LEVEL_ONE_STATUS_ATTRIBUTES,
-  POTENTIAL_POINTS_PER_LEVEL,
   PRIMARY_ATTRIBUTE_KEYS,
-  PRIMARY_ATTRIBUTE_LABELS,
   SEAL_HIT_POINTS_PER_UPGRADE,
   TOTAL_POTENTIAL_POINTS,
 } from "../utils/characterAttributes";
 import type {
-  CharacterAllocation,
+  CharacterAllocationPresetId,
+  CharacterBonusAttribute,
   PrimaryAttribute,
 } from "../utils/characterAttributes";
 
-const ATTRIBUTE_RULES: Record<PrimaryAttribute, string> = {
-  constitution: "+3 气血 · +0.1 法攻/法防/速度",
-  spirit: "+0.5 法攻/法防 · +0.05 速度",
-  strength: "+0.5 物攻 · +0.3 法攻/法防 · +0.1 速度",
-  endurance: "+1 物防 · +0.1 法攻/法防/速度",
-  agility: "+0.5 速度",
-};
+const SKILL_BONUS_FIELDS = [
+  { attribute: "health", label: "气血" },
+  { attribute: "mana", label: "法力" },
+  { attribute: "physicalAttack", label: "物攻" },
+  { attribute: "magicAttack", label: "法攻" },
+  { attribute: "physicalDefense", label: "物防" },
+  { attribute: "magicDefense", label: "法防" },
+  { attribute: "speed", label: "速度", allowNegative: true },
+] as const;
 
 const DERIVED_ATTRIBUTES = [
   ["magicAttack", "法攻"],
@@ -63,43 +68,56 @@ const ADVANCED_ATTRIBUTE_COLUMNS = [
 const formatAttribute = (value: number) =>
   Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
 
+const formatBonus = (value: number) =>
+  `${value > 0 ? "+" : ""}${formatAttribute(value)}`;
+
 const CharacterAttributeCalculator = () => {
-  const [allocation, setAllocation] = useState<CharacterAllocation>({
-    ...EMPTY_CHARACTER_ALLOCATION,
-  });
+  const [selectedPresetId, setSelectedPresetId] =
+    useState<CharacterAllocationPresetId>(CHARACTER_ALLOCATION_PRESETS[0].id);
   const [activeAttributeTab, setActiveAttributeTab] =
     useState<AttributeTab>("basic");
+  const [skillBonuses, setSkillBonuses] = useState(
+    createEmptyCharacterAttributeBonuses
+  );
+  const selectedPreset =
+    CHARACTER_ALLOCATION_PRESETS.find(({ id }) => id === selectedPresetId) ??
+    CHARACTER_ALLOCATION_PRESETS[0];
+  const allocation = useMemo(
+    () => calculatePresetAllocation(selectedPreset.ratio),
+    [selectedPreset]
+  );
   const calculated = useMemo(
     () => calculateCharacterAttributes(allocation),
     [allocation]
   );
+  const totalBonuses = useMemo(
+    () => combineCharacterAttributeBonuses(skillBonuses),
+    [skillBonuses]
+  );
+  const effectiveAttributes = useMemo(
+    () => applyCharacterAttributeBonuses(calculated, totalBonuses),
+    [calculated, totalBonuses]
+  );
+  const allocationSummary = PRIMARY_ATTRIBUTE_KEYS.filter(
+    (attribute) => allocation[attribute] > 0
+  )
+    .map(
+      (attribute) =>
+        `${PRIMARY_ATTRIBUTE_SHORT_LABELS[attribute]} +${allocation[attribute]}`
+    )
+    .join(" · ");
 
-  const updateAllocation = (attribute: PrimaryAttribute, nextValue: number) => {
-    setAllocation((current) => {
-      const currentValue = current[attribute];
-      const usedByOthers =
-        calculateCharacterAttributes(current).allocatedPoints - currentValue;
-      const availableForAttribute = TOTAL_POTENTIAL_POINTS - usedByOthers;
-      const safeValue = Number.isFinite(nextValue)
-        ? Math.min(Math.max(Math.trunc(nextValue), 0), availableForAttribute)
-        : 0;
-
-      return { ...current, [attribute]: safeValue };
-    });
-  };
-
-  const adjustAllocation = (attribute: PrimaryAttribute, delta: number) => {
-    updateAllocation(attribute, allocation[attribute] + delta);
-  };
-
-  const resetAllocation = () => {
-    setAllocation({ ...EMPTY_CHARACTER_ALLOCATION });
+  const updateSkillBonus = (
+    attribute: CharacterBonusAttribute,
+    value: number
+  ) => {
+    setSkillBonuses((current) => ({ ...current, [attribute]: value }));
   };
 
   return (
     <div className="space-y-5">
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-4 border-b border-slate-200 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-slate-900">
@@ -116,13 +134,6 @@ const CharacterAttributeCalculator = () => {
               从刚创建的 1 级角色裸值开始计算，不含装备、魂器、神器与临时符。
             </p>
           </div>
-          <button
-            type="button"
-            className="h-10 shrink-0 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            onClick={resetAllocation}
-          >
-            重置加点
-          </button>
         </div>
 
         <div className="grid grid-cols-3 divide-x divide-slate-100 bg-slate-50/70">
@@ -154,83 +165,61 @@ const CharacterAttributeCalculator = () => {
       </section>
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(520px,1.2fr)_minmax(360px,0.8fr)]">
-        <section className="order-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-          <div className="mb-5">
-            <h2 className="text-base font-semibold text-slate-900">潜力点分配</h2>
-            <p className="mt-1.5 text-xs leading-5 text-slate-500">
-              每级固定五维各 +{FIXED_ATTRIBUTE_POINTS_PER_LEVEL}，另有 +
-              {POTENTIAL_POINTS_PER_LEVEL} 点可自由分配；共升级 {CHARACTER_UPGRADE_COUNT} 次。
-            </p>
-          </div>
+        <div className="order-1 space-y-5 xl:order-2">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">潜力点分配</h2>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  按每 10 点的固定比例分配，暂提供常用方案。
+                </p>
+              </div>
+              <p className="text-xs font-medium text-emerald-600">
+                {allocationSummary}
+              </p>
+            </div>
 
-          <div className="space-y-3">
-            {PRIMARY_ATTRIBUTE_KEYS.map((attribute) => {
-              const label = PRIMARY_ATTRIBUTE_LABELS[attribute];
-              const canIncrease = calculated.remainingPoints > 0;
+            <div
+              className="mt-3 flex flex-wrap gap-2"
+              role="radiogroup"
+              aria-label="潜力点加点方案"
+            >
+              {CHARACTER_ALLOCATION_PRESETS.map((preset) => {
+                const isSelected = preset.id === selectedPresetId;
 
-              return (
-                <div
-                  key={attribute}
-                  className="rounded-xl border border-slate-200 p-3.5"
-                >
-                  <div className="mb-3 flex items-start justify-between gap-3">
-                    <div>
-                      <label
-                        htmlFor={`${attribute}-allocation`}
-                        className="text-sm font-semibold text-slate-800"
-                      >
-                        {label}
-                      </label>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
-                        {ATTRIBUTE_RULES[attribute]}
-                      </p>
-                    </div>
-                    <p className="shrink-0 text-xs text-slate-400">
-                      最终 {calculated.primary[attribute]}
-                    </p>
-                  </div>
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    className={`h-9 rounded-lg border px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                      isSelected
+                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                    }`}
+                    onClick={() => setSelectedPresetId(preset.id)}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
-                  <div className="grid grid-cols-[40px_minmax(0,1fr)_40px] gap-2">
-                    <button
-                      type="button"
-                      aria-label={`${label}减少 1 点`}
-                      className="h-10 rounded-lg border border-slate-200 bg-slate-50 text-lg text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
-                      disabled={allocation[attribute] === 0}
-                      onClick={() => adjustAllocation(attribute, -1)}
-                    >
-                      −
-                    </button>
-                    <input
-                      id={`${attribute}-allocation`}
-                      aria-label={`${label}加点`}
-                      type="number"
-                      min={0}
-                      max={allocation[attribute] + calculated.remainingPoints}
-                      step={1}
-                      inputMode="numeric"
-                      className="h-10 min-w-0 rounded-lg border border-slate-200 bg-white px-3 text-center text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                      value={allocation[attribute]}
-                      onChange={(event) =>
-                        updateAllocation(attribute, Number(event.target.value))
-                      }
-                    />
-                    <button
-                      type="button"
-                      aria-label={`${label}增加 1 点`}
-                      className="h-10 rounded-lg bg-blue-600 text-lg text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
-                      disabled={!canIncrease}
-                      onClick={() => adjustAllocation(attribute, 1)}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+          <AttributeBonusCard
+            title="技能属性加成"
+            description="不同门派的技能加成不同，请按实际数值填写；速度减少时填负数。"
+            fields={SKILL_BONUS_FIELDS}
+            values={skillBonuses}
+            onChange={updateSkillBonus}
+            onReset={() =>
+              setSkillBonuses(createEmptyCharacterAttributeBonuses())
+            }
+          />
+        </div>
 
-        <section className="order-1 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <section className="order-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 xl:order-1">
           <div>
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
@@ -246,9 +235,16 @@ const CharacterAttributeCalculator = () => {
               <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 px-4 py-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-slate-700">气血</span>
-                  <strong className="text-base text-emerald-700">
-                    {formatAttribute(calculated.derived.health)}
-                  </strong>
+                  <div className="text-right">
+                    <strong className="text-base text-emerald-700">
+                      {formatAttribute(effectiveAttributes.status.health)}
+                    </strong>
+                    {skillBonuses.health > 0 && (
+                      <span className="ml-2 text-xs text-emerald-600">
+                        +技能 {formatAttribute(skillBonuses.health)}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-emerald-100">
                   <div className="h-full w-full rounded-full bg-emerald-500" />
@@ -259,10 +255,12 @@ const CharacterAttributeCalculator = () => {
                   <span className="text-sm font-medium text-slate-700">法力</span>
                   <div className="text-right">
                     <strong className="text-sm text-blue-700">
-                      {LEVEL_ONE_STATUS_ATTRIBUTES.mana}
+                      {formatAttribute(effectiveAttributes.status.mana)}
                     </strong>
                     <span className="ml-2 text-xs text-slate-400">
-                      1 级基准 · 成长待补
+                      {skillBonuses.mana > 0
+                        ? `+技能 ${formatAttribute(skillBonuses.mana)}`
+                        : "1 级基准 · 成长待补"}
                     </span>
                   </div>
                 </div>
@@ -325,7 +323,7 @@ const CharacterAttributeCalculator = () => {
                     </span>
                   </div>
                   <p className="mt-1.5 text-xs leading-5 text-slate-500">
-                    当前值 = 1 级物理角色初始值 + {CHARACTER_UPGRADE_COUNT} 次固定成长 + 潜力点。
+                    当前值 = 1 级物理角色初始值 + {CHARACTER_UPGRADE_COUNT} 次固定成长 + 潜力点 + 属性加成。
                   </p>
                 </div>
 
@@ -339,9 +337,22 @@ const CharacterAttributeCalculator = () => {
                         <span className="text-xs text-slate-600 sm:text-sm">
                           {label}
                         </span>
-                        <strong className="text-sm text-slate-900">
-                          {formatAttribute(calculated.derived[attribute])}
-                        </strong>
+                        <div className="min-w-0 text-right">
+                          <strong className="text-sm text-slate-900">
+                            {formatAttribute(effectiveAttributes.derived[attribute])}
+                          </strong>
+                          {skillBonuses[attribute] !== 0 && (
+                            <span
+                              className={`ml-1 text-[11px] ${
+                                skillBonuses[attribute] > 0
+                                  ? "text-blue-600"
+                                  : "text-rose-600"
+                              }`}
+                            >
+                              {formatBonus(skillBonuses[attribute])}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -363,11 +374,16 @@ const CharacterAttributeCalculator = () => {
                                 : "text-slate-900"
                             }`}
                           >
-                            {calculated.primary[attribute]}
+                            {effectiveAttributes.primary[attribute]}
                           </strong>
                           {allocation[attribute] > 0 && (
                             <span className="ml-1 text-[11px] text-emerald-600">
                               +{allocation[attribute]}
+                            </span>
+                          )}
+                          {skillBonuses[attribute] > 0 && (
+                            <span className="ml-1 text-[11px] text-blue-600">
+                              +加成 {formatAttribute(skillBonuses[attribute])}
                             </span>
                           )}
                         </div>

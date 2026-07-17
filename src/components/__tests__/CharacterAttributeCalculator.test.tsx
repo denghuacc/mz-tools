@@ -15,15 +15,68 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.queryByText("进阶属性与亲和")).not.toBeInTheDocument();
   });
 
-  it("应该支持加点并实时更新派生属性", async () => {
+  it("应该通过比例方案分配全部潜力点并实时更新属性", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
 
-    await user.click(screen.getByRole("button", { name: "体力增加 1 点" }));
+    const defaultPreset = screen.getByRole("radio", { name: "10力" });
+    expect(defaultPreset).toHaveAttribute("aria-checked", "true");
 
-    expect(screen.getByLabelText("体力加点")).toHaveValue(1);
-    expect(screen.getByText("645")).toBeInTheDocument();
-    expect(screen.getByText("679")).toBeInTheDocument();
+    const mixedPreset = screen.getByRole("radio", { name: "6敏2体2耐" });
+    await user.click(mixedPreset);
+
+    expect(mixedPreset).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("体 +136 · 耐 +136 · 敏 +408")).toBeInTheDocument();
+    expect(screen.getByText("1050")).toBeInTheDocument();
+  });
+
+  it("应该自由叠加多条技能属性并支持清空", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    expect(
+      screen.getByRole("heading", { name: "技能属性加成" })
+    ).toBeInTheDocument();
+    expect(
+      SKILL_INPUT_LABELS.map((label) =>
+        screen.getByRole("spinbutton", { name: label })
+      )
+    ).toHaveLength(7);
+
+    await user.type(
+      screen.getByRole("spinbutton", { name: "技能属性加成：气血" }),
+      "100"
+    );
+    await user.type(
+      screen.getByRole("spinbutton", { name: "技能属性加成：物攻" }),
+      "25"
+    );
+
+    expect(screen.getByText("742")).toBeInTheDocument();
+    expect(screen.getByText("531")).toBeInTheDocument();
+    expect(screen.getByText("+技能 100")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "清空" }));
+
+    expect(screen.queryByText("742")).not.toBeInTheDocument();
+    expect(screen.queryByText("531")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("spinbutton", { name: "技能属性加成：气血" })
+    ).toHaveValue(null);
+  });
+
+  it("应该允许技能减少速度并正确更新最终速度", () => {
+    render(<CharacterAttributeCalculator />);
+
+    const speedInput = screen.getByRole("spinbutton", {
+      name: "技能属性加成：速度",
+    });
+    fireEvent.change(speedInput, { target: { value: "-30" } });
+
+    expect(speedInput).toHaveValue(-30);
+    expect(screen.getByText("172.6")).toBeInTheDocument();
+    expect(screen.getByText("-30")).toHaveClass("text-rose-600");
+    expect(screen.getByRole("button", { name: "清空" })).toBeEnabled();
   });
 
   it("应该按照游戏布局左侧显示派生属性、右侧显示潜力属性", () => {
@@ -69,19 +122,34 @@ describe("CharacterAttributeCalculator", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("应该限制总加点并支持重置", async () => {
-    const user = userEvent.setup();
+  it("应该只提供当前阶段允许的七种加点方案", () => {
     render(<CharacterAttributeCalculator />);
 
-    fireEvent.change(screen.getByLabelText("体力加点"), {
-      target: { value: "999" },
-    });
-
-    expect(screen.getByLabelText("体力加点")).toHaveValue(680);
-    expect(screen.getByRole("button", { name: "灵力增加 1 点" })).toBeDisabled();
-
-    await user.click(screen.getByRole("button", { name: "重置加点" }));
-    expect(screen.getByLabelText("体力加点")).toHaveValue(0);
-    expect(screen.getAllByText("680")).toHaveLength(2);
+    expect(
+      within(screen.getByRole("radiogroup", { name: "潜力点加点方案" }))
+        .getAllByRole("radio")
+        .map((option) => option.textContent)
+    ).toEqual([
+      "10力",
+      "10灵",
+      "10敏",
+      "6力4敏",
+      "6灵4耐",
+      "6敏4耐",
+      "6敏2体2耐",
+    ]);
+    expect(
+      screen.queryByRole("button", { name: "重置加点" })
+    ).not.toBeInTheDocument();
   });
 });
+
+const SKILL_INPUT_LABELS = [
+  "技能属性加成：气血",
+  "技能属性加成：法力",
+  "技能属性加成：物攻",
+  "技能属性加成：法攻",
+  "技能属性加成：物防",
+  "技能属性加成：法防",
+  "技能属性加成：速度",
+];

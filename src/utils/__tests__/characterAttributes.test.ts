@@ -1,6 +1,11 @@
 import {
+  applyCharacterAttributeBonuses,
+  calculatePresetAllocation,
   calculateCharacterAttributes,
+  CHARACTER_ALLOCATION_PRESETS,
   CHARACTER_UPGRADE_COUNT,
+  combineCharacterAttributeBonuses,
+  createEmptyCharacterAttributeBonuses,
   EMPTY_CHARACTER_ALLOCATION,
   FIXED_PRIMARY_ATTRIBUTES,
   LEVEL_69_ADVANCED_ATTRIBUTES,
@@ -10,6 +15,87 @@ import {
 } from "../characterAttributes";
 
 describe("角色属性计算", () => {
+  it("应该合并多个来源的直接属性和潜力属性加成", () => {
+    const combined = combineCharacterAttributeBonuses(
+      { health: 100, strength: 5 },
+      { health: 50, strength: 7, speed: 3 }
+    );
+
+    expect(combined).toEqual({
+      ...createEmptyCharacterAttributeBonuses(),
+      health: 150,
+      strength: 12,
+      speed: 3,
+    });
+  });
+
+  it("应该让潜力加成参与派生公式但不占用可分配点", () => {
+    const calculated = calculateCharacterAttributes(
+      EMPTY_CHARACTER_ALLOCATION
+    );
+    const bonuses = {
+      ...createEmptyCharacterAttributeBonuses(),
+      strength: 10,
+      endurance: 4,
+      physicalAttack: 5,
+    };
+    const effective = applyCharacterAttributeBonuses(calculated, bonuses);
+
+    expect(effective.primary.strength).toBe(178);
+    expect(effective.primary.endurance).toBe(162);
+    expect(effective.status.health).toBe(642);
+    expect(effective.derived).toEqual({
+      physicalAttack: 176,
+      magicAttack: 239.4,
+      physicalDefense: 193,
+      magicDefense: 184.4,
+      speed: 136,
+    });
+    expect(calculated.allocatedPoints).toBe(0);
+    expect(calculated.remainingPoints).toBe(TOTAL_POTENTIAL_POINTS);
+  });
+
+  it("应该支持技能直接减少速度", () => {
+    const calculated = calculateCharacterAttributes(
+      EMPTY_CHARACTER_ALLOCATION
+    );
+    const bonuses = {
+      ...createEmptyCharacterAttributeBonuses(),
+      magicAttack: 20,
+      speed: -30,
+    };
+    const effective = applyCharacterAttributeBonuses(calculated, bonuses);
+
+    expect(effective.derived.magicAttack).toBe(256);
+    expect(effective.derived.speed).toBe(104.6);
+  });
+
+  it("应该将每个预设比例换算为完整的 69 级潜力点", () => {
+    for (const preset of CHARACTER_ALLOCATION_PRESETS) {
+      const allocation = calculatePresetAllocation(preset.ratio);
+      const allocatedPoints = Object.values(allocation).reduce(
+        (total, points) => total + points,
+        0
+      );
+
+      expect(allocatedPoints).toBe(TOTAL_POTENTIAL_POINTS);
+    }
+
+    expect(
+      calculatePresetAllocation(
+        CHARACTER_ALLOCATION_PRESETS.find(
+          ({ id }) => id === "6-agility-2-constitution-2-endurance"
+        )!.ratio
+      )
+    ).toEqual({
+      constitution: 136,
+      spirit: 0,
+      strength: 0,
+      endurance: 136,
+      agility: 408,
+    });
+  });
+
   it("应该生成 69 级固定成长与完整潜力点", () => {
     const result = calculateCharacterAttributes(EMPTY_CHARACTER_ALLOCATION);
 

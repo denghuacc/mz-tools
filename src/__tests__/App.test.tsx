@@ -106,7 +106,13 @@ describe("App 组件", () => {
     expect(
       screen.getByRole("heading", { name: "69 级裸属性" })
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("体力加点")).toBeInTheDocument();
+    expect(
+      screen.getByRole("radiogroup", { name: "潜力点加点方案" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "10力" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
     expect(loadPreferences().activeTool).toBe("character");
   });
 

@@ -16,6 +16,12 @@ export const PRIMARY_ATTRIBUTE_KEYS = [
 export type PrimaryAttribute = (typeof PRIMARY_ATTRIBUTE_KEYS)[number];
 export type CharacterAllocation = Record<PrimaryAttribute, number>;
 
+export type CharacterAllocationPreset = {
+  id: string;
+  label: string;
+  ratio: CharacterAllocation;
+};
+
 export const PRIMARY_ATTRIBUTE_LABELS: Record<PrimaryAttribute, string> = {
   constitution: "体力",
   spirit: "灵力",
@@ -31,6 +37,59 @@ export const EMPTY_CHARACTER_ALLOCATION: CharacterAllocation = {
   endurance: 0,
   agility: 0,
 };
+
+/** 当前开发阶段开放的加点比例；每个方案每级固定分配 10 点潜力。 */
+export const CHARACTER_ALLOCATION_PRESETS = [
+  {
+    id: "10-strength",
+    label: "10力",
+    ratio: { constitution: 0, spirit: 0, strength: 10, endurance: 0, agility: 0 },
+  },
+  {
+    id: "10-spirit",
+    label: "10灵",
+    ratio: { constitution: 0, spirit: 10, strength: 0, endurance: 0, agility: 0 },
+  },
+  {
+    id: "10-agility",
+    label: "10敏",
+    ratio: { constitution: 0, spirit: 0, strength: 0, endurance: 0, agility: 10 },
+  },
+  {
+    id: "6-strength-4-agility",
+    label: "6力4敏",
+    ratio: { constitution: 0, spirit: 0, strength: 6, endurance: 0, agility: 4 },
+  },
+  {
+    id: "6-spirit-4-endurance",
+    label: "6灵4耐",
+    ratio: { constitution: 0, spirit: 6, strength: 0, endurance: 4, agility: 0 },
+  },
+  {
+    id: "6-agility-4-endurance",
+    label: "6敏4耐",
+    ratio: { constitution: 0, spirit: 0, strength: 0, endurance: 4, agility: 6 },
+  },
+  {
+    id: "6-agility-2-constitution-2-endurance",
+    label: "6敏2体2耐",
+    ratio: { constitution: 2, spirit: 0, strength: 0, endurance: 2, agility: 6 },
+  },
+] as const satisfies readonly CharacterAllocationPreset[];
+
+export type CharacterAllocationPresetId =
+  (typeof CHARACTER_ALLOCATION_PRESETS)[number]["id"];
+
+/** 将每级 10 点的比例方案换算为当前等级的实际潜力点。 */
+export const calculatePresetAllocation = (
+  ratio: CharacterAllocation
+): CharacterAllocation => ({
+  constitution: ratio.constitution * CHARACTER_UPGRADE_COUNT,
+  spirit: ratio.spirit * CHARACTER_UPGRADE_COUNT,
+  strength: ratio.strength * CHARACTER_UPGRADE_COUNT,
+  endurance: ratio.endurance * CHARACTER_UPGRADE_COUNT,
+  agility: ratio.agility * CHARACTER_UPGRADE_COUNT,
+});
 
 export const LEVEL_ONE_PRIMARY_ATTRIBUTES: CharacterAllocation = {
   constitution: 22,
@@ -53,6 +112,59 @@ export const LEVEL_ONE_DERIVED_ATTRIBUTES = {
   physicalDefense: 53,
   speed: 19,
 } as const;
+
+export const CHARACTER_DIRECT_BONUS_ATTRIBUTE_KEYS = [
+  "health",
+  "mana",
+  "physicalAttack",
+  "magicAttack",
+  "physicalDefense",
+  "magicDefense",
+  "speed",
+] as const;
+
+export type CharacterDirectBonusAttribute =
+  (typeof CHARACTER_DIRECT_BONUS_ATTRIBUTE_KEYS)[number];
+
+export const CHARACTER_BONUS_ATTRIBUTE_KEYS = [
+  ...PRIMARY_ATTRIBUTE_KEYS,
+  ...CHARACTER_DIRECT_BONUS_ATTRIBUTE_KEYS,
+] as const;
+
+export type CharacterBonusAttribute =
+  (typeof CHARACTER_BONUS_ATTRIBUTE_KEYS)[number];
+export type CharacterAttributeBonuses = Record<CharacterBonusAttribute, number>;
+
+export const createEmptyCharacterAttributeBonuses =
+  (): CharacterAttributeBonuses => ({
+    health: 0,
+    mana: 0,
+    physicalAttack: 0,
+    magicAttack: 0,
+    physicalDefense: 0,
+    magicDefense: 0,
+    speed: 0,
+    constitution: 0,
+    spirit: 0,
+    strength: 0,
+    endurance: 0,
+    agility: 0,
+  });
+
+/** 合并技能、装备等多个来源的最终属性加成。 */
+export const combineCharacterAttributeBonuses = (
+  ...bonusSources: readonly Partial<CharacterAttributeBonuses>[]
+): CharacterAttributeBonuses => {
+  const combined = createEmptyCharacterAttributeBonuses();
+
+  for (const source of bonusSources) {
+    for (const attribute of CHARACTER_BONUS_ATTRIBUTE_KEYS) {
+      combined[attribute] += source[attribute] ?? 0;
+    }
+  }
+
+  return combined;
+};
 
 export type AdvancedAttributes = {
   physicalCritical: number;
@@ -131,6 +243,73 @@ export type CalculatedCharacterAttributes = {
 };
 
 const roundAttribute = (value: number) => Math.round(value * 100) / 100;
+
+export type EffectiveCharacterAttributes = {
+  primary: CharacterAllocation;
+  status: Pick<CharacterAttributeBonuses, "health" | "mana">;
+  derived: Record<
+    Exclude<CharacterDirectBonusAttribute, "health" | "mana">,
+    number
+  >;
+};
+
+/** 潜力属性先参与派生公式，直接属性再叠加到最终结果。 */
+export const applyCharacterAttributeBonuses = (
+  calculated: CalculatedCharacterAttributes,
+  bonuses: CharacterAttributeBonuses
+): EffectiveCharacterAttributes => {
+  const magicAttributeBonus =
+    bonuses.constitution * 0.1 +
+    bonuses.spirit * 0.5 +
+    bonuses.strength * 0.3 +
+    bonuses.endurance * 0.1;
+  const speedFromPotential =
+    bonuses.constitution * 0.1 +
+    bonuses.spirit * 0.05 +
+    bonuses.strength * 0.1 +
+    bonuses.endurance * 0.1 +
+    bonuses.agility * 0.5;
+
+  return {
+    primary: {
+      constitution: calculated.primary.constitution + bonuses.constitution,
+      spirit: calculated.primary.spirit + bonuses.spirit,
+      strength: calculated.primary.strength + bonuses.strength,
+      endurance: calculated.primary.endurance + bonuses.endurance,
+      agility: calculated.primary.agility + bonuses.agility,
+    },
+    status: {
+      health: roundAttribute(
+        calculated.derived.health + bonuses.constitution * 3 + bonuses.health
+      ),
+      // 当前法力成长规则未知，只叠加明确填写的直接加成。
+      mana: roundAttribute(LEVEL_ONE_STATUS_ATTRIBUTES.mana + bonuses.mana),
+    },
+    derived: {
+      physicalAttack: roundAttribute(
+        calculated.derived.physicalAttack +
+          bonuses.strength * 0.5 +
+          bonuses.physicalAttack
+      ),
+      magicAttack: roundAttribute(
+        calculated.derived.magicAttack + magicAttributeBonus + bonuses.magicAttack
+      ),
+      physicalDefense: roundAttribute(
+        calculated.derived.physicalDefense +
+          bonuses.endurance +
+          bonuses.physicalDefense
+      ),
+      magicDefense: roundAttribute(
+        calculated.derived.magicDefense +
+          magicAttributeBonus +
+          bonuses.magicDefense
+      ),
+      speed: roundAttribute(
+        calculated.derived.speed + speedFromPotential + bonuses.speed
+      ),
+    },
+  };
+};
 
 /** 根据 69 级固定成长和玩家分配的潜力点计算当前已知裸属性。 */
 export const calculateCharacterAttributes = (
