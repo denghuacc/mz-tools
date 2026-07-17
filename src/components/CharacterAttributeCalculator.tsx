@@ -1,8 +1,16 @@
-import { useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import AttributeBonusCard from "./AttributeBonusCard";
+import AttributeBonusSummaryPanel from "./AttributeBonusSummaryPanel";
+import type { AttributeBonusSummarySource } from "./AttributeBonusSummaryPanel";
+import EditorDialog from "./EditorDialog";
+import PotentialAllocationControl from "./PotentialAllocationControl";
 import SatinAttributeBonusControl from "./SatinAttributeBonusControl";
 import SinglePrimaryAttributeBonusControl from "./SinglePrimaryAttributeBonusControl";
-import type { SatinBonusSelection } from "./SatinAttributeBonusControl";
+import type {
+  SatinBonusAttribute,
+  SatinBonusSelection,
+} from "./SatinAttributeBonusControl";
 import {
   AFFINITY_LABELS,
   applyCharacterAttributeBonuses,
@@ -70,6 +78,31 @@ const PRIMARY_ATTRIBUTE_SHORT_LABELS: Record<PrimaryAttribute, string> = {
 };
 
 type AttributeTab = "basic" | "advanced";
+type EditorId =
+  | "allocation"
+  | "soulArtifact"
+  | "seasonArtifact"
+  | "charm"
+  | "satin"
+  | "skill";
+type AttributeBonusSourceId = Exclude<EditorId, "allocation">;
+type EditorDefinition = {
+  id: EditorId;
+  title: string;
+  renderContent: (title: string) => ReactNode;
+};
+type AttributeBonusSource =
+  AttributeBonusSummarySource<AttributeBonusSourceId> & {
+    renderContent: (title: string) => ReactNode;
+  };
+
+const SATIN_ATTRIBUTE_SHORT_LABELS: Record<SatinBonusAttribute, string> = {
+  physicalAttack: "物攻",
+  magicAttack: "法攻",
+  physicalDefense: "物防",
+  magicDefense: "法防",
+  speed: "速度",
+};
 
 const ADVANCED_ATTRIBUTE_COLUMNS = [
   [
@@ -91,6 +124,20 @@ const formatAttribute = (value: number) =>
 
 const formatBonus = (value: number) =>
   `${value > 0 ? "+" : ""}${formatAttribute(value)}`;
+
+const createBonusSummaryItems = (
+  fields: readonly {
+    attribute: CharacterBonusAttribute;
+    label: string;
+  }[],
+  values: Partial<Record<CharacterBonusAttribute, number>>
+) =>
+  fields
+    .filter(({ attribute }) => (values[attribute] ?? 0) !== 0)
+    .map(({ attribute, label }) => ({
+      label,
+      value: values[attribute] ?? 0,
+    }));
 
 const createSinglePrimaryAttributeBonuses = (
   attribute: PrimaryAttribute | null,
@@ -137,6 +184,38 @@ const CharacterAttributeCalculator = () => {
   const [satinSelections, setSatinSelections] = useState<
     readonly SatinBonusSelection[]
   >([]);
+  const [activeEditorId, setActiveEditorId] = useState<EditorId | null>(null);
+  const [leftAttributePanelHeight, setLeftAttributePanelHeight] = useState(0);
+  const leftAttributePanelRef = useRef<HTMLElement>(null);
+  const closeEditor = useCallback(() => setActiveEditorId(null), []);
+
+  useLayoutEffect(() => {
+    const panel = leftAttributePanelRef.current;
+
+    if (!panel) {
+      return;
+    }
+
+    const updatePanelHeight = () => {
+      const nextHeight = Math.ceil(panel.getBoundingClientRect().height);
+
+      if (nextHeight > 0) {
+        setLeftAttributePanelHeight(nextHeight);
+      }
+    };
+
+    updatePanelHeight();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updatePanelHeight);
+      return () => window.removeEventListener("resize", updatePanelHeight);
+    }
+
+    const resizeObserver = new ResizeObserver(updatePanelHeight);
+    resizeObserver.observe(panel);
+
+    return () => resizeObserver.disconnect();
+  }, []);
   const seasonArtifactBonuses = useMemo(
     () =>
       createSinglePrimaryAttributeBonuses(
@@ -205,6 +284,44 @@ const CharacterAttributeCalculator = () => {
         `${PRIMARY_ATTRIBUTE_SHORT_LABELS[attribute]} +${allocation[attribute]}`
     )
     .join(" · ");
+  const soulArtifactSummaryItems = createBonusSummaryItems(
+    SOUL_ARTIFACT_BONUS_FIELDS,
+    soulArtifactBonuses
+  );
+  const seasonArtifactSummaryItems =
+    seasonArtifactAttribute && seasonArtifactValue !== 0
+      ? [
+          {
+            label: PRIMARY_ATTRIBUTE_SHORT_LABELS[seasonArtifactAttribute],
+            value: seasonArtifactValue,
+          },
+        ]
+      : [];
+  const charmSummaryItems =
+    charmAttribute && charmValue !== 0
+      ? [
+          {
+            label: PRIMARY_ATTRIBUTE_SHORT_LABELS[charmAttribute],
+            value: charmValue,
+          },
+        ]
+      : [];
+  const satinSummaryItems = satinSelections
+    .filter(({ value }) => value !== 0)
+    .map(({ attribute, value }) => ({
+      label: SATIN_ATTRIBUTE_SHORT_LABELS[attribute],
+      value,
+    }));
+  const skillSummaryItems = createBonusSummaryItems(
+    SKILL_BONUS_FIELDS,
+    skillBonuses
+  );
+  const rightRailStyle =
+    leftAttributePanelHeight > 0
+      ? ({
+          "--attribute-panel-height": `${leftAttributePanelHeight}px`,
+        } as CSSProperties)
+      : undefined;
 
   const updateSkillBonus = (
     attribute: CharacterBonusAttribute,
@@ -219,6 +336,114 @@ const CharacterAttributeCalculator = () => {
   ) => {
     setSoulArtifactBonuses((current) => ({ ...current, [attribute]: value }));
   };
+
+  const attributeBonusSources: readonly AttributeBonusSource[] = [
+    {
+      id: "soulArtifact",
+      title: "魂器属性",
+      items: soulArtifactSummaryItems,
+      validationError: soulArtifactValidationError,
+      renderContent: (title) => (
+        <AttributeBonusCard
+          title={title}
+          description="体/灵/力/耐/敏可增可减，五项增减合计必须为 0；其余属性只能增加。"
+          fields={SOUL_ARTIFACT_BONUS_FIELDS}
+          values={soulArtifactBonuses}
+          onChange={updateSoulArtifactBonus}
+          onReset={() =>
+            setSoulArtifactBonuses(createEmptyCharacterAttributeBonuses())
+          }
+          validationError={soulArtifactValidationError}
+        />
+      ),
+    },
+    {
+      id: "seasonArtifact",
+      title: "赛季神器",
+      items: seasonArtifactSummaryItems,
+      renderContent: (title) => (
+        <SinglePrimaryAttributeBonusControl
+          title={title}
+          description="选择一项属性，并填写本次实际潜能点。"
+          selectedAttribute={seasonArtifactAttribute}
+          value={seasonArtifactValue}
+          onSelect={setSeasonArtifactAttribute}
+          onValueChange={setSeasonArtifactValue}
+          onReset={() => {
+            setSeasonArtifactAttribute(null);
+            setSeasonArtifactValue(0);
+          }}
+        />
+      ),
+    },
+    {
+      id: "charm",
+      title: "魅灵",
+      items: charmSummaryItems,
+      renderContent: (title) => (
+        <SinglePrimaryAttributeBonusControl
+          title={title}
+          description="选择一项属性并填写实际潜能点，最高 120 点。"
+          selectedAttribute={charmAttribute}
+          value={charmValue}
+          onSelect={setCharmAttribute}
+          onValueChange={setCharmValue}
+          maximumValue={CHARM_BONUS_MAX_VALUE}
+          onReset={() => {
+            setCharmAttribute(null);
+            setCharmValue(0);
+          }}
+        />
+      ),
+    },
+    {
+      id: "satin",
+      title: "缎纹属性",
+      items: satinSummaryItems,
+      renderContent: (title) => (
+        <SatinAttributeBonusControl
+          title={title}
+          selections={satinSelections}
+          onChange={setSatinSelections}
+        />
+      ),
+    },
+    {
+      id: "skill",
+      title: "技能属性加成",
+      items: skillSummaryItems,
+      renderContent: (title) => (
+        <AttributeBonusCard
+          title={title}
+          description="不同门派的技能加成不同，请按实际数值填写；速度减少时填负数。"
+          fields={SKILL_BONUS_FIELDS}
+          values={skillBonuses}
+          onChange={updateSkillBonus}
+          onReset={() =>
+            setSkillBonuses(createEmptyCharacterAttributeBonuses())
+          }
+        />
+      ),
+    },
+  ];
+  const editorDefinitions: readonly EditorDefinition[] = [
+    {
+      id: "allocation",
+      title: "潜力点分配",
+      renderContent: (title) => (
+        <PotentialAllocationControl
+          title={title}
+          selectedPresetId={selectedPresetId}
+          summary={allocationSummary}
+          onSelect={setSelectedPresetId}
+        />
+      ),
+    },
+    ...attributeBonusSources,
+  ];
+  const activeEditor = activeEditorId
+    ? editorDefinitions.find(({ id }) => id === activeEditorId)
+    : undefined;
 
   return (
     <div className="space-y-5">
@@ -271,118 +496,22 @@ const CharacterAttributeCalculator = () => {
       </section>
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(520px,1.2fr)_minmax(360px,0.8fr)]">
-        <div className="order-1 space-y-5 xl:order-2">
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-              <div>
-                <h2 className="text-base font-semibold text-slate-900">潜力点分配</h2>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  按每 10 点的固定比例分配，暂提供常用方案。
-                </p>
-              </div>
-              <p className="text-xs font-medium text-emerald-600">
-                {allocationSummary}
-              </p>
-            </div>
-
-            <div
-              className="mt-3 flex flex-wrap gap-2"
-              role="radiogroup"
-              aria-label="潜力点加点方案"
-            >
-              {CHARACTER_ALLOCATION_PRESETS.map((preset) => {
-                const isSelected = preset.id === selectedPresetId;
-
-                return (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={isSelected}
-                    className={`h-9 rounded-lg border px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
-                      isSelected
-                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                    }`}
-                    onClick={() => setSelectedPresetId(preset.id)}
-                  >
-                    {preset.label}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
-          <AttributeBonusCard
-            title="魂器属性"
-            description="体/灵/力/耐/敏可增可减，五项增减合计必须为 0；其余属性只能增加。"
-            fields={SOUL_ARTIFACT_BONUS_FIELDS}
-            values={soulArtifactBonuses}
-            onChange={updateSoulArtifactBonus}
-            onReset={() =>
-              setSoulArtifactBonuses(createEmptyCharacterAttributeBonuses())
-            }
-            validationError={soulArtifactValidationError}
-          />
-
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">
-                单属性潜能
-              </h2>
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                赛季神器和魅灵均只选择一项五维属性，切换选择时加成会同步转移。
-              </p>
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <SinglePrimaryAttributeBonusControl
-                title="赛季神器"
-                description="选择一项属性，并填写本次实际潜能点。"
-                selectedAttribute={seasonArtifactAttribute}
-                value={seasonArtifactValue}
-                onSelect={setSeasonArtifactAttribute}
-                onValueChange={setSeasonArtifactValue}
-                onReset={() => {
-                  setSeasonArtifactAttribute(null);
-                  setSeasonArtifactValue(0);
-                }}
-              />
-
-              <SinglePrimaryAttributeBonusControl
-                title="魅灵"
-                description="选择一项属性并填写实际潜能点，最高 120 点。"
-                selectedAttribute={charmAttribute}
-                value={charmValue}
-                onSelect={setCharmAttribute}
-                onValueChange={setCharmValue}
-                maximumValue={CHARM_BONUS_MAX_VALUE}
-                onReset={() => {
-                  setCharmAttribute(null);
-                  setCharmValue(0);
-                }}
-              />
-            </div>
-          </section>
-
-          <SatinAttributeBonusControl
-            selections={satinSelections}
-            onChange={setSatinSelections}
-          />
-
-          <AttributeBonusCard
-            title="技能属性加成"
-            description="不同门派的技能加成不同，请按实际数值填写；速度减少时填负数。"
-            fields={SKILL_BONUS_FIELDS}
-            values={skillBonuses}
-            onChange={updateSkillBonus}
-            onReset={() =>
-              setSkillBonuses(createEmptyCharacterAttributeBonuses())
-            }
+        <div
+          className="order-1 space-y-4 xl:order-2 xl:max-h-[var(--attribute-panel-height)] xl:overflow-y-auto xl:overscroll-contain xl:pr-1"
+          style={rightRailStyle}
+          data-testid="attribute-bonus-rail"
+        >
+          <AttributeBonusSummaryPanel
+            sources={attributeBonusSources}
+            onEdit={(sourceId) => setActiveEditorId(sourceId)}
           />
         </div>
 
-        <section className="order-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 xl:order-1">
+        <section
+          ref={leftAttributePanelRef}
+          className="order-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 xl:order-1"
+          data-testid="attribute-result-panel"
+        >
           <div>
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
@@ -482,18 +611,40 @@ const CharacterAttributeCalculator = () => {
 
             {activeAttributeTab === "basic" ? (
               <div className="mt-5">
-                <div className="mb-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-base font-semibold text-slate-900">
-                      基础属性 · 10 项
-                    </h2>
-                    <span className="text-xs font-medium text-amber-600">
-                      五项派生初值待验证
-                    </span>
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <h2 className="text-base font-semibold text-slate-900">
+                        基础属性 · 10 项
+                      </h2>
+                      <span className="text-xs font-medium text-amber-600">
+                        五项派生初值待验证
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-xs leading-5 text-slate-500">
+                      当前值 = 1 级物理角色初始值 + {CHARACTER_UPGRADE_COUNT} 次固定成长 + 潜力点 + 属性加成。
+                    </p>
                   </div>
-                  <p className="mt-1.5 text-xs leading-5 text-slate-500">
-                    当前值 = 1 级物理角色初始值 + {CHARACTER_UPGRADE_COUNT} 次固定成长 + 潜力点 + 属性加成。
-                  </p>
+
+                  <button
+                    type="button"
+                    className="w-full shrink-0 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-left transition hover:border-blue-200 hover:bg-blue-50/60 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-44"
+                    aria-label="编辑潜力点分配"
+                    onClick={() => setActiveEditorId("allocation")}
+                  >
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-slate-500">潜力点分配</span>
+                      <span className="text-xs font-medium text-blue-600">编辑</span>
+                    </span>
+                    <span className="mt-1 flex items-baseline justify-between gap-2">
+                      <strong className="shrink-0 whitespace-nowrap text-sm font-semibold text-slate-900">
+                        {selectedPreset.label}
+                      </strong>
+                      <span className="truncate text-[11px] font-medium text-emerald-600">
+                        {allocationSummary}
+                      </span>
+                    </span>
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -673,6 +824,12 @@ const CharacterAttributeCalculator = () => {
           </div>
         </section>
       </div>
+
+      {activeEditor && (
+        <EditorDialog title={activeEditor.title} onClose={closeEditor}>
+          {activeEditor.renderContent(activeEditor.title)}
+        </EditorDialog>
+      )}
 
       <section className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 text-xs leading-6 text-blue-900 sm:px-5">
         <strong className="font-semibold">当前计算口径：</strong>

@@ -107,12 +107,25 @@ describe("App 组件", () => {
       screen.getByRole("heading", { name: "69 级裸属性" })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("radiogroup", { name: "潜力点加点方案" })
+      within(
+        screen.getByRole("button", { name: "编辑潜力点分配" })
+      ).getByText("10力")
     ).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "10力" })).toHaveAttribute(
-      "aria-checked",
-      "true"
+
+    await user.click(
+      screen.getByRole("button", { name: "编辑潜力点分配" })
     );
+    const allocationDialog = screen.getByRole("dialog", {
+      name: "编辑潜力点分配",
+    });
+    expect(
+      within(allocationDialog).getByRole("radiogroup", {
+        name: "潜力点加点方案",
+      })
+    ).toBeInTheDocument();
+    expect(
+      within(allocationDialog).getByRole("radio", { name: "10力" })
+    ).toHaveAttribute("aria-checked", "true");
     expect(loadPreferences().activeTool).toBe("character");
   });
 

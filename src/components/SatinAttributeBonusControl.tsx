@@ -15,6 +15,7 @@ export type SatinBonusSelection = {
 };
 
 type SatinAttributeBonusControlProps = {
+  title: string;
   selections: readonly SatinBonusSelection[];
   onChange: (selections: readonly SatinBonusSelection[]) => void;
 };
@@ -23,6 +24,7 @@ const MAX_SATIN_ATTRIBUTE_COUNT = 2;
 
 /** 录入一至两项缎纹直接属性，并在达到两项后阻止继续选择。 */
 const SatinAttributeBonusControl = ({
+  title,
   selections,
   onChange,
 }: SatinAttributeBonusControlProps) => {
@@ -63,7 +65,7 @@ const SatinAttributeBonusControl = ({
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold text-slate-900">缎纹属性</h2>
+          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
           <p className="mt-1 text-xs leading-5 text-slate-500">
             从物攻、法攻、物防、法防、速度中选择一至两项，并填写实际数值。
           </p>
