@@ -104,7 +104,7 @@ describe("App 组件", () => {
     await user.click(screen.getByRole("tab", { name: "角色属性" }));
 
     expect(
-      screen.getByRole("heading", { name: "69 级裸属性" })
+      screen.getByRole("heading", { name: "基础属性 · 10 项" })
     ).toBeInTheDocument();
     expect(
       within(

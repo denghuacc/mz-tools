@@ -29,7 +29,7 @@ const SatinAttributeBonusControl = ({
   <SelectableAttributeBonusControl
     title={title}
     description="从物攻、法攻、物防、法防、速度中选择一至两项，并填写实际数值。"
-    groupLabel="缎纹属性选择"
+    groupLabel="缎纹选择"
     fields={SATIN_ATTRIBUTE_FIELDS}
     selections={selections}
     onChange={onChange}

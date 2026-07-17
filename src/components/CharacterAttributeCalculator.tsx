@@ -242,6 +242,15 @@ const TIANSHU_BONUS_SUMMARY_FIELDS = [
   ...AFFINITY_BONUS_FIELDS,
 ] as const;
 
+const AFFINITY_BACKGROUND_CLASSES = {
+  fireAffinity: "bg-[#f6e0e0]",
+  iceAffinity: "bg-[#e0f1f6]",
+  electricAffinity: "bg-[#f5ede0]",
+  poisonAffinity: "bg-[#f1e5f6]",
+  waterAffinity: "bg-[#e0e9f6]",
+  windAffinity: "bg-[#e0f5f4]",
+} as const;
+
 const DERIVED_ATTRIBUTES = [
   ["magicAttack", "法攻"],
   ["magicDefense", "法防"],
@@ -703,7 +712,7 @@ const CharacterAttributeCalculator = () => {
   const attributeBonusSources: readonly AttributeBonusSource[] = [
     {
       id: "soulArtifact",
-      title: "魂器属性",
+      title: "魂器",
       items: soulArtifactSummaryItems,
       validationError: soulArtifactValidationError,
       renderContent: (title) => (
@@ -790,7 +799,7 @@ const CharacterAttributeCalculator = () => {
     },
     {
       id: "satin",
-      title: "缎纹属性",
+      title: "缎纹",
       items: satinSummaryItems,
       renderContent: (title) => (
         <SatinAttributeBonusControl
@@ -845,7 +854,7 @@ const CharacterAttributeCalculator = () => {
     },
     {
       id: "temporaryTalisman",
-      title: "临时符",
+      title: "灵符",
       items: temporaryTalismanSummaryItems,
       renderContent: (title) => (
         <AttributeBonusCard
@@ -864,7 +873,7 @@ const CharacterAttributeCalculator = () => {
     },
     {
       id: "skill",
-      title: "技能属性加成",
+      title: "技能",
       items: skillSummaryItems,
       renderContent: (title) => (
         <AttributeBonusCard
@@ -901,54 +910,6 @@ const CharacterAttributeCalculator = () => {
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-5 py-5 sm:px-6">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-slate-900">
-                {CHARACTER_LEVEL} 级裸属性
-              </h2>
-              <span className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
-                白版
-              </span>
-              <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-                物理角色基准
-              </span>
-            </div>
-            <p className="mt-1.5 text-sm leading-6 text-slate-500">
-              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器、神魂、天书、赛季神器、魅灵、缎纹、幻形符、祝福、临时符与门派技能；不含装备。
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 divide-x divide-slate-100 bg-slate-50/70">
-          <div className="px-3 py-4 text-center sm:px-5">
-            <p className="text-xs text-slate-500">潜力点总计</p>
-            <p className="mt-1 text-xl font-semibold text-slate-900">
-              {TOTAL_POTENTIAL_POINTS}
-            </p>
-          </div>
-          <div className="px-3 py-4 text-center sm:px-5">
-            <p className="text-xs text-slate-500">已分配</p>
-            <p className="mt-1 text-xl font-semibold text-slate-900">
-              {calculated.allocatedPoints}
-            </p>
-          </div>
-          <div className="px-3 py-4 text-center sm:px-5">
-            <p className="text-xs text-slate-500">剩余</p>
-            <p
-              className={`mt-1 text-xl font-semibold ${
-                calculated.remainingPoints === 0
-                  ? "text-emerald-600"
-                  : "text-blue-600"
-              }`}
-            >
-              {calculated.remainingPoints}
-            </p>
-          </div>
-        </div>
-      </section>
-
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(520px,1.2fr)_minmax(360px,0.8fr)]">
         <div
           className="order-1 space-y-4 xl:order-2 xl:max-h-[var(--attribute-panel-height)] xl:overflow-y-auto xl:overscroll-contain xl:pr-1"
@@ -1015,7 +976,7 @@ const CharacterAttributeCalculator = () => {
                           )}
                           {temporaryTalismanBonuses.health > 0 && (
                             <span className="ml-2 inline-block whitespace-nowrap text-xs text-violet-600">
-                              +临时符 {formatAttribute(temporaryTalismanBonuses.health)}
+                              +灵符 {formatAttribute(temporaryTalismanBonuses.health)}
                             </span>
                           )}
                         </>
@@ -1049,7 +1010,7 @@ const CharacterAttributeCalculator = () => {
                             )}
                             {temporaryTalismanBonuses.mana > 0 && (
                               <span className="ml-2 inline-block whitespace-nowrap text-xs text-violet-600">
-                                +临时符 {formatAttribute(temporaryTalismanBonuses.mana)}
+                                +灵符 {formatAttribute(temporaryTalismanBonuses.mana)}
                               </span>
                             )}
                           </>
@@ -1090,7 +1051,7 @@ const CharacterAttributeCalculator = () => {
           <div className="mt-6 border-t border-slate-200 pt-5">
             <div className="flex items-stretch gap-2">
               <div
-                className="grid min-w-0 flex-1 grid-cols-2 rounded-xl bg-slate-100 p-1"
+                className="grid min-w-0 flex-1 grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1"
                 role="tablist"
                 aria-label="属性类型"
               >
@@ -1235,7 +1196,7 @@ const CharacterAttributeCalculator = () => {
                                 )}
                                 {temporaryTalismanBonuses[attribute] > 0 && (
                                   <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-violet-600">
-                                    临时符 {formatBonus(temporaryTalismanBonuses[attribute])}
+                                    灵符 {formatBonus(temporaryTalismanBonuses[attribute])}
                                   </span>
                                 )}
                               </>
@@ -1308,7 +1269,7 @@ const CharacterAttributeCalculator = () => {
                                 )}
                                 {temporaryTalismanBonuses[attribute] > 0 && (
                                   <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-violet-600">
-                                    临时符 {formatBonus(temporaryTalismanBonuses[attribute])}
+                                    灵符 {formatBonus(temporaryTalismanBonuses[attribute])}
                                   </span>
                                 )}
                               </>
@@ -1380,7 +1341,7 @@ const CharacterAttributeCalculator = () => {
                                       attribute.attribute
                                     ] > 0 && (
                                       <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-violet-600">
-                                        临时符 {formatBonus(
+                                        灵符 {formatBonus(
                                           temporaryTalismanBonuses[
                                             attribute.attribute
                                           ]
@@ -1446,7 +1407,7 @@ const CharacterAttributeCalculator = () => {
                     {AFFINITY_BONUS_FIELDS.map(({ attribute, label }) => (
                       <div
                         key={attribute}
-                        className="rounded-lg bg-slate-50 px-2 py-3 text-center"
+                        className={`rounded-lg px-2 py-3 text-center ${AFFINITY_BACKGROUND_CLASSES[attribute]}`}
                       >
                         <p className="text-xs text-slate-500">{label}</p>
                         {areBonusDetailsVisible && tianshuBonuses[attribute] > 0 && (

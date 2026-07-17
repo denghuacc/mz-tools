@@ -78,7 +78,7 @@ describe("角色属性计算", () => {
     expect(calculated.remainingPoints).toBe(TOTAL_POTENTIAL_POINTS);
   });
 
-  it("应该把临时符的治疗强度和封印命中计入进阶属性", () => {
+  it("应该把灵符的治疗强度和封印命中计入进阶属性", () => {
     const calculated = calculateCharacterAttributes(
       EMPTY_CHARACTER_ALLOCATION
     );

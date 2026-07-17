@@ -3,27 +3,40 @@ import userEvent from "@testing-library/user-event";
 import CharacterAttributeCalculator from "../CharacterAttributeCalculator";
 
 describe("CharacterAttributeCalculator", () => {
-  it("应该展示 69 级白版计算结构", () => {
+  it("应该展示角色属性计算结构", () => {
     render(<CharacterAttributeCalculator />);
 
     expect(
-      screen.getByRole("heading", { name: "69 级裸属性" })
-    ).toBeInTheDocument();
-    expect(screen.getByText("潜力点总计")).toBeInTheDocument();
+      screen.queryByRole("heading", { name: "69 级裸属性" })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("潜力点总计")).not.toBeInTheDocument();
     expect(screen.getByText("基础属性 · 10 项")).toBeInTheDocument();
     expect(screen.getByText("五项派生初值待验证")).toBeInTheDocument();
     expect(screen.getByText("潜力 +680")).toBeInTheDocument();
     expect(screen.queryByText("进阶属性与亲和")).not.toBeInTheDocument();
   });
 
+  it("应该为每个属性加成卡片显示编辑图标", () => {
+    render(<CharacterAttributeCalculator />);
+
+    const editButtons = within(screen.getByTestId("attribute-bonus-rail"))
+      .getAllByRole("button", { name: /^编辑/ });
+
+    expect(editButtons).toHaveLength(11);
+    editButtons.forEach((button) => {
+      expect(button.textContent).toBe("");
+      expect(button.querySelector("svg")).not.toBeNull();
+    });
+  });
+
   it("应该一键隐藏并恢复全部属性加成明细", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
 
-    const skillDialog = await openBonusEditor(user, "技能属性加成");
+    const skillDialog = await openBonusEditor(user, "技能");
     await user.type(
       within(skillDialog).getByRole("spinbutton", {
-        name: "技能属性加成：气血",
+        name: "技能：气血",
       }),
       "100"
     );
@@ -88,13 +101,13 @@ describe("CharacterAttributeCalculator", () => {
     render(<CharacterAttributeCalculator />);
 
     expect(
-      screen.getByRole("heading", { name: "技能属性加成" })
+      screen.getByRole("heading", { name: "技能" })
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("spinbutton", { name: "技能属性加成：气血" })
+      screen.queryByRole("spinbutton", { name: "技能：气血" })
     ).not.toBeInTheDocument();
 
-    const skillDialog = await openBonusEditor(user, "技能属性加成");
+    const skillDialog = await openBonusEditor(user, "技能");
     expect(
       SKILL_INPUT_LABELS.map((label) =>
         within(skillDialog).getByRole("spinbutton", { name: label })
@@ -103,13 +116,13 @@ describe("CharacterAttributeCalculator", () => {
 
     await user.type(
       within(skillDialog).getByRole("spinbutton", {
-        name: "技能属性加成：气血",
+        name: "技能：气血",
       }),
       "100"
     );
     await user.type(
       within(skillDialog).getByRole("spinbutton", {
-        name: "技能属性加成：物攻",
+        name: "技能：物攻",
       }),
       "25"
     );
@@ -119,7 +132,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("+技能 100")).toBeInTheDocument();
 
     const skillCard = within(skillDialog)
-      .getByRole("heading", { name: "技能属性加成" })
+      .getByRole("heading", { name: "技能" })
       .closest("section");
     expect(skillCard).not.toBeNull();
     await user.click(within(skillCard!).getByRole("button", { name: "清空" }));
@@ -128,7 +141,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.queryByText("531")).not.toBeInTheDocument();
     expect(
       within(skillDialog).getByRole("spinbutton", {
-        name: "技能属性加成：气血",
+        name: "技能：气血",
       })
     ).toHaveValue(null);
   });
@@ -137,14 +150,14 @@ describe("CharacterAttributeCalculator", () => {
     render(<CharacterAttributeCalculator />);
 
     fireEvent.click(
-      screen.getByRole("button", { name: "编辑技能属性加成" })
+      screen.getByRole("button", { name: "编辑技能" })
     );
     const skillDialog = screen.getByRole("dialog", {
-      name: "编辑技能属性加成",
+      name: "编辑技能",
     });
 
     const speedInput = within(skillDialog).getByRole("spinbutton", {
-      name: "技能属性加成：速度",
+      name: "技能：速度",
     });
     fireEvent.change(speedInput, { target: { value: "-30" } });
 
@@ -152,7 +165,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("172.6")).toBeInTheDocument();
     expect(screen.getByText("-30")).toHaveClass("text-rose-600");
     const skillCard = within(skillDialog)
-      .getByRole("heading", { name: "技能属性加成" })
+      .getByRole("heading", { name: "技能" })
       .closest("section");
     expect(skillCard).not.toBeNull();
     expect(
@@ -163,22 +176,22 @@ describe("CharacterAttributeCalculator", () => {
   it("应该叠加总和为零的魂器五维和直接属性", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
-    await openBonusEditor(user, "魂器属性");
+    await openBonusEditor(user, "魂器");
 
     await user.type(
-      screen.getByRole("spinbutton", { name: "魂器属性：力" }),
+      screen.getByRole("spinbutton", { name: "魂器：力" }),
       "10"
     );
     await user.type(
-      screen.getByRole("spinbutton", { name: "魂器属性：灵" }),
+      screen.getByRole("spinbutton", { name: "魂器：灵" }),
       "-8"
     );
     await user.type(
-      screen.getByRole("spinbutton", { name: "魂器属性：体" }),
+      screen.getByRole("spinbutton", { name: "魂器：体" }),
       "-2"
     );
     await user.type(
-      screen.getByRole("spinbutton", { name: "魂器属性：物攻" }),
+      screen.getByRole("spinbutton", { name: "魂器：物攻" }),
       "20"
     );
 
@@ -192,21 +205,21 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(derivedColumn).getByText("魂器 +20")).toBeInTheDocument();
   });
 
-  it("应该阻止五维增减总和不为零的魂器属性参与计算", async () => {
+  it("应该阻止五维增减总和不为零的魂器参与计算", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
-    await openBonusEditor(user, "魂器属性");
+    await openBonusEditor(user, "魂器");
 
     await user.type(
-      screen.getByRole("spinbutton", { name: "魂器属性：力" }),
+      screen.getByRole("spinbutton", { name: "魂器：力" }),
       "10"
     );
     await user.type(
-      screen.getByRole("spinbutton", { name: "魂器属性：灵" }),
+      screen.getByRole("spinbutton", { name: "魂器：灵" }),
       "-7"
     );
     await user.type(
-      screen.getByRole("spinbutton", { name: "魂器属性：体" }),
+      screen.getByRole("spinbutton", { name: "魂器：体" }),
       "-2"
     );
 
@@ -387,12 +400,12 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(potentialColumn).getAllByText("魅灵 +120")).toHaveLength(1);
   });
 
-  it("应该选择一至两项缎纹属性并阻止选择第三项", async () => {
+  it("应该选择一至两项缎纹并阻止选择第三项", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
-    await openBonusEditor(user, "缎纹属性");
+    await openBonusEditor(user, "缎纹");
 
-    const satinGroup = screen.getByRole("group", { name: "缎纹属性选择" });
+    const satinGroup = screen.getByRole("group", { name: "缎纹选择" });
     const physicalAttackOption = within(satinGroup).getByRole("button", {
       name: "物攻",
     });
@@ -412,11 +425,11 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("已选 2 / 2 项")).toBeInTheDocument();
 
     await user.type(
-      screen.getByRole("spinbutton", { name: "缎纹属性：物攻" }),
+      screen.getByRole("spinbutton", { name: "缎纹：物攻" }),
       "30"
     );
     await user.type(
-      screen.getByRole("spinbutton", { name: "缎纹属性：速度" }),
+      screen.getByRole("spinbutton", { name: "缎纹：速度" }),
       "15"
     );
 
@@ -428,7 +441,7 @@ describe("CharacterAttributeCalculator", () => {
 
     await user.click(physicalAttackOption);
     expect(
-      screen.queryByRole("spinbutton", { name: "缎纹属性：物攻" })
+      screen.queryByRole("spinbutton", { name: "缎纹：物攻" })
     ).not.toBeInTheDocument();
     expect(magicAttackOption).toBeEnabled();
     expect(within(derivedColumn).getByText("506")).toBeInTheDocument();
@@ -621,15 +634,27 @@ describe("CharacterAttributeCalculator", () => {
       "水系亲和",
       "风系亲和",
     ]);
+    for (const [label, backgroundClass] of [
+      ["火系亲和", "bg-[#f6e0e0]"],
+      ["冰系亲和", "bg-[#e0f1f6]"],
+      ["电系亲和", "bg-[#f5ede0]"],
+      ["毒系亲和", "bg-[#f1e5f6]"],
+      ["水系亲和", "bg-[#e0e9f6]"],
+      ["风系亲和", "bg-[#e0f5f4]"],
+    ] as const) {
+      expect(screen.getByText(label).closest("div")).toHaveClass(
+        backgroundClass
+      );
+    }
     expect(
       screen.queryByRole("heading", { name: "基础属性 · 10 项" })
     ).not.toBeInTheDocument();
   });
 
-  it("应该通过临时符叠加基础、状态条和进阶属性", async () => {
+  it("应该通过灵符叠加基础、状态条和进阶属性", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
-    const talismanDialog = await openBonusEditor(user, "临时符");
+    const talismanDialog = await openBonusEditor(user, "灵符");
 
     expect(
       TEMPORARY_TALISMAN_INPUT_LABELS.map((label) =>
@@ -638,12 +663,12 @@ describe("CharacterAttributeCalculator", () => {
     ).toHaveLength(14);
 
     for (const [label, value] of [
-      ["临时符：力", "10"],
-      ["临时符：物攻", "20"],
-      ["临时符：气血", "100"],
-      ["临时符：法力", "50"],
-      ["临时符：封印命中", "42"],
-      ["临时符：治疗强度", "36"],
+      ["灵符：力", "10"],
+      ["灵符：物攻", "20"],
+      ["灵符：气血", "100"],
+      ["灵符：法力", "50"],
+      ["灵符：封印命中", "42"],
+      ["灵符：治疗强度", "36"],
     ] as const) {
       await user.type(
         within(talismanDialog).getByRole("spinbutton", { name: label }),
@@ -661,11 +686,11 @@ describe("CharacterAttributeCalculator", () => {
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
     expect(screen.getByText("190")).toBeInTheDocument();
     expect(screen.getByText("36")).toBeInTheDocument();
-    expect(screen.getByText("临时符 +42")).toBeInTheDocument();
-    expect(screen.getByText("临时符 +36")).toBeInTheDocument();
+    expect(screen.getByText("灵符 +42")).toBeInTheDocument();
+    expect(screen.getByText("灵符 +36")).toBeInTheDocument();
 
     const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
-      .getByRole("heading", { name: "临时符" })
+      .getByRole("heading", { name: "灵符" })
       .closest("article");
     expect(summaryCard).not.toBeNull();
     expect(within(summaryCard!).getByText("力 +10")).toBeInTheDocument();
@@ -704,22 +729,22 @@ describe("CharacterAttributeCalculator", () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
 
-    const skillDialog = await openBonusEditor(user, "技能属性加成");
+    const skillDialog = await openBonusEditor(user, "技能");
     await user.type(
       within(skillDialog).getByRole("spinbutton", {
-        name: "技能属性加成：气血",
+        name: "技能：气血",
       }),
       "100"
     );
     await user.type(
       within(skillDialog).getByRole("spinbutton", {
-        name: "技能属性加成：速度",
+        name: "技能：速度",
       }),
       "-30"
     );
     await user.type(
       within(skillDialog).getByRole("spinbutton", {
-        name: "技能属性加成：物攻",
+        name: "技能：物攻",
       }),
       "122"
     );
@@ -727,7 +752,7 @@ describe("CharacterAttributeCalculator", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     const summaryCard = screen
-      .getByRole("heading", { name: "技能属性加成" })
+      .getByRole("heading", { name: "技能" })
       .closest("article");
     expect(summaryCard).not.toBeNull();
     expect(within(summaryCard!).getByText("气血 +100")).toBeInTheDocument();
@@ -751,28 +776,28 @@ const openBonusEditor = async (
 };
 
 const SKILL_INPUT_LABELS = [
-  "技能属性加成：气血",
-  "技能属性加成：法力",
-  "技能属性加成：物攻",
-  "技能属性加成：法攻",
-  "技能属性加成：物防",
-  "技能属性加成：法防",
-  "技能属性加成：速度",
+  "技能：气血",
+  "技能：法力",
+  "技能：物攻",
+  "技能：法攻",
+  "技能：物防",
+  "技能：法防",
+  "技能：速度",
 ];
 
 const TEMPORARY_TALISMAN_INPUT_LABELS = [
-  "临时符：体",
-  "临时符：灵",
-  "临时符：力",
-  "临时符：耐",
-  "临时符：敏",
-  "临时符：物攻",
-  "临时符：法攻",
-  "临时符：物防",
-  "临时符：法防",
-  "临时符：速度",
-  "临时符：气血",
-  "临时符：法力",
-  "临时符：封印命中",
-  "临时符：治疗强度",
+  "灵符：体",
+  "灵符：灵",
+  "灵符：力",
+  "灵符：耐",
+  "灵符：敏",
+  "灵符：物攻",
+  "灵符：法攻",
+  "灵符：物防",
+  "灵符：法防",
+  "灵符：速度",
+  "灵符：气血",
+  "灵符：法力",
+  "灵符：封印命中",
+  "灵符：治疗强度",
 ];
