@@ -1,6 +1,7 @@
 import { useState } from "react";
 import RingConverter from "./components/RingConverter";
 import WeaponConverter from "./components/WeaponConverter";
+import CharacterAttributeCalculator from "./components/CharacterAttributeCalculator";
 import DataPage from "./pages/DataPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import GuidePage from "./pages/GuidePage";
@@ -68,7 +69,7 @@ const HomePage = ({
           装备属性转换
         </h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          计算不同门派武器与戒指转换后的主属性。
+          分配角色潜力点，或计算不同门派武器与戒指转换后的主属性。
         </p>
         <button
           type="button"
@@ -117,6 +118,22 @@ const CalculatorPage = () => {
     () => loadPreferences().activeTool
   );
   const isWeapon = activeTool === "weapon";
+  const isCharacter = activeTool === "character";
+
+  const toolMeta = isCharacter
+    ? {
+        title: "角色属性计算器",
+        description: "分配 69 级角色潜力点，查看当前已知规则下的裸属性。",
+      }
+    : isWeapon
+      ? {
+          title: "武器属性转换器",
+          description: "设置转换路径，并填写当前武器的三项属性。",
+        }
+      : {
+          title: "戒指属性转换器",
+          description: "选择当前与目标门派，并填写戒指的两项主属性。",
+        };
 
   const handleToolChange = (tool: CalculatorTool) => {
     setActiveTool(tool);
@@ -128,22 +145,23 @@ const CalculatorPage = () => {
       <div>
         <p className="text-sm font-medium text-blue-600">计算器</p>
         <h1 className="mt-1 text-2xl font-semibold text-slate-900">
-          装备数值计算
+          游戏数值计算
         </h1>
         <p className="mt-2 text-sm text-slate-500">
-          输入当前装备属性，查看转换至目标门派后的数值变化。
+          计算角色裸属性，或查看装备转换至目标门派后的数值变化。
         </p>
       </div>
 
       <div
         className="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm"
         role="tablist"
-        aria-label="装备转换类型"
+        aria-label="计算器类型"
       >
         {(
           [
             ["weapon", "武器转换"],
             ["ring", "戒指转换"],
+            ["character", "角色属性"],
           ] as const
         ).map(([tool, label]) => (
           <button
@@ -163,24 +181,39 @@ const CalculatorPage = () => {
         ))}
       </div>
 
-      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,672px)_minmax(260px,1fr)]">
-        {isWeapon ? <WeaponConverter /> : <RingConverter />}
+      <div
+        className={`grid items-start gap-5 ${
+          isCharacter
+            ? ""
+            : "xl:grid-cols-[minmax(0,672px)_minmax(260px,1fr)]"
+        }`}
+      >
+        {isCharacter ? (
+          <CharacterAttributeCalculator />
+        ) : isWeapon ? (
+          <WeaponConverter />
+        ) : (
+          <RingConverter />
+        )}
 
-        <aside className="space-y-4 xl:sticky xl:top-24">
+        {!isCharacter && <aside className="space-y-4 xl:sticky xl:top-24">
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-5 hidden border-b border-slate-100 pb-5 xl:block">
               <h2 className="text-xl font-semibold tracking-tight text-slate-900">
-                {isWeapon ? "武器属性转换器" : "戒指属性转换器"}
+                {toolMeta.title}
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                {isWeapon
-                  ? "设置转换路径，并填写当前武器的三项属性。"
-                  : "选择当前与目标门派，并填写戒指的两项主属性。"}
+                {toolMeta.description}
               </p>
             </div>
             <h2 className="text-base font-semibold text-slate-900">工具说明</h2>
             <div className="mt-4 space-y-3 text-sm leading-6 text-slate-500">
-              {isWeapon ? (
+              {isCharacter ? (
+                <>
+                  <p>当前固定为 69 级，仅计算五维固定成长和潜力点。</p>
+                  <p>本期只做状态与 10 项基础属性，进阶属性后续补充。</p>
+                </>
+              ) : isWeapon ? (
                 <>
                   <p>选择武器等级、当前门派与目标门派，再填写三项武器属性。</p>
                   <p>如武器经过原造型转换，可选择原造型以计算完整转换路径。</p>
@@ -209,7 +242,7 @@ const CalculatorPage = () => {
               <li>官方攻略索引持续更新</li>
             </ul>
           </section>
-        </aside>
+        </aside>}
       </div>
     </div>
   );

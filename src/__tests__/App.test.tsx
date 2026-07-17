@@ -50,7 +50,7 @@ describe("App 组件", () => {
       "aria-current",
       "page"
     );
-    expect(screen.getByText("装备数值计算")).toBeInTheDocument();
+    expect(screen.getByText("游戏数值计算")).toBeInTheDocument();
   });
 
   it("应该支持在导航页面之间切换", async () => {
@@ -61,11 +61,11 @@ describe("App 组件", () => {
     await user.click(within(navigation).getByRole("button", { name: "首页" }));
 
     expect(screen.getByRole("heading", { name: "梦幻新诛仙实用工具" })).toBeInTheDocument();
-    expect(screen.queryByText("装备数值计算")).not.toBeInTheDocument();
+    expect(screen.queryByText("游戏数值计算")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "进入计算器" }));
 
-    expect(screen.getByText("装备数值计算")).toBeInTheDocument();
+    expect(screen.getByText("游戏数值计算")).toBeInTheDocument();
   });
 
   it("首页入口应该打开资料和攻略模块", async () => {
@@ -95,6 +95,19 @@ describe("App 组件", () => {
     expect(screen.getByText("戒指属性转换器")).toBeInTheDocument();
     expect(screen.queryByText("武器属性转换器")).not.toBeInTheDocument();
     expect(loadPreferences().activeTool).toBe("ring");
+  });
+
+  it("应该支持切换到角色属性计算器", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "角色属性" }));
+
+    expect(
+      screen.getByRole("heading", { name: "69 级裸属性" })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("体力加点")).toBeInTheDocument();
+    expect(loadPreferences().activeTool).toBe("character");
   });
 
   it("应该从本地偏好恢复上次使用的工具", () => {
