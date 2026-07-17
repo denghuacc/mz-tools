@@ -12,7 +12,47 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("潜力点总计")).toBeInTheDocument();
     expect(screen.getByText("基础属性 · 10 项")).toBeInTheDocument();
     expect(screen.getByText("五项派生初值待验证")).toBeInTheDocument();
+    expect(screen.getByText("潜力 +680")).toBeInTheDocument();
     expect(screen.queryByText("进阶属性与亲和")).not.toBeInTheDocument();
+  });
+
+  it("应该一键隐藏并恢复全部属性加成明细", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    const skillDialog = await openBonusEditor(user, "技能属性加成");
+    await user.type(
+      within(skillDialog).getByRole("spinbutton", {
+        name: "技能属性加成：气血",
+      }),
+      "100"
+    );
+    await user.click(within(skillDialog).getByRole("button", { name: "完成" }));
+
+    expect(screen.getByText("潜力 +680")).toBeInTheDocument();
+    expect(screen.getByText("+技能 100")).toBeInTheDocument();
+
+    const hideButton = screen.getByRole("button", {
+      name: "隐藏全部属性加成",
+    });
+    expect(hideButton).toHaveAttribute("aria-pressed", "true");
+    await user.click(hideButton);
+
+    expect(screen.queryByText("潜力 +680")).not.toBeInTheDocument();
+    expect(screen.queryByText("+技能 100")).not.toBeInTheDocument();
+    expect(screen.getByText("742")).toBeInTheDocument();
+    expect(screen.getByText("1 级基准 · 成长待补")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "进阶属性" }));
+    expect(screen.queryByText("等级 +136")).not.toBeInTheDocument();
+    expect(screen.getByText("148")).toBeInTheDocument();
+
+    const showButton = screen.getByRole("button", {
+      name: "显示全部属性加成",
+    });
+    expect(showButton).toHaveAttribute("aria-pressed", "false");
+    await user.click(showButton);
+    expect(screen.getByText("等级 +136")).toBeInTheDocument();
   });
 
   it("应该通过比例方案分配全部潜力点并实时更新属性", async () => {
@@ -333,6 +373,18 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(derivedColumn).getByText("209")).toBeInTheDocument();
     expect(within(derivedColumn).getAllByText("帮派 +20")).toHaveLength(2);
     expect(within(derivedColumn).getAllByText("帮派 +16")).toHaveLength(2);
+
+    const physicalAttackRow = within(derivedColumn)
+      .getByText("物攻")
+      .closest("div");
+    expect(physicalAttackRow).not.toBeNull();
+    const physicalAttackBonus = within(physicalAttackRow!).getByText("帮派 +20");
+    const physicalAttackValue = within(physicalAttackRow!).getByText("526");
+    expect(
+      physicalAttackBonus.compareDocumentPosition(physicalAttackValue) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+    expect(physicalAttackValue).toHaveClass("shrink-0");
   });
 
   it("应该为星运祈福选择三项五维并切换 18 或 25 档", async () => {
@@ -412,7 +464,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("物理暴击")).toBeInTheDocument();
     expect(screen.getByText("100%")).toBeInTheDocument();
     expect(screen.getByText("148")).toBeInTheDocument();
-    expect(screen.getByText("+136")).toBeInTheDocument();
+    expect(screen.getByText("等级 +136")).toBeInTheDocument();
     expect(
       screen.getAllByText(/系亲和$/).map((element) => element.textContent)
     ).toEqual([

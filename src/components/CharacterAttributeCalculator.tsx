@@ -157,6 +157,22 @@ const formatAttribute = (value: number) =>
 const formatBonus = (value: number) =>
   `${value > 0 ? "+" : ""}${formatAttribute(value)}`;
 
+type AttributeValueLayoutProps = {
+  bonuses?: ReactNode;
+  value: ReactNode;
+};
+
+/** 最终值固定在行尾；空间不足时，左侧加成可独立换行。 */
+const AttributeValueLayout = ({
+  bonuses,
+  value,
+}: AttributeValueLayoutProps) => (
+  <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-2 text-right">
+    <div className="min-w-0 leading-5">{bonuses}</div>
+    {value}
+  </div>
+);
+
 const createBonusSummaryItems = (
   fields: readonly {
     attribute: CharacterBonusAttribute;
@@ -228,6 +244,7 @@ const CharacterAttributeCalculator = () => {
     useState<CharacterAllocationPresetId>(CHARACTER_ALLOCATION_PRESETS[0].id);
   const [activeAttributeTab, setActiveAttributeTab] =
     useState<AttributeTab>("basic");
+  const [areBonusDetailsVisible, setAreBonusDetailsVisible] = useState(true);
   const [skillBonuses, setSkillBonuses] = useState(
     createEmptyCharacterAttributeBonuses
   );
@@ -682,29 +699,39 @@ const CharacterAttributeCalculator = () => {
 
             <div className="space-y-3">
               <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">气血</span>
-                  <div className="text-right">
-                    <strong className="text-base text-emerald-700">
-                      {formatAttribute(effectiveAttributes.status.health)}
-                    </strong>
-                    {skillBonuses.health > 0 && (
-                      <span className="ml-2 text-xs text-emerald-600">
-                        +技能 {formatAttribute(skillBonuses.health)}
-                      </span>
-                    )}
-                    {areSoulArtifactBonusesValid &&
-                      soulArtifactBonuses.health > 0 && (
-                        <span className="ml-2 text-xs text-blue-600">
-                          +魂器 {formatAttribute(soulArtifactBonuses.health)}
-                        </span>
-                      )}
-                    {temporaryTalismanBonuses.health > 0 && (
-                      <span className="ml-2 text-xs text-violet-600">
-                        +临时符 {formatAttribute(temporaryTalismanBonuses.health)}
-                      </span>
-                    )}
-                  </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="shrink-0 text-sm font-medium text-slate-700">
+                    气血
+                  </span>
+                  <AttributeValueLayout
+                    bonuses={
+                      areBonusDetailsVisible ? (
+                        <>
+                          {skillBonuses.health > 0 && (
+                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-emerald-600">
+                              +技能 {formatAttribute(skillBonuses.health)}
+                            </span>
+                          )}
+                          {areSoulArtifactBonusesValid &&
+                            soulArtifactBonuses.health > 0 && (
+                              <span className="ml-2 inline-block whitespace-nowrap text-xs text-blue-600">
+                                +魂器 {formatAttribute(soulArtifactBonuses.health)}
+                              </span>
+                            )}
+                          {temporaryTalismanBonuses.health > 0 && (
+                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-violet-600">
+                              +临时符 {formatAttribute(temporaryTalismanBonuses.health)}
+                            </span>
+                          )}
+                        </>
+                      ) : null
+                    }
+                    value={
+                      <strong className="shrink-0 text-base text-emerald-700">
+                        {formatAttribute(effectiveAttributes.status.health)}
+                      </strong>
+                    }
+                  />
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-emerald-100">
                   <div className="h-full w-full rounded-full bg-emerald-500" />
@@ -712,28 +739,40 @@ const CharacterAttributeCalculator = () => {
               </div>
               <div className="rounded-xl border border-blue-100 bg-blue-50/50 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-medium text-slate-700">法力</span>
-                  <div className="text-right">
-                    <strong className="text-sm text-blue-700">
-                      {formatAttribute(effectiveAttributes.status.mana)}
-                    </strong>
-                    {skillBonuses.mana > 0 && (
-                      <span className="ml-2 text-xs text-blue-600">
-                        +技能 {formatAttribute(skillBonuses.mana)}
-                      </span>
-                    )}
-                    {temporaryTalismanBonuses.mana > 0 && (
-                      <span className="ml-2 text-xs text-violet-600">
-                        +临时符 {formatAttribute(temporaryTalismanBonuses.mana)}
-                      </span>
-                    )}
-                    {skillBonuses.mana === 0 &&
-                      temporaryTalismanBonuses.mana === 0 && (
-                        <span className="ml-2 text-xs text-slate-400">
-                          1 级基准 · 成长待补
-                        </span>
-                      )}
-                  </div>
+                  <span className="shrink-0 text-sm font-medium text-slate-700">
+                    法力
+                  </span>
+                  <AttributeValueLayout
+                    bonuses={
+                      <>
+                        {areBonusDetailsVisible && (
+                          <>
+                            {skillBonuses.mana > 0 && (
+                              <span className="ml-2 inline-block whitespace-nowrap text-xs text-blue-600">
+                                +技能 {formatAttribute(skillBonuses.mana)}
+                              </span>
+                            )}
+                            {temporaryTalismanBonuses.mana > 0 && (
+                              <span className="ml-2 inline-block whitespace-nowrap text-xs text-violet-600">
+                                +临时符 {formatAttribute(temporaryTalismanBonuses.mana)}
+                              </span>
+                            )}
+                          </>
+                        )}
+                        {skillBonuses.mana === 0 &&
+                          temporaryTalismanBonuses.mana === 0 && (
+                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-slate-400">
+                              1 级基准 · 成长待补
+                            </span>
+                          )}
+                      </>
+                    }
+                    value={
+                      <strong className="shrink-0 text-sm text-blue-700">
+                        {formatAttribute(effectiveAttributes.status.mana)}
+                      </strong>
+                    }
+                  />
                 </div>
                 <div className="mt-2 h-1.5 rounded-full bg-blue-100" />
               </div>
@@ -754,32 +793,49 @@ const CharacterAttributeCalculator = () => {
           </div>
 
           <div className="mt-6 border-t border-slate-200 pt-5">
-            <div
-              className="grid grid-cols-2 rounded-xl bg-slate-100 p-1"
-              role="tablist"
-              aria-label="属性类型"
-            >
-              {(
-                [
-                  ["basic", "基础属性"],
-                  ["advanced", "进阶属性"],
-                ] as const
-              ).map(([tab, label]) => (
-                <button
-                  key={tab}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeAttributeTab === tab}
-                  className={`rounded-lg px-3 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    activeAttributeTab === tab
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "text-slate-500 hover:text-slate-800"
-                  }`}
-                  onClick={() => setActiveAttributeTab(tab)}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="flex items-stretch gap-2">
+              <div
+                className="grid min-w-0 flex-1 grid-cols-2 rounded-xl bg-slate-100 p-1"
+                role="tablist"
+                aria-label="属性类型"
+              >
+                {(
+                  [
+                    ["basic", "基础属性"],
+                    ["advanced", "进阶属性"],
+                  ] as const
+                ).map(([tab, label]) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeAttributeTab === tab}
+                    className={`rounded-lg px-3 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      activeAttributeTab === tab
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-800"
+                    }`}
+                    onClick={() => setActiveAttributeTab(tab)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label={
+                  areBonusDetailsVisible
+                    ? "隐藏全部属性加成"
+                    : "显示全部属性加成"
+                }
+                aria-pressed={areBonusDetailsVisible}
+                onClick={() =>
+                  setAreBonusDetailsVisible((current) => !current)
+                }
+              >
+                {areBonusDetailsVisible ? "隐藏加成" : "显示加成"}
+              </button>
             </div>
 
             {activeAttributeTab === "basic" ? (
@@ -827,46 +883,54 @@ const CharacterAttributeCalculator = () => {
                         key={attribute}
                         className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2.5"
                       >
-                        <span className="text-xs text-slate-600 sm:text-sm">
+                        <span className="shrink-0 text-xs text-slate-600 sm:text-sm">
                           {label}
                         </span>
-                        <div className="min-w-0 text-right">
-                          <strong className="text-sm text-slate-900">
-                            {formatAttribute(effectiveAttributes.derived[attribute])}
-                          </strong>
-                          {skillBonuses[attribute] !== 0 && (
-                            <span
-                              className={`ml-1 text-[11px] ${
-                                skillBonuses[attribute] > 0
-                                  ? "text-blue-600"
-                                  : "text-rose-600"
-                              }`}
-                            >
-                              {formatBonus(skillBonuses[attribute])}
-                            </span>
-                          )}
-                          {areSoulArtifactBonusesValid &&
-                            soulArtifactBonuses[attribute] !== 0 && (
-                              <span className="ml-1 text-[11px] text-blue-600">
-                                魂器 {formatBonus(soulArtifactBonuses[attribute])}
-                              </span>
-                            )}
-                          {satinBonuses[attribute] > 0 && (
-                            <span className="ml-1 text-[11px] text-amber-600">
-                              缎纹 {formatBonus(satinBonuses[attribute])}
-                            </span>
-                          )}
-                          {guildBlessingBonuses[attribute] > 0 && (
-                            <span className="ml-1 text-[11px] text-cyan-600">
-                              帮派 {formatBonus(guildBlessingBonuses[attribute])}
-                            </span>
-                          )}
-                          {temporaryTalismanBonuses[attribute] > 0 && (
-                            <span className="ml-1 text-[11px] text-violet-600">
-                              临时符 {formatBonus(temporaryTalismanBonuses[attribute])}
-                            </span>
-                          )}
-                        </div>
+                        <AttributeValueLayout
+                          bonuses={
+                            areBonusDetailsVisible ? (
+                              <>
+                                {skillBonuses[attribute] !== 0 && (
+                                  <span
+                                    className={`ml-1 inline-block whitespace-nowrap text-[11px] ${
+                                      skillBonuses[attribute] > 0
+                                        ? "text-blue-600"
+                                        : "text-rose-600"
+                                    }`}
+                                  >
+                                    {formatBonus(skillBonuses[attribute])}
+                                  </span>
+                                )}
+                                {areSoulArtifactBonusesValid &&
+                                  soulArtifactBonuses[attribute] !== 0 && (
+                                    <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-600">
+                                      魂器 {formatBonus(soulArtifactBonuses[attribute])}
+                                    </span>
+                                  )}
+                                {satinBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-amber-600">
+                                    缎纹 {formatBonus(satinBonuses[attribute])}
+                                  </span>
+                                )}
+                                {guildBlessingBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-cyan-600">
+                                    帮派 {formatBonus(guildBlessingBonuses[attribute])}
+                                  </span>
+                                )}
+                                {temporaryTalismanBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-violet-600">
+                                    临时符 {formatBonus(temporaryTalismanBonuses[attribute])}
+                                  </span>
+                                )}
+                              </>
+                            ) : null
+                          }
+                          value={
+                            <strong className="shrink-0 text-sm text-slate-900">
+                              {formatAttribute(effectiveAttributes.derived[attribute])}
+                            </strong>
+                          }
+                        />
                       </div>
                     ))}
                   </div>
@@ -877,62 +941,70 @@ const CharacterAttributeCalculator = () => {
                         key={attribute}
                         className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2.5"
                       >
-                        <span className="text-xs text-slate-600 sm:text-sm">
+                        <span className="shrink-0 text-xs text-slate-600 sm:text-sm">
                           {PRIMARY_ATTRIBUTE_SHORT_LABELS[attribute]}
                         </span>
-                        <div className="min-w-0 text-right">
-                          <strong
-                            className={`text-sm ${
-                              allocation[attribute] > 0
-                                ? "text-emerald-600"
-                                : "text-slate-900"
-                            }`}
-                          >
-                            {effectiveAttributes.primary[attribute]}
-                          </strong>
-                          {allocation[attribute] > 0 && (
-                            <span className="ml-1 text-[11px] text-emerald-600">
-                              +{allocation[attribute]}
-                            </span>
-                          )}
-                          {skillBonuses[attribute] > 0 && (
-                            <span className="ml-1 text-[11px] text-blue-600">
-                              +加成 {formatAttribute(skillBonuses[attribute])}
-                            </span>
-                          )}
-                          {areSoulArtifactBonusesValid &&
-                            soulArtifactBonuses[attribute] !== 0 && (
-                              <span
-                                className={`ml-1 text-[11px] ${
-                                  soulArtifactBonuses[attribute] > 0
-                                    ? "text-blue-600"
-                                    : "text-rose-600"
-                                }`}
-                              >
-                                魂器 {formatBonus(soulArtifactBonuses[attribute])}
-                              </span>
-                            )}
-                          {seasonArtifactBonuses[attribute] > 0 && (
-                            <span className="ml-1 text-[11px] text-violet-600">
-                              神器 {formatBonus(seasonArtifactBonuses[attribute])}
-                            </span>
-                          )}
-                          {charmBonuses[attribute] > 0 && (
-                            <span className="ml-1 text-[11px] text-fuchsia-600">
-                              魅灵 {formatBonus(charmBonuses[attribute])}
-                            </span>
-                          )}
-                          {starBlessingBonuses[attribute] > 0 && (
-                            <span className="ml-1 text-[11px] text-cyan-600">
-                              祈福 {formatBonus(starBlessingBonuses[attribute])}
-                            </span>
-                          )}
-                          {temporaryTalismanBonuses[attribute] > 0 && (
-                            <span className="ml-1 text-[11px] text-violet-600">
-                              临时符 {formatBonus(temporaryTalismanBonuses[attribute])}
-                            </span>
-                          )}
-                        </div>
+                        <AttributeValueLayout
+                          bonuses={
+                            areBonusDetailsVisible ? (
+                              <>
+                                {allocation[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-emerald-600">
+                                    潜力 +{allocation[attribute]}
+                                  </span>
+                                )}
+                                {skillBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-600">
+                                    +加成 {formatAttribute(skillBonuses[attribute])}
+                                  </span>
+                                )}
+                                {areSoulArtifactBonusesValid &&
+                                  soulArtifactBonuses[attribute] !== 0 && (
+                                    <span
+                                      className={`ml-1 inline-block whitespace-nowrap text-[11px] ${
+                                        soulArtifactBonuses[attribute] > 0
+                                          ? "text-blue-600"
+                                          : "text-rose-600"
+                                      }`}
+                                    >
+                                      魂器 {formatBonus(soulArtifactBonuses[attribute])}
+                                    </span>
+                                  )}
+                                {seasonArtifactBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-violet-600">
+                                    神器 {formatBonus(seasonArtifactBonuses[attribute])}
+                                  </span>
+                                )}
+                                {charmBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-fuchsia-600">
+                                    魅灵 {formatBonus(charmBonuses[attribute])}
+                                  </span>
+                                )}
+                                {starBlessingBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-cyan-600">
+                                    祈福 {formatBonus(starBlessingBonuses[attribute])}
+                                  </span>
+                                )}
+                                {temporaryTalismanBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-violet-600">
+                                    临时符 {formatBonus(temporaryTalismanBonuses[attribute])}
+                                  </span>
+                                )}
+                              </>
+                            ) : null
+                          }
+                          value={
+                            <strong
+                              className={`shrink-0 text-sm ${
+                                allocation[attribute] > 0
+                                  ? "text-emerald-600"
+                                  : "text-slate-900"
+                              }`}
+                            >
+                              {effectiveAttributes.primary[attribute]}
+                            </strong>
+                          }
+                        />
                       </div>
                     ))}
                   </div>
@@ -967,37 +1039,49 @@ const CharacterAttributeCalculator = () => {
                           key={attribute.label}
                           className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2.5"
                         >
-                          <span className="text-xs text-slate-600 sm:text-sm">
+                          <span className="shrink-0 text-xs text-slate-600 sm:text-sm">
                             {attribute.label}
                           </span>
-                          <div className="text-right">
-                            <strong
-                              className={`text-sm ${
-                                "growsWithLevel" in attribute
-                                  ? "text-emerald-600"
-                                  : "text-slate-900"
-                              }`}
-                            >
-                              {effectiveAttributes.advanced[attribute.attribute]}
-                              {attribute.unit}
-                            </strong>
-                            {"growsWithLevel" in attribute && (
-                              <span className="ml-1 text-[11px] text-emerald-600">
-                                +
-                                {calculated.advanced.sealHit -
-                                  LEVEL_ONE_ADVANCED_ATTRIBUTES.sealHit}
-                              </span>
-                            )}
-                            {(attribute.attribute === "healingPower" ||
-                              attribute.attribute === "sealHit") &&
-                              temporaryTalismanBonuses[attribute.attribute] > 0 && (
-                                <span className="ml-1 text-[11px] text-violet-600">
-                                  临时符 {formatBonus(
-                                    temporaryTalismanBonuses[attribute.attribute]
+                          <AttributeValueLayout
+                            bonuses={
+                              areBonusDetailsVisible ? (
+                                <>
+                                  {"growsWithLevel" in attribute && (
+                                    <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-emerald-600">
+                                      等级 +
+                                      {calculated.advanced.sealHit -
+                                        LEVEL_ONE_ADVANCED_ATTRIBUTES.sealHit}
+                                    </span>
                                   )}
-                                </span>
-                              )}
-                          </div>
+                                  {(attribute.attribute === "healingPower" ||
+                                    attribute.attribute === "sealHit") &&
+                                    temporaryTalismanBonuses[
+                                      attribute.attribute
+                                    ] > 0 && (
+                                      <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-violet-600">
+                                        临时符 {formatBonus(
+                                          temporaryTalismanBonuses[
+                                            attribute.attribute
+                                          ]
+                                        )}
+                                      </span>
+                                    )}
+                                </>
+                              ) : null
+                            }
+                            value={
+                              <strong
+                                className={`shrink-0 text-sm ${
+                                  "growsWithLevel" in attribute
+                                    ? "text-emerald-600"
+                                    : "text-slate-900"
+                                }`}
+                              >
+                                {effectiveAttributes.advanced[attribute.attribute]}
+                                {attribute.unit}
+                              </strong>
+                            }
+                          />
                         </div>
                       ))}
                     </div>
