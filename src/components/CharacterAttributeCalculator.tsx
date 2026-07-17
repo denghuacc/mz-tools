@@ -7,6 +7,7 @@ import EditorDialog from "./EditorDialog";
 import GuildBlessingBonusControl from "./GuildBlessingBonusControl";
 import PotentialAllocationControl from "./PotentialAllocationControl";
 import SatinAttributeBonusControl from "./SatinAttributeBonusControl";
+import SelectableAttributeBonusControl from "./SelectableAttributeBonusControl";
 import SinglePrimaryAttributeBonusControl from "./SinglePrimaryAttributeBonusControl";
 import StarBlessingBonusControl, {
   STAR_BLESSING_ATTRIBUTE_COUNT,
@@ -19,6 +20,7 @@ import type {
   SatinBonusAttribute,
   SatinBonusSelection,
 } from "./SatinAttributeBonusControl";
+import type { SelectableBonusSelection } from "./SelectableAttributeBonusControl";
 import {
   AFFINITY_BONUS_FIELDS,
   applyCharacterAttributeBonuses,
@@ -91,6 +93,24 @@ const TEMPORARY_TALISMAN_BONUS_FIELDS = [
   { attribute: "sealHit", label: "封印命中" },
   { attribute: "healingPower", label: "治疗强度" },
 ] as const;
+
+const TRANSFORMATION_TALISMAN_BONUS_FIELDS = [
+  { attribute: "physicalAttack", label: "物攻" },
+  { attribute: "magicAttack", label: "法攻" },
+  { attribute: "physicalDefense", label: "物防" },
+  { attribute: "magicDefense", label: "法防" },
+  { attribute: "speed", label: "速度" },
+  { attribute: "health", label: "气血" },
+  { attribute: "healingPower", label: "治疗强度" },
+  { attribute: "sealHit", label: "封印命中" },
+  { attribute: "physicalCritical", label: "物理暴击率", unit: "%" },
+  { attribute: "magicalCritical", label: "法术暴击率", unit: "%" },
+] as const;
+
+type TransformationTalismanBonusAttribute =
+  (typeof TRANSFORMATION_TALISMAN_BONUS_FIELDS)[number]["attribute"];
+type TransformationTalismanBonusSelection =
+  SelectableBonusSelection<TransformationTalismanBonusAttribute>;
 
 const CHARM_BONUS_MAX_VALUE = 120;
 
@@ -247,6 +267,7 @@ type EditorId =
   | "seasonArtifact"
   | "charm"
   | "satin"
+  | "transformationTalisman"
   | "guildBlessing"
   | "starBlessing"
   | "temporaryTalisman"
@@ -336,8 +357,8 @@ const createSinglePrimaryAttributeBonuses = (
   return bonuses;
 };
 
-const createSatinBonuses = (
-  selections: readonly SatinBonusSelection[]
+const createSelectedAttributeBonuses = (
+  selections: readonly SelectableBonusSelection[]
 ) => {
   const bonuses = createEmptyCharacterAttributeBonuses();
 
@@ -423,6 +444,8 @@ const CharacterAttributeCalculator = () => {
   const [satinSelections, setSatinSelections] = useState<
     readonly SatinBonusSelection[]
   >([]);
+  const [transformationTalismanSelections, setTransformationTalismanSelections] =
+    useState<readonly TransformationTalismanBonusSelection[]>([]);
   const [isGuildBlessingEnabled, setIsGuildBlessingEnabled] = useState(false);
   const [starBlessingAttributes, setStarBlessingAttributes] = useState<
     readonly PrimaryAttribute[]
@@ -482,8 +505,12 @@ const CharacterAttributeCalculator = () => {
     [charmAttribute, charmValue]
   );
   const satinBonuses = useMemo(
-    () => createSatinBonuses(satinSelections),
+    () => createSelectedAttributeBonuses(satinSelections),
     [satinSelections]
+  );
+  const transformationTalismanBonuses = useMemo(
+    () => createSelectedAttributeBonuses(transformationTalismanSelections),
+    [transformationTalismanSelections]
   );
   const guildBlessingBonuses = useMemo(
     () => createGuildBlessingBonuses(isGuildBlessingEnabled),
@@ -526,6 +553,7 @@ const CharacterAttributeCalculator = () => {
         seasonArtifactBonuses,
         charmBonuses,
         satinBonuses,
+        transformationTalismanBonuses,
         guildBlessingBonuses,
         starBlessingBonuses,
         temporaryTalismanBonuses
@@ -538,6 +566,7 @@ const CharacterAttributeCalculator = () => {
       seasonArtifactBonuses,
       charmBonuses,
       satinBonuses,
+      transformationTalismanBonuses,
       guildBlessingBonuses,
       starBlessingBonuses,
       temporaryTalismanBonuses,
@@ -592,6 +621,19 @@ const CharacterAttributeCalculator = () => {
       label: SATIN_ATTRIBUTE_SHORT_LABELS[attribute],
       value,
     }));
+  const transformationTalismanSummaryItems = transformationTalismanSelections
+    .filter(({ value }) => value !== 0)
+    .map(({ attribute, value }) => {
+      const field = TRANSFORMATION_TALISMAN_BONUS_FIELDS.find(
+        (candidate) => candidate.attribute === attribute
+      );
+
+      return {
+        label: field?.label ?? attribute,
+        value,
+        unit: field && "unit" in field ? field.unit : undefined,
+      };
+    });
   const skillSummaryItems = createBonusSummaryItems(
     SKILL_BONUS_FIELDS,
     skillBonuses
@@ -759,6 +801,21 @@ const CharacterAttributeCalculator = () => {
       ),
     },
     {
+      id: "transformationTalisman",
+      title: "幻形符",
+      items: transformationTalismanSummaryItems,
+      renderContent: (title) => (
+        <SelectableAttributeBonusControl
+          title={title}
+          description="从 10 种属性中选择一至两项；物理、法术暴击率按百分比填写。"
+          groupLabel="幻形符属性选择"
+          fields={TRANSFORMATION_TALISMAN_BONUS_FIELDS}
+          selections={transformationTalismanSelections}
+          onChange={setTransformationTalismanSelections}
+        />
+      ),
+    },
+    {
       id: "guildBlessing",
       title: "帮派祝福",
       items: guildBlessingSummaryItems,
@@ -859,7 +916,7 @@ const CharacterAttributeCalculator = () => {
               </span>
             </div>
             <p className="mt-1.5 text-sm leading-6 text-slate-500">
-              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器、神魂、天书、赛季神器、魅灵、缎纹、祝福、临时符与门派技能；不含装备。
+              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器、神魂、天书、赛季神器、魅灵、缎纹、幻形符、祝福、临时符与门派技能；不含装备。
             </p>
           </div>
         </div>
@@ -949,6 +1006,11 @@ const CharacterAttributeCalculator = () => {
                           {tianshuBonuses.health > 0 && (
                             <span className="ml-2 inline-block whitespace-nowrap text-xs text-orange-600">
                               +天书 {formatAttribute(tianshuBonuses.health)}
+                            </span>
+                          )}
+                          {transformationTalismanBonuses.health > 0 && (
+                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-pink-600">
+                              +幻形符 {formatAttribute(transformationTalismanBonuses.health)}
                             </span>
                           )}
                           {temporaryTalismanBonuses.health > 0 && (
@@ -1161,6 +1223,11 @@ const CharacterAttributeCalculator = () => {
                                     缎纹 {formatBonus(satinBonuses[attribute])}
                                   </span>
                                 )}
+                                {transformationTalismanBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-pink-600">
+                                    幻形符 {formatBonus(transformationTalismanBonuses[attribute])}
+                                  </span>
+                                )}
                                 {guildBlessingBonuses[attribute] > 0 && (
                                   <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-cyan-600">
                                     帮派 {formatBonus(guildBlessingBonuses[attribute])}
@@ -1327,6 +1394,25 @@ const CharacterAttributeCalculator = () => {
                                         天书 {formatBonus(
                                           tianshuBonuses[attribute.attribute]
                                         )}
+                                      </span>
+                                    )}
+                                  {(attribute.attribute === "physicalCritical" ||
+                                    attribute.attribute === "magicalCritical" ||
+                                    attribute.attribute === "healingPower" ||
+                                    attribute.attribute === "sealHit") &&
+                                    transformationTalismanBonuses[
+                                      attribute.attribute
+                                    ] > 0 && (
+                                      <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-pink-600">
+                                        幻形符 {formatBonus(
+                                          transformationTalismanBonuses[
+                                            attribute.attribute
+                                          ]
+                                        )}
+                                        {(attribute.attribute ===
+                                          "physicalCritical" ||
+                                          attribute.attribute ===
+                                            "magicalCritical") && "%"}
                                       </span>
                                     )}
                                 </>

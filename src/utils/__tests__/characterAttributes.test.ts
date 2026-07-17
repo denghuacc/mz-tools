@@ -96,6 +96,21 @@ describe("角色属性计算", () => {
     });
   });
 
+  it("应该把幻形符的物理和法术暴击率计入进阶属性", () => {
+    const calculated = calculateCharacterAttributes(
+      EMPTY_CHARACTER_ALLOCATION
+    );
+    const bonuses = {
+      ...createEmptyCharacterAttributeBonuses(),
+      physicalCritical: 3.5,
+      magicalCritical: 2,
+    };
+    const effective = applyCharacterAttributeBonuses(calculated, bonuses);
+
+    expect(effective.advanced.physicalCritical).toBe(5.5);
+    expect(effective.advanced.magicalCritical).toBe(3);
+  });
+
   it("应该在固定速度之后应用百分比速度并叠加封印抵抗和亲和", () => {
     const calculated = calculateCharacterAttributes(
       EMPTY_CHARACTER_ALLOCATION

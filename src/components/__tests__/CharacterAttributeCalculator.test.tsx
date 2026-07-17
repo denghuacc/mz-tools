@@ -434,6 +434,60 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(derivedColumn).getByText("506")).toBeInTheDocument();
   });
 
+  it("应该选择一至两项幻形符属性并叠加基础与暴击属性", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const dialog = await openBonusEditor(user, "幻形符");
+
+    const attributeGroup = within(dialog).getByRole("group", {
+      name: "幻形符属性选择",
+    });
+    expect(within(attributeGroup).getAllByRole("button")).toHaveLength(10);
+
+    const healthOption = within(attributeGroup).getByRole("button", {
+      name: "气血",
+    });
+    const physicalCriticalOption = within(attributeGroup).getByRole("button", {
+      name: "物理暴击率",
+    });
+    const magicAttackOption = within(attributeGroup).getByRole("button", {
+      name: "法攻",
+    });
+
+    await user.click(healthOption);
+    await user.click(physicalCriticalOption);
+
+    expect(healthOption).toHaveAttribute("aria-pressed", "true");
+    expect(physicalCriticalOption).toHaveAttribute("aria-pressed", "true");
+    expect(magicAttackOption).toBeDisabled();
+
+    await user.type(
+      within(dialog).getByRole("spinbutton", { name: "幻形符：气血" }),
+      "100"
+    );
+    await user.type(
+      within(dialog).getByRole("spinbutton", {
+        name: "幻形符：物理暴击率",
+      }),
+      "3.5"
+    );
+    await user.click(within(dialog).getByRole("button", { name: "完成" }));
+
+    expect(screen.getByText("+幻形符 100")).toBeInTheDocument();
+    const summaryCard = screen
+      .getByRole("heading", { name: "幻形符" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    expect(within(summaryCard!).getByText("气血 +100")).toBeInTheDocument();
+    expect(
+      within(summaryCard!).getByText("物理暴击率 +3.5%")
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "进阶属性" }));
+    expect(screen.getByText("幻形符 +3.5%")).toBeInTheDocument();
+    expect(screen.getByText("5.5%")).toBeInTheDocument();
+  });
+
   it("应该整组启用固定的帮派祝福属性", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
@@ -681,7 +735,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).getByText("物攻 +122")).toBeInTheDocument();
     expect(within(summaryCard!).queryByText("3 项变更")).not.toBeInTheDocument();
     expect(within(summaryCard!).queryByText("另 1 项")).not.toBeInTheDocument();
-    expect(screen.getByText("已配置 1 / 10")).toBeInTheDocument();
+    expect(screen.getByText("已配置 1 / 11")).toBeInTheDocument();
   });
 });
 
