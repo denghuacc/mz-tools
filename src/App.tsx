@@ -57,7 +57,7 @@ const HomePage = ({
         梦幻新诛仙实用工具
       </h1>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-        当前已上线装备属性转换、门派资料查询和官方攻略索引，资料均保留原文链接与核验日期。
+        当前已上线装备属性转换、游戏资料查询和官方攻略索引，资料均保留原文链接与核验日期。
       </p>
     </section>
 
@@ -81,16 +81,16 @@ const HomePage = ({
 
       <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <p className="text-xs font-medium text-blue-600">官网资料</p>
-        <h2 className="mt-2 text-lg font-semibold text-slate-900">门派资料查询</h2>
+        <h2 className="mt-2 text-lg font-semibold text-slate-900">游戏资料查询</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          查询现有 13 个门派的基础战斗定位，并查看官网出处。
+          查询门派、装备、灵兽与坐骑资料，并查看官网出处。
         </p>
         <button
           type="button"
           className="mt-5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           onClick={onOpenData}
         >
-          查询门派
+          查询资料
         </button>
       </article>
 
@@ -205,7 +205,7 @@ const CalculatorPage = () => {
             </div>
             <ul className="mt-4 space-y-2 text-sm text-slate-500">
               <li>规则数据持续核验</li>
-              <li>装备与灵兽资料扩充</li>
+              <li>装备与灵兽资料持续更新</li>
               <li>官方攻略索引持续更新</li>
             </ul>
           </section>
@@ -242,7 +242,7 @@ function App() {
         return (
           <DataPage
             favorites={favorites}
-            onToggleFavorite={(id) => handleToggleFavorite("sect", id)}
+            onToggleFavorite={handleToggleFavorite}
           />
         );
       case "guide":
@@ -256,8 +256,7 @@ function App() {
         return (
           <FavoritesPage
             favorites={favorites}
-            onToggleSect={(id) => handleToggleFavorite("sect", id)}
-            onToggleGuide={(id) => handleToggleFavorite("guide", id)}
+            onToggleFavorite={handleToggleFavorite}
             onBrowseData={() => setActivePage("data")}
           />
         );

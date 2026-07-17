@@ -1,6 +1,6 @@
 import { CONTENT_ITEM_IDS } from "../data/content";
 
-export type FavoriteKind = "sect" | "guide";
+export type FavoriteKind = "sect" | "equipment" | "companion" | "guide";
 
 export type FavoritesState = {
   items: string[];

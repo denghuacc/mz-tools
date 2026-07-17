@@ -27,6 +27,29 @@ export type GuideEntry = {
   source: ContentSource;
 };
 
+export type EquipmentCategory = "打造" | "升级" | "词条" | "全等级装备";
+
+export type EquipmentEntry = {
+  id: string;
+  category: EquipmentCategory;
+  title: string;
+  availability: string;
+  summary: string;
+  source: ContentSource;
+};
+
+export type CompanionKind = "灵兽" | "坐骑";
+
+export type CompanionEntry = {
+  id: string;
+  kind: CompanionKind;
+  title: string;
+  positioning: string;
+  availability: string;
+  summary: string;
+  source: ContentSource;
+};
+
 const CLASSIC_SECTS_SOURCE: ContentSource = {
   title: "《梦幻新诛仙》八大职业来自原著",
   url: "https://mhxzx.wanmei.com/news/gamenews/20200512/223993.shtml",
@@ -147,6 +170,161 @@ export const SECT_PROFILES: readonly SectProfile[] = [
   },
 ] as const;
 
+export const EQUIPMENT_ENTRIES: readonly EquipmentEntry[] = [
+  {
+    id: "equipment-110-crafting",
+    category: "打造",
+    title: "110级装备打造",
+    availability: "世界等级开放110级装备后",
+    summary:
+      "使用110级装备宝玉和对应等级天工符打造；普通打造不再出现蓝色品质，百炼打造不再出现紫色品质，最低为橙色。",
+    source: {
+      title: "110级新版本最全前瞻",
+      url: "https://mhxzx.wanmei.com/news/gamenews/20230906/245799.shtml",
+      publishedAt: "2023-09-06",
+    },
+  },
+  {
+    id: "equipment-110-upgrade",
+    category: "升级",
+    title: "100级红装升级至110级",
+    availability: "角色达到110级并解锁装备升级",
+    summary:
+      "可使用开天玉将100级红色品质装备升级为110级，装备外观、图标和属性会随升级变化。",
+    source: {
+      title: "110级武器与装备升级说明",
+      url: "https://mhxzx.wanmei.com/news/gamenews/20230905/245718.shtml",
+      publishedAt: "2023-09-05",
+    },
+  },
+  {
+    id: "equipment-110-affix",
+    category: "词条",
+    title: "110级装备词条",
+    availability: "打造110级装备时概率获得",
+    summary:
+      "词条分为需要多件激活的套装词条和单条生效的独立词条；已获得词条可通过转移功能继承到其他装备。",
+    source: {
+      title: "110级装备词条机制说明",
+      url: "https://mhxzx.wanmei.com/news/gamenews/20230905/245718.shtml",
+      publishedAt: "2023-09-05",
+    },
+  },
+  {
+    id: "spirit-weapon",
+    category: "全等级装备",
+    title: "成长型装备·灵武",
+    availability: "具体开放条件以当前游戏内为准",
+    summary:
+      "灵武可使用龙纹玉改变装备部位或附加属性类型，并支持定向培养属性、特技、特效和百炼属性。",
+    source: {
+      title: "灵武装备全服上线说明",
+      url: "https://mhxzx.wanmei.com/m/news/gamebroad/20240418/249976.shtml",
+      publishedAt: "2024-04-18",
+    },
+  },
+  {
+    id: "season-divine-equipment",
+    category: "全等级装备",
+    title: "赛年神装",
+    availability: "角色等级≥69且服务器开服≥67天",
+    summary:
+      "包含角色戒指、角色项链和灵兽宝冠三个部位，属性随角色等级成长，最多拥有三条副属性，并支持特效等级与同名特效共鸣。",
+    source: {
+      title: "永夜赛季赛年神装公告",
+      url: "https://mhxzx.wanmei.com/m/news/gamebroad/20251231/260149.shtml",
+      publishedAt: "2025-12-31",
+    },
+  },
+] as const;
+
+export const COMPANION_ENTRIES: readonly CompanionEntry[] = [
+  {
+    id: "jiuer",
+    kind: "灵兽",
+    title: "九儿",
+    positioning: "兽潮赛季·多段物理",
+    availability: "兽潮赛季内容，当前获取方式以游戏内为准",
+    summary:
+      "专属技能可连续进行物理攻击并叠加崩裂；攻击崩裂层数满足条件的目标时可追加一次攻击。",
+    source: {
+      title: "五周年兽潮赛季与九儿公告",
+      url: "https://mhxzx.wanmei.com/m/news/gamenews/20260625/262881.shtml",
+      publishedAt: "2026-06-25",
+    },
+  },
+  {
+    id: "canglong-shenjun",
+    kind: "灵兽",
+    title: "苍龙神君",
+    positioning: "风系单体法术",
+    availability: "公告上线期可通过对应任务获取",
+    summary:
+      "拥有被动法术吸血能力；攻击气血上限高于自身的目标时可额外追击，每回合最多触发一次。",
+    source: {
+      title: "苍龙神君上线与技能说明",
+      url: "https://mhxzx.wanmei.com/m/news/gamenews/20260326/261493.shtml",
+      publishedAt: "2026-03-26",
+    },
+  },
+  {
+    id: "eshou",
+    kind: "灵兽",
+    title: "讹兽",
+    positioning: "105级灵兽",
+    availability: "角色达到105级后可前往集市获取",
+    summary:
+      "105级灵兽资料条目；官网公告未公开完整战斗技能，具体资质和技能以游戏内图鉴为准。",
+    source: {
+      title: "105级灵兽·讹兽登场公告",
+      url: "https://mhxzx.wanmei.com/news/gamenews/20220721/238817.shtml",
+      publishedAt: "2022-07-21",
+    },
+  },
+  {
+    id: "huanyuexian",
+    kind: "坐骑",
+    title: "幻月仙",
+    positioning: "速度支援",
+    availability: "原活动已结束，当前获取方式以游戏内为准",
+    summary:
+      "统御灵兽在场时可提升自身与召唤者速度，并根据统御灵兽与攻击目标的速度差提高伤害结果。",
+    source: {
+      title: "坐骑·幻月仙上线公告",
+      url: "https://mhxzx.wanmei.com/news/gamebroad/20250423/256101.shtml",
+      publishedAt: "2025-04-23",
+    },
+  },
+  {
+    id: "nielihuo",
+    kind: "坐骑",
+    title: "涅离火",
+    positioning: "法术暴击与吸血",
+    availability: "原活动已结束，当前获取方式以游戏内为准",
+    summary:
+      "统御灵兽对主目标的法术暴击率提升12%；对主目标造成法术暴击时，吸收其所掉气血的20%。",
+    source: {
+      title: "四象坐骑·涅离火上线公告",
+      url: "https://mhxzx.wanmei.com/m/news/gamebroad/20260205/260801.shtml",
+      publishedAt: "2026-02-05",
+    },
+  },
+  {
+    id: "tayunzhui",
+    kind: "坐骑",
+    title: "踏云骓",
+    positioning: "复活与恢复",
+    availability: "原活动已结束，当前获取方式以游戏内为准",
+    summary:
+      "心情技能「单骑救主」具备复活及恢复能力，适合在关键回合提供容错。",
+    source: {
+      title: "侠客行版本与坐骑·踏云骓公告",
+      url: "https://mhxzx.wanmei.com/news/gamenews/20230330/242983.shtml",
+      publishedAt: "2023-03-30",
+    },
+  },
+] as const;
+
 export const GUIDE_ENTRIES: readonly GuideEntry[] = [
   {
     id: "five-anniversary-2026",
@@ -225,5 +403,7 @@ export const GUIDE_ENTRIES: readonly GuideEntry[] = [
 
 export const CONTENT_ITEM_IDS = new Set<string>([
   ...SECT_PROFILES.map(({ id }) => `sect:${id}`),
+  ...EQUIPMENT_ENTRIES.map(({ id }) => `equipment:${id}`),
+  ...COMPANION_ENTRIES.map(({ id }) => `companion:${id}`),
   ...GUIDE_ENTRIES.map(({ id }) => `guide:${id}`),
 ]);

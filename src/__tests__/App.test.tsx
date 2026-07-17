@@ -74,9 +74,9 @@ describe("App 组件", () => {
 
     const navigation = screen.getByRole("navigation", { name: "主导航" });
     await user.click(within(navigation).getByRole("button", { name: "首页" }));
-    await user.click(screen.getByRole("button", { name: "查询门派" }));
+    await user.click(screen.getByRole("button", { name: "查询资料" }));
     expect(
-      screen.getByRole("heading", { name: "门派资料查询" })
+      screen.getByRole("heading", { name: "游戏资料查询" })
     ).toBeInTheDocument();
 
     await user.click(within(navigation).getByRole("button", { name: "首页" }));
@@ -120,7 +120,7 @@ describe("App 组件", () => {
       within(desktopNavigation).getByRole("button", { name: "数据查询" })
     );
     expect(
-      screen.getByRole("heading", { name: "门派资料查询" })
+      screen.getByRole("heading", { name: "游戏资料查询" })
     ).toBeInTheDocument();
     expect(screen.getByText("找到 13 个门派")).toBeInTheDocument();
 
@@ -157,7 +157,65 @@ describe("App 组件", () => {
 
     await user.clear(screen.getByLabelText("搜索门派或定位"));
     await user.type(screen.getByLabelText("搜索门派或定位"), "不存在的资料");
-    expect(screen.getByText("没有匹配的门派")).toBeInTheDocument();
+    expect(screen.getByText("没有匹配的资料")).toBeInTheDocument();
+  });
+
+  it("资料分类应该支持键盘焦点与回车切换", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const navigation = screen.getByRole("navigation", { name: "主导航" });
+    await user.click(
+      within(navigation).getByRole("button", { name: "数据查询" })
+    );
+
+    const sectTab = screen.getByRole("tab", { name: "门派" });
+    const equipmentTab = screen.getByRole("tab", { name: "装备" });
+    sectTab.focus();
+    await user.tab();
+
+    expect(equipmentTab).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(equipmentTab).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByLabelText("搜索装备资料")).toBeInTheDocument();
+  });
+
+  it("应该查询、筛选并收藏装备和灵兽坐骑资料", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const navigation = screen.getByRole("navigation", { name: "主导航" });
+    await user.click(
+      within(navigation).getByRole("button", { name: "数据查询" })
+    );
+
+    await user.click(screen.getByRole("tab", { name: "装备" }));
+    expect(screen.getByText("找到 5 条装备资料")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("搜索装备资料"), "赛年神装");
+    expect(screen.getByText("找到 1 条装备资料")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "赛年神装" })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "收藏赛年神装" }));
+
+    await user.click(screen.getByRole("tab", { name: "灵兽与坐骑" }));
+    expect(screen.getByText("找到 6 条灵兽与坐骑资料")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "坐骑" }));
+    expect(screen.getByText("找到 3 条灵兽与坐骑资料")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("搜索灵兽或坐骑"), "速度支援");
+    expect(screen.getByText("找到 1 条灵兽与坐骑资料")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "幻月仙" })
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "收藏幻月仙" }));
+
+    await user.click(within(navigation).getByRole("button", { name: "收藏" }));
+    expect(screen.getByRole("heading", { name: "装备资料" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "灵兽与坐骑资料" })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "赛年神装" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "幻月仙" })).toBeInTheDocument();
   });
 
   it("应该筛选并收藏官方攻略", async () => {
@@ -228,7 +286,7 @@ describe("App 组件", () => {
 
     const navigation = screen.getByRole("navigation", { name: "主导航" });
     await user.click(within(navigation).getByRole("button", { name: "收藏" }));
-    await user.click(screen.getByRole("button", { name: "浏览门派资料" }));
+    await user.click(screen.getByRole("button", { name: "浏览游戏资料" }));
     await user.click(screen.getByRole("button", { name: "收藏鬼王宗" }));
 
     await user.click(within(navigation).getByRole("button", { name: "设置" }));

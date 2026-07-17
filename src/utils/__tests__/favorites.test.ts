@@ -18,6 +18,25 @@ describe("内容收藏存储", () => {
     expect(removed).toEqual(EMPTY_FAVORITES);
   });
 
+  it("应该支持装备、灵兽与坐骑收藏", () => {
+    const withEquipment = toggleFavorite(
+      EMPTY_FAVORITES,
+      "equipment",
+      "season-divine-equipment"
+    );
+    const withCompanion = toggleFavorite(
+      withEquipment,
+      "companion",
+      "jiuer"
+    );
+
+    expect(
+      isFavorite(withCompanion, "equipment", "season-divine-equipment")
+    ).toBe(true);
+    expect(isFavorite(withCompanion, "companion", "jiuer")).toBe(true);
+    expect(loadFavorites()).toEqual(withCompanion);
+  });
+
   it("应该过滤重复、非法和已失效的 ID", () => {
     window.localStorage.setItem(
       FAVORITES_STORAGE_KEY,
