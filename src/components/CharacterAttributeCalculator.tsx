@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
 import AttributeBonusCard from "./AttributeBonusCard";
+import SatinAttributeBonusControl from "./SatinAttributeBonusControl";
+import SinglePrimaryAttributeBonusControl from "./SinglePrimaryAttributeBonusControl";
+import type { SatinBonusSelection } from "./SatinAttributeBonusControl";
 import {
   AFFINITY_LABELS,
   applyCharacterAttributeBonuses,
@@ -48,6 +51,8 @@ const SOUL_ARTIFACT_BONUS_FIELDS = [
   { attribute: "speed", label: "速度" },
 ] as const;
 
+const CHARM_BONUS_MAX_VALUE = 120;
+
 const DERIVED_ATTRIBUTES = [
   ["magicAttack", "法攻"],
   ["magicDefense", "法防"],
@@ -87,6 +92,31 @@ const formatAttribute = (value: number) =>
 const formatBonus = (value: number) =>
   `${value > 0 ? "+" : ""}${formatAttribute(value)}`;
 
+const createSinglePrimaryAttributeBonuses = (
+  attribute: PrimaryAttribute | null,
+  value: number
+) => {
+  const bonuses = createEmptyCharacterAttributeBonuses();
+
+  if (attribute) {
+    bonuses[attribute] = value;
+  }
+
+  return bonuses;
+};
+
+const createSatinBonuses = (
+  selections: readonly SatinBonusSelection[]
+) => {
+  const bonuses = createEmptyCharacterAttributeBonuses();
+
+  for (const selection of selections) {
+    bonuses[selection.attribute] = selection.value;
+  }
+
+  return bonuses;
+};
+
 const CharacterAttributeCalculator = () => {
   const [selectedPresetId, setSelectedPresetId] =
     useState<CharacterAllocationPresetId>(CHARACTER_ALLOCATION_PRESETS[0].id);
@@ -97,6 +127,31 @@ const CharacterAttributeCalculator = () => {
   );
   const [soulArtifactBonuses, setSoulArtifactBonuses] = useState(
     createEmptyCharacterAttributeBonuses
+  );
+  const [seasonArtifactAttribute, setSeasonArtifactAttribute] =
+    useState<PrimaryAttribute | null>(null);
+  const [seasonArtifactValue, setSeasonArtifactValue] = useState(0);
+  const [charmAttribute, setCharmAttribute] =
+    useState<PrimaryAttribute | null>(null);
+  const [charmValue, setCharmValue] = useState(0);
+  const [satinSelections, setSatinSelections] = useState<
+    readonly SatinBonusSelection[]
+  >([]);
+  const seasonArtifactBonuses = useMemo(
+    () =>
+      createSinglePrimaryAttributeBonuses(
+        seasonArtifactAttribute,
+        seasonArtifactValue
+      ),
+    [seasonArtifactAttribute, seasonArtifactValue]
+  );
+  const charmBonuses = useMemo(
+    () => createSinglePrimaryAttributeBonuses(charmAttribute, charmValue),
+    [charmAttribute, charmValue]
+  );
+  const satinBonuses = useMemo(
+    () => createSatinBonuses(satinSelections),
+    [satinSelections]
   );
   const selectedPreset =
     CHARACTER_ALLOCATION_PRESETS.find(({ id }) => id === selectedPresetId) ??
@@ -124,9 +179,19 @@ const CharacterAttributeCalculator = () => {
     () =>
       combineCharacterAttributeBonuses(
         skillBonuses,
-        areSoulArtifactBonusesValid ? soulArtifactBonuses : {}
+        areSoulArtifactBonusesValid ? soulArtifactBonuses : {},
+        seasonArtifactBonuses,
+        charmBonuses,
+        satinBonuses
       ),
-    [skillBonuses, soulArtifactBonuses, areSoulArtifactBonusesValid]
+    [
+      skillBonuses,
+      soulArtifactBonuses,
+      seasonArtifactBonuses,
+      charmBonuses,
+      satinBonuses,
+      areSoulArtifactBonusesValid,
+    ]
   );
   const effectiveAttributes = useMemo(
     () => applyCharacterAttributeBonuses(calculated, totalBonuses),
@@ -172,7 +237,7 @@ const CharacterAttributeCalculator = () => {
               </span>
             </div>
             <p className="mt-1.5 text-sm leading-6 text-slate-500">
-              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器与门派技能；不含装备、神器与临时符。
+              从刚创建的 1 级角色裸值开始计算，可在下方叠加魂器、赛季神器、魅灵、缎纹与门派技能；不含装备与临时符。
             </p>
           </div>
         </div>
@@ -258,6 +323,51 @@ const CharacterAttributeCalculator = () => {
               setSoulArtifactBonuses(createEmptyCharacterAttributeBonuses())
             }
             validationError={soulArtifactValidationError}
+          />
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">
+                单属性潜能
+              </h2>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                赛季神器和魅灵均只选择一项五维属性，切换选择时加成会同步转移。
+              </p>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+              <SinglePrimaryAttributeBonusControl
+                title="赛季神器"
+                description="选择一项属性，并填写本次实际潜能点。"
+                selectedAttribute={seasonArtifactAttribute}
+                value={seasonArtifactValue}
+                onSelect={setSeasonArtifactAttribute}
+                onValueChange={setSeasonArtifactValue}
+                onReset={() => {
+                  setSeasonArtifactAttribute(null);
+                  setSeasonArtifactValue(0);
+                }}
+              />
+
+              <SinglePrimaryAttributeBonusControl
+                title="魅灵"
+                description="选择一项属性并填写实际潜能点，最高 120 点。"
+                selectedAttribute={charmAttribute}
+                value={charmValue}
+                onSelect={setCharmAttribute}
+                onValueChange={setCharmValue}
+                maximumValue={CHARM_BONUS_MAX_VALUE}
+                onReset={() => {
+                  setCharmAttribute(null);
+                  setCharmValue(0);
+                }}
+              />
+            </div>
+          </section>
+
+          <SatinAttributeBonusControl
+            selections={satinSelections}
+            onChange={setSatinSelections}
           />
 
           <AttributeBonusCard
@@ -417,6 +527,11 @@ const CharacterAttributeCalculator = () => {
                                 魂器 {formatBonus(soulArtifactBonuses[attribute])}
                               </span>
                             )}
+                          {satinBonuses[attribute] > 0 && (
+                            <span className="ml-1 text-[11px] text-amber-600">
+                              缎纹 {formatBonus(satinBonuses[attribute])}
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -463,6 +578,16 @@ const CharacterAttributeCalculator = () => {
                                 魂器 {formatBonus(soulArtifactBonuses[attribute])}
                               </span>
                             )}
+                          {seasonArtifactBonuses[attribute] > 0 && (
+                            <span className="ml-1 text-[11px] text-violet-600">
+                              神器 {formatBonus(seasonArtifactBonuses[attribute])}
+                            </span>
+                          )}
+                          {charmBonuses[attribute] > 0 && (
+                            <span className="ml-1 text-[11px] text-fuchsia-600">
+                              魅灵 {formatBonus(charmBonuses[attribute])}
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}

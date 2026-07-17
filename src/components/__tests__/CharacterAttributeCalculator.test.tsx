@@ -145,6 +145,127 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(potentialColumn).queryByText("魂器 +10")).not.toBeInTheDocument();
   });
 
+  it("应该单选赛季神器属性并填写本次实际潜能点", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    const artifactGroup = screen.getByRole("radiogroup", {
+      name: "赛季神器潜能属性",
+    });
+    const strengthOption = within(artifactGroup).getByRole("radio", {
+      name: "力量",
+    });
+    const spiritOption = within(artifactGroup).getByRole("radio", {
+      name: "灵力",
+    });
+    expect(within(artifactGroup).getAllByRole("radio")).toHaveLength(5);
+
+    await user.click(strengthOption);
+    await user.type(
+      screen.getByRole("spinbutton", { name: "赛季神器：潜能点" }),
+      "12"
+    );
+
+    const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
+    const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
+    expect(within(potentialColumn).getByText("860")).toBeInTheDocument();
+    expect(within(potentialColumn).getByText("神器 +12")).toBeInTheDocument();
+    expect(within(derivedColumn).getByText("512")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    await user.click(spiritOption);
+    expect(strengthOption).toHaveAttribute("aria-checked", "false");
+    expect(spiritOption).toHaveAttribute("aria-checked", "true");
+    expect(within(potentialColumn).queryByText("860")).not.toBeInTheDocument();
+    expect(within(potentialColumn).getByText("170")).toBeInTheDocument();
+    expect(within(potentialColumn).getAllByText("神器 +12")).toHaveLength(1);
+  });
+
+  it("应该单选魅灵属性并限制实际潜能点最高为 120", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    const charmGroup = screen.getByRole("radiogroup", {
+      name: "魅灵潜能属性",
+    });
+    const constitutionOption = within(charmGroup).getByRole("radio", {
+      name: "体力",
+    });
+    const spiritOption = within(charmGroup).getByRole("radio", {
+      name: "灵力",
+    });
+    expect(within(charmGroup).getAllByRole("radio")).toHaveLength(5);
+
+    await user.click(constitutionOption);
+    const charmInput = screen.getByRole("spinbutton", {
+      name: "魅灵：潜能点",
+    });
+    expect(charmInput).toHaveAttribute("max", "120");
+    await user.type(charmInput, "80");
+
+    const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
+    expect(within(potentialColumn).getByText("238")).toBeInTheDocument();
+    expect(within(potentialColumn).getByText("魅灵 +80")).toBeInTheDocument();
+
+    fireEvent.change(charmInput, { target: { value: "121" } });
+    expect(charmInput).toHaveValue(80);
+    fireEvent.change(charmInput, { target: { value: "120" } });
+    expect(charmInput).toHaveValue(120);
+    expect(within(potentialColumn).getByText("278")).toBeInTheDocument();
+    expect(within(potentialColumn).getByText("魅灵 +120")).toBeInTheDocument();
+
+    await user.click(spiritOption);
+    expect(constitutionOption).toHaveAttribute("aria-checked", "false");
+    expect(spiritOption).toHaveAttribute("aria-checked", "true");
+    expect(within(potentialColumn).getAllByText("魅灵 +120")).toHaveLength(1);
+  });
+
+  it("应该选择一至两项缎纹属性并阻止选择第三项", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    const satinGroup = screen.getByRole("group", { name: "缎纹属性选择" });
+    const physicalAttackOption = within(satinGroup).getByRole("button", {
+      name: "物攻",
+    });
+    const magicAttackOption = within(satinGroup).getByRole("button", {
+      name: "法攻",
+    });
+    const speedOption = within(satinGroup).getByRole("button", {
+      name: "速度",
+    });
+
+    await user.click(physicalAttackOption);
+    await user.click(speedOption);
+
+    expect(physicalAttackOption).toHaveAttribute("aria-pressed", "true");
+    expect(speedOption).toHaveAttribute("aria-pressed", "true");
+    expect(magicAttackOption).toBeDisabled();
+    expect(screen.getByText("已选 2 / 2 项")).toBeInTheDocument();
+
+    await user.type(
+      screen.getByRole("spinbutton", { name: "缎纹属性：物攻" }),
+      "30"
+    );
+    await user.type(
+      screen.getByRole("spinbutton", { name: "缎纹属性：速度" }),
+      "15"
+    );
+
+    const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
+    expect(within(derivedColumn).getByText("536")).toBeInTheDocument();
+    expect(within(derivedColumn).getByText("217.6")).toBeInTheDocument();
+    expect(within(derivedColumn).getByText("缎纹 +30")).toBeInTheDocument();
+    expect(within(derivedColumn).getByText("缎纹 +15")).toBeInTheDocument();
+
+    await user.click(physicalAttackOption);
+    expect(
+      screen.queryByRole("spinbutton", { name: "缎纹属性：物攻" })
+    ).not.toBeInTheDocument();
+    expect(magicAttackOption).toBeEnabled();
+    expect(within(derivedColumn).getByText("506")).toBeInTheDocument();
+  });
+
   it("应该按照游戏布局左侧显示派生属性、右侧显示潜力属性", () => {
     render(<CharacterAttributeCalculator />);
 
