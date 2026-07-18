@@ -1,6 +1,13 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CharacterAttributeCalculator from "../CharacterAttributeCalculator";
+import { CHARACTER_ATTRIBUTES_STORAGE_KEY } from "../../utils/calculatorStorage";
 
 describe("CharacterAttributeCalculator", () => {
   it("应该展示角色属性计算结构", () => {
@@ -785,6 +792,54 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).queryByText("3 项变更")).not.toBeInTheDocument();
     expect(within(summaryCard!).queryByText("另 1 项")).not.toBeInTheDocument();
     expect(screen.getByText("已配置 1 / 12")).toBeInTheDocument();
+  });
+
+  it("应该保存全部角色属性配置并在重新挂载后恢复", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<CharacterAttributeCalculator />);
+
+    const skillDialog = await openBonusEditor(user, "技能");
+    await user.type(
+      within(skillDialog).getByRole("spinbutton", { name: "技能：气血" }),
+      "100"
+    );
+    await user.click(within(skillDialog).getByRole("button", { name: "完成" }));
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+      );
+      expect(stored.skillBonuses.health).toBe(100);
+      expect(Object.keys(stored).sort()).toEqual(
+        [
+          "charmAttribute",
+          "charmValue",
+          "divineSoulValue",
+          "isGuildBlessingEnabled",
+          "satinSelections",
+          "seasonArtifactAttribute",
+          "seasonArtifactValue",
+          "selectedPresetId",
+          "skillBonuses",
+          "soulArtifactBonuses",
+          "starBlessingAttributes",
+          "starBlessingValue",
+          "talismanOptionId",
+          "temporaryTalismanBonuses",
+          "tianshuBonusCounts",
+          "transformationTalismanSelections",
+        ].sort()
+      );
+    });
+
+    unmount();
+    render(<CharacterAttributeCalculator />);
+
+    expect(screen.getByText("+技能 100")).toBeInTheDocument();
+    const restoredDialog = await openBonusEditor(user, "技能");
+    expect(
+      within(restoredDialog).getByRole("spinbutton", { name: "技能：气血" })
+    ).toHaveValue(100);
   });
 });
 

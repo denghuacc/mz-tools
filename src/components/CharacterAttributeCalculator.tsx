@@ -1,4 +1,11 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { CSSProperties, ReactNode } from "react";
 import AttributeBonusCard from "./AttributeBonusCard";
 import AttributeBonusSummaryPanel from "./AttributeBonusSummaryPanel";
@@ -29,6 +36,7 @@ import {
   calculatePresetAllocation,
   calculateCharacterAttributes,
   CHARACTER_ALLOCATION_PRESETS,
+  CHARACTER_BONUS_ATTRIBUTE_KEYS,
   CHARACTER_LEVEL,
   CHARACTER_UPGRADE_COUNT,
   combineCharacterAttributeBonuses,
@@ -46,6 +54,11 @@ import type {
   CharacterBonusAttribute,
   PrimaryAttribute,
 } from "../utils/characterAttributes";
+import {
+  CHARACTER_ATTRIBUTES_STORAGE_KEY,
+  loadCalculatorState,
+  saveCalculatorState,
+} from "../utils/calculatorStorage";
 
 const SKILL_BONUS_FIELDS = [
   { attribute: "health", label: "气血" },
@@ -474,6 +487,222 @@ const createStarBlessingBonuses = (
   return bonuses;
 };
 
+/** 新增长期表单字段时，必须同步更新默认值、标准化、保存对象和恢复测试。 */
+type CharacterCalculatorState = {
+  selectedPresetId: CharacterAllocationPresetId;
+  skillBonuses: CharacterAttributeBonuses;
+  temporaryTalismanBonuses: CharacterAttributeBonuses;
+  soulArtifactBonuses: CharacterAttributeBonuses;
+  divineSoulValue: number;
+  tianshuBonusCounts: Readonly<Record<string, number>>;
+  talismanOptionId: TalismanBonusOptionId | null;
+  seasonArtifactAttribute: PrimaryAttribute | null;
+  seasonArtifactValue: number;
+  charmAttribute: PrimaryAttribute | null;
+  charmValue: number;
+  satinSelections: readonly SatinBonusSelection[];
+  transformationTalismanSelections: readonly TransformationTalismanBonusSelection[];
+  isGuildBlessingEnabled: boolean;
+  starBlessingAttributes: readonly PrimaryAttribute[];
+  starBlessingValue: StarBlessingBonusValue;
+};
+
+const createDefaultCharacterCalculatorState = (): CharacterCalculatorState => ({
+  selectedPresetId: CHARACTER_ALLOCATION_PRESETS[0].id,
+  skillBonuses: createEmptyCharacterAttributeBonuses(),
+  temporaryTalismanBonuses: createEmptyCharacterAttributeBonuses(),
+  soulArtifactBonuses: createEmptyCharacterAttributeBonuses(),
+  divineSoulValue: 0,
+  tianshuBonusCounts: {},
+  talismanOptionId: null,
+  seasonArtifactAttribute: null,
+  seasonArtifactValue: 0,
+  charmAttribute: null,
+  charmValue: 0,
+  satinSelections: [],
+  transformationTalismanSelections: [],
+  isGuildBlessingEnabled: false,
+  starBlessingAttributes: [],
+  starBlessingValue: 18,
+});
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const normalizeCharacterBonuses = (
+  value: unknown
+): CharacterAttributeBonuses => {
+  const bonuses = createEmptyCharacterAttributeBonuses();
+  if (!isRecord(value)) return bonuses;
+
+  for (const attribute of CHARACTER_BONUS_ATTRIBUTE_KEYS) {
+    const storedValue = value[attribute];
+    if (typeof storedValue === "number" && Number.isFinite(storedValue)) {
+      bonuses[attribute] = storedValue;
+    }
+  }
+
+  return bonuses;
+};
+
+const PRIMARY_ATTRIBUTE_SET = new Set<string>(PRIMARY_ATTRIBUTE_KEYS);
+const CHARACTER_PRESET_ID_SET = new Set<string>(
+  CHARACTER_ALLOCATION_PRESETS.map(({ id }) => id)
+);
+const TALISMAN_OPTION_ID_SET = new Set<string>(
+  TALISMAN_BONUS_OPTIONS.map(({ id }) => id)
+);
+const TIANSHU_OPTION_ID_SET = new Set<string>(
+  TIANSHU_BONUS_OPTIONS.map(({ id }) => id)
+);
+const SATIN_ATTRIBUTE_SET = new Set<string>(
+  Object.keys(SATIN_ATTRIBUTE_SHORT_LABELS)
+);
+const TRANSFORMATION_TALISMAN_ATTRIBUTE_SET = new Set<string>(
+  TRANSFORMATION_TALISMAN_BONUS_FIELDS.map(({ attribute }) => attribute)
+);
+
+const isPrimaryAttribute = (value: unknown): value is PrimaryAttribute =>
+  typeof value === "string" && PRIMARY_ATTRIBUTE_SET.has(value);
+
+const normalizeNonNegativeNumber = (
+  value: unknown,
+  fallback = 0,
+  maximum = Number.POSITIVE_INFINITY
+) =>
+  typeof value === "number" &&
+  Number.isFinite(value) &&
+  value >= 0 &&
+  value <= maximum
+    ? value
+    : fallback;
+
+const normalizeTianshuCounts = (
+  value: unknown
+): Readonly<Record<string, number>> => {
+  if (!isRecord(value)) return {};
+
+  const counts: Record<string, number> = {};
+  for (const [optionId, count] of Object.entries(value)) {
+    if (
+      TIANSHU_OPTION_ID_SET.has(optionId) &&
+      typeof count === "number" &&
+      Number.isInteger(count) &&
+      count > 0
+    ) {
+      counts[optionId] = count;
+    }
+  }
+
+  return counts;
+};
+
+const normalizeBonusSelections = <Attribute extends CharacterBonusAttribute>(
+  value: unknown,
+  allowedAttributes: ReadonlySet<string>,
+  maximumSelectionCount: number
+): readonly SelectableBonusSelection<Attribute>[] => {
+  if (!Array.isArray(value)) return [];
+
+  const seenAttributes = new Set<string>();
+  const selections: SelectableBonusSelection<Attribute>[] = [];
+
+  for (const candidate of value) {
+    if (!isRecord(candidate)) continue;
+
+    const { attribute, value: storedValue } = candidate;
+    if (
+      typeof attribute !== "string" ||
+      !allowedAttributes.has(attribute) ||
+      seenAttributes.has(attribute) ||
+      typeof storedValue !== "number" ||
+      !Number.isFinite(storedValue) ||
+      storedValue < 0
+    ) {
+      continue;
+    }
+
+    seenAttributes.add(attribute);
+    selections.push({ attribute: attribute as Attribute, value: storedValue });
+    if (selections.length === maximumSelectionCount) break;
+  }
+
+  return selections;
+};
+
+const normalizePrimaryAttributes = (value: unknown): PrimaryAttribute[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter(isPrimaryAttribute)
+    .filter((attribute, index, attributes) => attributes.indexOf(attribute) === index)
+    .slice(0, STAR_BLESSING_ATTRIBUTE_COUNT);
+};
+
+const normalizeCharacterCalculatorState = (
+  value: unknown
+): CharacterCalculatorState | null => {
+  if (!isRecord(value)) return null;
+
+  const selectedPresetId =
+    typeof value.selectedPresetId === "string" &&
+    CHARACTER_PRESET_ID_SET.has(value.selectedPresetId)
+      ? (value.selectedPresetId as CharacterAllocationPresetId)
+      : CHARACTER_ALLOCATION_PRESETS[0].id;
+  const talismanOptionId =
+    typeof value.talismanOptionId === "string" &&
+    TALISMAN_OPTION_ID_SET.has(value.talismanOptionId)
+      ? (value.talismanOptionId as TalismanBonusOptionId)
+      : null;
+
+  return {
+    selectedPresetId,
+    skillBonuses: normalizeCharacterBonuses(value.skillBonuses),
+    temporaryTalismanBonuses: normalizeCharacterBonuses(
+      value.temporaryTalismanBonuses
+    ),
+    soulArtifactBonuses: normalizeCharacterBonuses(value.soulArtifactBonuses),
+    divineSoulValue: normalizeNonNegativeNumber(value.divineSoulValue),
+    tianshuBonusCounts: normalizeTianshuCounts(value.tianshuBonusCounts),
+    talismanOptionId,
+    seasonArtifactAttribute: isPrimaryAttribute(value.seasonArtifactAttribute)
+      ? value.seasonArtifactAttribute
+      : null,
+    seasonArtifactValue: normalizeNonNegativeNumber(value.seasonArtifactValue),
+    charmAttribute: isPrimaryAttribute(value.charmAttribute)
+      ? value.charmAttribute
+      : null,
+    charmValue: normalizeNonNegativeNumber(
+      value.charmValue,
+      0,
+      CHARM_BONUS_MAX_VALUE
+    ),
+    satinSelections: normalizeBonusSelections<SatinBonusAttribute>(
+      value.satinSelections,
+      SATIN_ATTRIBUTE_SET,
+      2
+    ),
+    transformationTalismanSelections:
+      normalizeBonusSelections<TransformationTalismanBonusAttribute>(
+        value.transformationTalismanSelections,
+        TRANSFORMATION_TALISMAN_ATTRIBUTE_SET,
+        2
+      ),
+    isGuildBlessingEnabled: value.isGuildBlessingEnabled === true,
+    starBlessingAttributes: normalizePrimaryAttributes(
+      value.starBlessingAttributes
+    ),
+    starBlessingValue: value.starBlessingValue === 25 ? 25 : 18,
+  };
+};
+
+const loadCharacterCalculatorState = (): CharacterCalculatorState =>
+  loadCalculatorState(
+    CHARACTER_ATTRIBUTES_STORAGE_KEY,
+    createDefaultCharacterCalculatorState(),
+    normalizeCharacterCalculatorState
+  );
+
 type CharacterAttributeCalculatorProps = {
   equipmentBonuses?: CharacterAttributeBonuses;
   equipmentItemCount?: number;
@@ -483,47 +712,97 @@ const CharacterAttributeCalculator = ({
   equipmentBonuses = createEmptyCharacterAttributeBonuses(),
   equipmentItemCount = 0,
 }: CharacterAttributeCalculatorProps) => {
+  const [initialState] = useState(loadCharacterCalculatorState);
   const [selectedPresetId, setSelectedPresetId] =
-    useState<CharacterAllocationPresetId>(CHARACTER_ALLOCATION_PRESETS[0].id);
+    useState<CharacterAllocationPresetId>(initialState.selectedPresetId);
   const [activeAttributeTab, setActiveAttributeTab] =
     useState<AttributeTab>("basic");
   const [areBonusDetailsVisible, setAreBonusDetailsVisible] = useState(true);
-  const [skillBonuses, setSkillBonuses] = useState(
-    createEmptyCharacterAttributeBonuses
+  const [skillBonuses, setSkillBonuses] = useState<CharacterAttributeBonuses>(
+    initialState.skillBonuses
   );
   const [temporaryTalismanBonuses, setTemporaryTalismanBonuses] = useState(
-    createEmptyCharacterAttributeBonuses
+    initialState.temporaryTalismanBonuses
   );
   const [soulArtifactBonuses, setSoulArtifactBonuses] = useState(
-    createEmptyCharacterAttributeBonuses
+    initialState.soulArtifactBonuses
   );
-  const [divineSoulValue, setDivineSoulValue] = useState(0);
+  const [divineSoulValue, setDivineSoulValue] = useState(
+    initialState.divineSoulValue
+  );
   const [tianshuBonusCounts, setTianshuBonusCounts] = useState<
     Readonly<Record<string, number>>
-  >({});
+  >(initialState.tianshuBonusCounts);
   const [talismanOptionId, setTalismanOptionId] =
-    useState<TalismanBonusOptionId | null>(null);
+    useState<TalismanBonusOptionId | null>(initialState.talismanOptionId);
   const [seasonArtifactAttribute, setSeasonArtifactAttribute] =
-    useState<PrimaryAttribute | null>(null);
-  const [seasonArtifactValue, setSeasonArtifactValue] = useState(0);
+    useState<PrimaryAttribute | null>(initialState.seasonArtifactAttribute);
+  const [seasonArtifactValue, setSeasonArtifactValue] = useState(
+    initialState.seasonArtifactValue
+  );
   const [charmAttribute, setCharmAttribute] =
-    useState<PrimaryAttribute | null>(null);
-  const [charmValue, setCharmValue] = useState(0);
+    useState<PrimaryAttribute | null>(initialState.charmAttribute);
+  const [charmValue, setCharmValue] = useState(initialState.charmValue);
   const [satinSelections, setSatinSelections] = useState<
     readonly SatinBonusSelection[]
-  >([]);
+  >(initialState.satinSelections);
   const [transformationTalismanSelections, setTransformationTalismanSelections] =
-    useState<readonly TransformationTalismanBonusSelection[]>([]);
-  const [isGuildBlessingEnabled, setIsGuildBlessingEnabled] = useState(false);
+    useState<readonly TransformationTalismanBonusSelection[]>(
+      initialState.transformationTalismanSelections
+    );
+  const [isGuildBlessingEnabled, setIsGuildBlessingEnabled] = useState(
+    initialState.isGuildBlessingEnabled
+  );
   const [starBlessingAttributes, setStarBlessingAttributes] = useState<
     readonly PrimaryAttribute[]
-  >([]);
+  >(initialState.starBlessingAttributes);
   const [starBlessingValue, setStarBlessingValue] =
-    useState<StarBlessingBonusValue>(18);
+    useState<StarBlessingBonusValue>(initialState.starBlessingValue);
   const [activeEditorId, setActiveEditorId] = useState<EditorId | null>(null);
   const [leftAttributePanelHeight, setLeftAttributePanelHeight] = useState(0);
   const leftAttributePanelRef = useRef<HTMLElement>(null);
   const closeEditor = useCallback(() => setActiveEditorId(null), []);
+
+  useEffect(() => {
+    saveCalculatorState<CharacterCalculatorState>(
+      CHARACTER_ATTRIBUTES_STORAGE_KEY,
+      {
+        selectedPresetId,
+        skillBonuses,
+        temporaryTalismanBonuses,
+        soulArtifactBonuses,
+        divineSoulValue,
+        tianshuBonusCounts,
+        talismanOptionId,
+        seasonArtifactAttribute,
+        seasonArtifactValue,
+        charmAttribute,
+        charmValue,
+        satinSelections,
+        transformationTalismanSelections,
+        isGuildBlessingEnabled,
+        starBlessingAttributes,
+        starBlessingValue,
+      }
+    );
+  }, [
+    selectedPresetId,
+    skillBonuses,
+    temporaryTalismanBonuses,
+    soulArtifactBonuses,
+    divineSoulValue,
+    tianshuBonusCounts,
+    talismanOptionId,
+    seasonArtifactAttribute,
+    seasonArtifactValue,
+    charmAttribute,
+    charmValue,
+    satinSelections,
+    transformationTalismanSelections,
+    isGuildBlessingEnabled,
+    starBlessingAttributes,
+    starBlessingValue,
+  ]);
 
   useLayoutEffect(() => {
     const panel = leftAttributePanelRef.current;

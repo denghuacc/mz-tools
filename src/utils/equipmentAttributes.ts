@@ -401,6 +401,203 @@ export const createInitialEquipmentSet = (): EquipmentSet => ({
   }),
 });
 
+const EQUIPMENT_ATTRIBUTE_SET = new Set<string>(
+  EQUIPMENT_ATTRIBUTE_OPTIONS.map(({ attribute }) => attribute)
+);
+const STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET = new Set<string>(
+  EQUIPMENT_PRIMARY_ATTRIBUTES
+);
+const EQUIPMENT_AFFINITY_ATTRIBUTE_SET = new Set<string>(
+  EQUIPMENT_AFFINITY_EFFECT_OPTIONS.map(({ attribute }) => attribute)
+);
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const normalizeEquipmentAttributeValues = (
+  value: unknown,
+  fallback: EquipmentAttributeValues
+): EquipmentAttributeValues => {
+  if (!isRecord(value)) return fallback;
+
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      ([attribute, storedValue]) =>
+        EQUIPMENT_ATTRIBUTE_SET.has(attribute) &&
+        typeof storedValue === "number" &&
+        Number.isFinite(storedValue)
+    )
+  ) as EquipmentAttributeValues;
+};
+
+const normalizeEquipmentAttributeLine = <Attribute extends EquipmentAttribute>(
+  value: unknown,
+  allowedAttributes: ReadonlySet<string>,
+  fallback: { attribute: Attribute; value: number }
+): { attribute: Attribute; value: number } => {
+  if (
+    !isRecord(value) ||
+    typeof value.attribute !== "string" ||
+    !allowedAttributes.has(value.attribute) ||
+    typeof value.value !== "number" ||
+    !Number.isFinite(value.value)
+  ) {
+    return fallback;
+  }
+
+  return {
+    attribute: value.attribute as Attribute,
+    value: value.value,
+  };
+};
+
+const normalizeEquipmentAttributeLines = <
+  Attribute extends EquipmentAttribute,
+>(
+  value: unknown,
+  allowedAttributes: ReadonlySet<string>,
+  maximumLineCount: number,
+  fallback: readonly { attribute: Attribute; value: number }[]
+): readonly { attribute: Attribute; value: number }[] => {
+  if (!Array.isArray(value)) return fallback;
+
+  const lines: { attribute: Attribute; value: number }[] = [];
+  for (const candidate of value) {
+    if (!isRecord(candidate)) continue;
+
+    if (
+      typeof candidate.attribute !== "string" ||
+      !allowedAttributes.has(candidate.attribute) ||
+      typeof candidate.value !== "number" ||
+      !Number.isFinite(candidate.value)
+    ) {
+      continue;
+    }
+
+    lines.push({
+      attribute: candidate.attribute as Attribute,
+      value: candidate.value,
+    });
+    if (lines.length === maximumLineCount) break;
+  }
+
+  return lines;
+};
+
+/** 新增 EquipmentItem 字段时必须在这里补充恢复规则，避免旧缓存产生缺字段。 */
+const normalizeEquipmentItem = (
+  value: unknown,
+  slot: EquipmentSlot,
+  fallback: EquipmentItem
+): EquipmentItem => {
+  if (!isRecord(value)) return fallback;
+
+  const supportAttribute =
+    value.supportAttribute === null
+      ? null
+      : normalizeEquipmentAttributeLine(
+          value.supportAttribute,
+          STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET,
+          fallback.supportAttribute ?? { attribute: "constitution", value: 0 }
+        );
+  const affinityEffectAttribute =
+    value.affinityEffectAttribute === null
+      ? null
+      : typeof value.affinityEffectAttribute === "string" &&
+          EQUIPMENT_AFFINITY_ATTRIBUTE_SET.has(value.affinityEffectAttribute)
+        ? (value.affinityEffectAttribute as EquipmentAffinityEffectAttribute)
+        : fallback.affinityEffectAttribute;
+  const specialEffectAttribute =
+    value.specialEffectAttribute === null
+      ? null
+      : normalizeEquipmentAttributeLine(
+          value.specialEffectAttribute,
+          EQUIPMENT_ATTRIBUTE_SET,
+          fallback.specialEffectAttribute ?? {
+            attribute: "physicalAttack",
+            value: 0,
+          }
+        );
+  const seasonEffectLevel =
+    typeof value.seasonEffectLevel === "number" &&
+    Number.isInteger(value.seasonEffectLevel) &&
+    value.seasonEffectLevel >= 0 &&
+    value.seasonEffectLevel <= 5
+      ? (value.seasonEffectLevel as SeasonEffectLevel)
+      : fallback.seasonEffectLevel;
+
+  return {
+    slot,
+    enabled:
+      typeof value.enabled === "boolean" ? value.enabled : fallback.enabled,
+    level:
+      typeof value.level === "number" &&
+      Number.isFinite(value.level) &&
+      value.level >= 0
+        ? value.level
+        : fallback.level,
+    baseAttributes: normalizeEquipmentAttributeValues(
+      value.baseAttributes,
+      fallback.baseAttributes
+    ),
+    castingAttributes: normalizeEquipmentAttributeValues(
+      value.castingAttributes,
+      fallback.castingAttributes
+    ),
+    additionalPrimaryAttributes: normalizeEquipmentAttributeLines(
+      value.additionalPrimaryAttributes,
+      STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET,
+      2,
+      fallback.additionalPrimaryAttributes
+    ),
+    tempering: normalizeEquipmentAttributeLine(
+      value.tempering,
+      STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET,
+      fallback.tempering
+    ),
+    affixes: normalizeEquipmentAttributeLines(
+      value.affixes,
+      EQUIPMENT_ATTRIBUTE_SET,
+      3,
+      fallback.affixes
+    ),
+    supportAttribute,
+    blessing:
+      typeof value.blessing === "boolean" ? value.blessing : fallback.blessing,
+    growth:
+      typeof value.growth === "boolean" ? value.growth : fallback.growth,
+    gale: typeof value.gale === "boolean" ? value.gale : fallback.gale,
+    affinityEffectAttribute,
+    vitalityEffect:
+      typeof value.vitalityEffect === "boolean"
+        ? value.vitalityEffect
+        : fallback.vitalityEffect,
+    specialEffect:
+      typeof value.specialEffect === "string"
+        ? value.specialEffect
+        : fallback.specialEffect,
+    seasonEffectLevel,
+    specialEffectAttribute,
+    specialSkill:
+      typeof value.specialSkill === "string"
+        ? value.specialSkill
+        : fallback.specialSkill,
+  };
+};
+
+/** 校验并补齐缓存中的八件装备，兼容缺字段的旧数据。 */
+export const normalizeEquipmentSet = (value: unknown): EquipmentSet | null => {
+  if (!isRecord(value)) return null;
+
+  const fallback = createInitialEquipmentSet();
+  return Object.fromEntries(
+    EQUIPMENT_SLOTS.map((slot) => [
+      slot,
+      normalizeEquipmentItem(value[slot], slot, fallback[slot]),
+    ])
+  ) as EquipmentSet;
+};
+
 export type EquipmentSummary = {
   activeItemCount: number;
   allAttributes: EquipmentAttributeValues;

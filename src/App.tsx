@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import RingConverter from "./components/RingConverter";
 import WeaponConverter from "./components/WeaponConverter";
 import CharacterAttributeCalculator from "./components/CharacterAttributeCalculator";
@@ -22,7 +22,14 @@ import type { FavoriteKind } from "./utils/favorites";
 import {
   calculateEquipmentSummary,
   createInitialEquipmentSet,
+  normalizeEquipmentSet,
 } from "./utils/equipmentAttributes";
+import {
+  EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
+  loadCalculatorState,
+  saveCalculatorState,
+} from "./utils/calculatorStorage";
+import type { EquipmentSet } from "./utils/equipmentAttributes";
 
 type PageId =
   | "home"
@@ -122,7 +129,13 @@ const CalculatorPage = () => {
   const [activeTool, setActiveTool] = useState<CalculatorTool>(
     () => loadPreferences().activeTool
   );
-  const [equipment, setEquipment] = useState(createInitialEquipmentSet);
+  const [equipment, setEquipment] = useState<EquipmentSet>(() =>
+    loadCalculatorState(
+      EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
+      createInitialEquipmentSet(),
+      normalizeEquipmentSet
+    )
+  );
   const isWeapon = activeTool === "weapon";
   const isCharacter = activeTool === "character";
   const isEquipment = activeTool === "equipment";
@@ -130,6 +143,10 @@ const CalculatorPage = () => {
     () => calculateEquipmentSummary(equipment),
     [equipment]
   );
+
+  useEffect(() => {
+    saveCalculatorState(EQUIPMENT_ATTRIBUTES_STORAGE_KEY, equipment);
+  }, [equipment]);
 
   const toolMeta = isEquipment
     ? {

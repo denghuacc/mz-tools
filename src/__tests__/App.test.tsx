@@ -1,10 +1,11 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../App";
 import {
   loadPreferences,
   updatePreferences,
 } from "../utils/preferences";
+import { EQUIPMENT_ATTRIBUTES_STORAGE_KEY } from "../utils/calculatorStorage";
 
 describe("App 组件", () => {
   it("应该渲染主应用", () => {
@@ -327,6 +328,7 @@ describe("App 组件", () => {
     );
     expect(screen.getByRole("heading", { name: "设置" })).toBeInTheDocument();
     expect(screen.getByText(/当前收藏 0 项/)).toBeInTheDocument();
+    expect(screen.getByText(/角色属性和八件装备输入会保存在当前浏览器/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "清空收藏" })).toBeDisabled();
 
     await user.click(screen.getByRole("button", { name: "重置计算器偏好" }));
@@ -348,5 +350,53 @@ describe("App 组件", () => {
     await user.click(screen.getByRole("button", { name: "清空收藏" }));
     expect(screen.getByRole("status")).toHaveTextContent("收藏已清空");
     expect(screen.getByRole("button", { name: "清空收藏" })).toBeDisabled();
+  });
+
+  it("应该保存八件装备并在重新加载应用后恢复", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "角色装备" }));
+    await user.click(screen.getByRole("button", { name: "编辑武器" }));
+    const weaponDialog = screen.getByRole("dialog", { name: "编辑武器" });
+    const physicalAttackInput = within(weaponDialog).getByRole("spinbutton", {
+      name: "武器：物攻",
+    });
+    await user.clear(physicalAttackInput);
+    await user.type(physicalAttackInput, "700");
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(EQUIPMENT_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+      );
+      expect(stored.weapon.baseAttributes.physicalAttack).toBe(700);
+      expect(Object.keys(stored).sort()).toEqual(
+        [
+          "weapon",
+          "armor",
+          "headgear",
+          "lowerGarment",
+          "accessory",
+          "shoes",
+          "ring",
+          "necklace",
+        ].sort()
+      );
+    });
+
+    unmount();
+    render(<App />);
+
+    expect(screen.getByRole("tab", { name: "角色装备" })).toHaveAttribute(
+      "aria-selected",
+      "true"
+    );
+    await user.click(screen.getByRole("button", { name: "编辑武器" }));
+    expect(
+      within(screen.getByRole("dialog", { name: "编辑武器" })).getByRole(
+        "spinbutton",
+        { name: "武器：物攻" }
+      )
+    ).toHaveValue(700);
   });
 });
