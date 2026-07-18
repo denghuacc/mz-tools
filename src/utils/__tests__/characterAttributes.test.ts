@@ -136,6 +136,23 @@ describe("角色属性计算", () => {
     });
   });
 
+  it("应该在固定防御加成之后应用物防和法防百分比", () => {
+    const calculated = calculateCharacterAttributes(
+      EMPTY_CHARACTER_ALLOCATION
+    );
+    const bonuses = {
+      ...createEmptyCharacterAttributeBonuses(),
+      physicalDefense: 10,
+      magicDefense: 20,
+      physicalDefensePercent: 5,
+      magicDefensePercent: 5,
+    };
+    const effective = applyCharacterAttributeBonuses(calculated, bonuses);
+
+    expect(effective.derived.physicalDefense).toBe(208.95);
+    expect(effective.derived.magicDefense).toBe(211.05);
+  });
+
   it("应该支持技能直接减少速度", () => {
     const calculated = calculateCharacterAttributes(
       EMPTY_CHARACTER_ALLOCATION

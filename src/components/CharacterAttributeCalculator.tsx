@@ -13,6 +13,7 @@ import StarBlessingBonusControl, {
   STAR_BLESSING_ATTRIBUTE_COUNT,
 } from "./StarBlessingBonusControl";
 import TianshuBonusControl from "./TianshuBonusControl";
+import TalismanBonusControl from "./TalismanBonusControl";
 import UniformAttributeBonusControl from "./UniformAttributeBonusControl";
 import type { TianshuBonusControlOption } from "./TianshuBonusControl";
 import type { StarBlessingBonusValue } from "./StarBlessingBonusControl";
@@ -119,6 +120,41 @@ const GUILD_BLESSING_FIELDS = [
   { attribute: "physicalDefense", label: "物防", value: 20 },
   { attribute: "magicAttack", label: "法攻", value: 16 },
   { attribute: "magicDefense", label: "法防", value: 16 },
+] as const;
+
+const TALISMAN_BONUS_OPTIONS = [
+  {
+    id: "physical-attack",
+    title: "物攻法宝",
+    effectLabel: `+${CHARACTER_LEVEL * 0.6} 物攻`,
+    bonuses: { physicalAttack: CHARACTER_LEVEL * 0.6 },
+  },
+  {
+    id: "magic-attack",
+    title: "法攻法宝",
+    effectLabel: `+${CHARACTER_LEVEL * 0.6} 法攻`,
+    bonuses: { magicAttack: CHARACTER_LEVEL * 0.6 },
+  },
+  {
+    id: "speed-defense",
+    title: "速度与防御法宝",
+    effectLabel: `+${CHARACTER_LEVEL * 0.4} 速度 · +5% 物防 · +5% 法防`,
+    bonuses: {
+      speed: CHARACTER_LEVEL * 0.4,
+      physicalDefensePercent: 5,
+      magicDefensePercent: 5,
+    },
+  },
+] as const;
+
+type TalismanBonusOptionId = (typeof TALISMAN_BONUS_OPTIONS)[number]["id"];
+
+const TALISMAN_BONUS_SUMMARY_FIELDS = [
+  { attribute: "physicalAttack", label: "物攻" },
+  { attribute: "magicAttack", label: "法攻" },
+  { attribute: "speed", label: "速度" },
+  { attribute: "physicalDefensePercent", label: "物防", unit: "%" },
+  { attribute: "magicDefensePercent", label: "法防", unit: "%" },
 ] as const;
 
 type TianshuBonusOption = TianshuBonusControlOption & {
@@ -273,6 +309,7 @@ type EditorId =
   | "soulArtifact"
   | "divineSoul"
   | "tianshu"
+  | "talisman"
   | "seasonArtifact"
   | "charm"
   | "satin"
@@ -410,6 +447,17 @@ const createTianshuBonuses = (counts: Readonly<Record<string, number>>) => {
   return bonuses;
 };
 
+const createTalismanBonuses = (optionId: TalismanBonusOptionId | null) => {
+  const bonuses = createEmptyCharacterAttributeBonuses();
+  const option = TALISMAN_BONUS_OPTIONS.find(({ id }) => id === optionId);
+
+  if (option) {
+    Object.assign(bonuses, option.bonuses);
+  }
+
+  return bonuses;
+};
+
 const createStarBlessingBonuses = (
   attributes: readonly PrimaryAttribute[],
   value: StarBlessingBonusValue
@@ -444,6 +492,8 @@ const CharacterAttributeCalculator = () => {
   const [tianshuBonusCounts, setTianshuBonusCounts] = useState<
     Readonly<Record<string, number>>
   >({});
+  const [talismanOptionId, setTalismanOptionId] =
+    useState<TalismanBonusOptionId | null>(null);
   const [seasonArtifactAttribute, setSeasonArtifactAttribute] =
     useState<PrimaryAttribute | null>(null);
   const [seasonArtifactValue, setSeasonArtifactValue] = useState(0);
@@ -509,6 +559,10 @@ const CharacterAttributeCalculator = () => {
     () => createTianshuBonuses(tianshuBonusCounts),
     [tianshuBonusCounts]
   );
+  const talismanBonuses = useMemo(
+    () => createTalismanBonuses(talismanOptionId),
+    [talismanOptionId]
+  );
   const charmBonuses = useMemo(
     () => createSinglePrimaryAttributeBonuses(charmAttribute, charmValue),
     [charmAttribute, charmValue]
@@ -559,6 +613,7 @@ const CharacterAttributeCalculator = () => {
         areSoulArtifactBonusesValid ? soulArtifactBonuses : {},
         divineSoulBonuses,
         tianshuBonuses,
+        talismanBonuses,
         seasonArtifactBonuses,
         charmBonuses,
         satinBonuses,
@@ -572,6 +627,7 @@ const CharacterAttributeCalculator = () => {
       soulArtifactBonuses,
       divineSoulBonuses,
       tianshuBonuses,
+      talismanBonuses,
       seasonArtifactBonuses,
       charmBonuses,
       satinBonuses,
@@ -605,6 +661,10 @@ const CharacterAttributeCalculator = () => {
   const tianshuSummaryItems = createBonusSummaryItems(
     TIANSHU_BONUS_SUMMARY_FIELDS,
     tianshuBonuses
+  );
+  const talismanSummaryItems = createBonusSummaryItems(
+    TALISMAN_BONUS_SUMMARY_FIELDS,
+    talismanBonuses
   );
   const seasonArtifactSummaryItems =
     seasonArtifactAttribute && seasonArtifactValue !== 0
@@ -755,6 +815,28 @@ const CharacterAttributeCalculator = () => {
           counts={tianshuBonusCounts}
           onCountChange={updateTianshuBonusCount}
           onReset={() => setTianshuBonusCounts({})}
+        />
+      ),
+    },
+    {
+      id: "talisman",
+      title: "法宝",
+      items: talismanSummaryItems,
+      renderContent: (title) => (
+        <TalismanBonusControl
+          title={title}
+          options={TALISMAN_BONUS_OPTIONS}
+          selectedOptionId={talismanOptionId}
+          onSelect={(optionId) => {
+            const option = TALISMAN_BONUS_OPTIONS.find(
+              ({ id }) => id === optionId
+            );
+
+            if (option) {
+              setTalismanOptionId(option.id);
+            }
+          }}
+          onReset={() => setTalismanOptionId(null)}
         />
       ),
     },
@@ -1173,6 +1255,23 @@ const CharacterAttributeCalculator = () => {
                                     天书 {formatBonus(tianshuBonuses[attribute])}
                                   </span>
                                 )}
+                                {talismanBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-indigo-600">
+                                    法宝 {formatBonus(talismanBonuses[attribute])}
+                                  </span>
+                                )}
+                                {attribute === "physicalDefense" &&
+                                  talismanBonuses.physicalDefensePercent > 0 && (
+                                    <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-indigo-600">
+                                      法宝 +{formatAttribute(talismanBonuses.physicalDefensePercent)}%
+                                    </span>
+                                  )}
+                                {attribute === "magicDefense" &&
+                                  talismanBonuses.magicDefensePercent > 0 && (
+                                    <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-indigo-600">
+                                      法宝 +{formatAttribute(talismanBonuses.magicDefensePercent)}%
+                                    </span>
+                                  )}
                                 {attribute === "speed" &&
                                   tianshuBonuses.speedPercent > 0 && (
                                     <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-orange-600">

@@ -22,11 +22,35 @@ describe("CharacterAttributeCalculator", () => {
     const editButtons = within(screen.getByTestId("attribute-bonus-rail"))
       .getAllByRole("button", { name: /^编辑/ });
 
-    expect(editButtons).toHaveLength(11);
+    expect(editButtons).toHaveLength(12);
     editButtons.forEach((button) => {
       expect(button.textContent).toBe("");
       expect(button.querySelector("svg")).not.toBeNull();
     });
+  });
+
+  it("应该只选择一种法宝加成并按等级计算属性", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const talismanDialog = await openBonusEditor(user, "法宝");
+
+    const physicalAttackOption = within(talismanDialog).getByRole("radio", {
+      name: /物攻法宝/,
+    });
+    const speedDefenseOption = within(talismanDialog).getByRole("radio", {
+      name: /速度与防御法宝/,
+    });
+
+    await user.click(physicalAttackOption);
+    expect(physicalAttackOption).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("法宝 +41.4")).toBeInTheDocument();
+
+    await user.click(speedDefenseOption);
+    expect(physicalAttackOption).toHaveAttribute("aria-checked", "false");
+    expect(speedDefenseOption).toHaveAttribute("aria-checked", "true");
+    expect(screen.queryByText("法宝 +41.4")).not.toBeInTheDocument();
+    expect(screen.getByText("法宝 +27.6")).toBeInTheDocument();
+    expect(screen.getAllByText("法宝 +5%")).toHaveLength(2);
   });
 
   it("应该一键隐藏并恢复全部属性加成明细", async () => {
@@ -760,7 +784,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).getByText("物攻 +122")).toBeInTheDocument();
     expect(within(summaryCard!).queryByText("3 项变更")).not.toBeInTheDocument();
     expect(within(summaryCard!).queryByText("另 1 项")).not.toBeInTheDocument();
-    expect(screen.getByText("已配置 1 / 11")).toBeInTheDocument();
+    expect(screen.getByText("已配置 1 / 12")).toBeInTheDocument();
   });
 });
 

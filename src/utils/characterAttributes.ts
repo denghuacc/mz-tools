@@ -139,6 +139,8 @@ export type CharacterAdvancedBonusAttribute =
 
 export const CHARACTER_PERCENTAGE_BONUS_ATTRIBUTE_KEYS = [
   "speedPercent",
+  "physicalDefensePercent",
+  "magicDefensePercent",
 ] as const;
 
 export type CharacterPercentageBonusAttribute =
@@ -188,6 +190,8 @@ export const createEmptyCharacterAttributeBonuses =
     sealHit: 0,
     sealResistance: 0,
     speedPercent: 0,
+    physicalDefensePercent: 0,
+    magicDefensePercent: 0,
     fireAffinity: 0,
     iceAffinity: 0,
     electricAffinity: 0,
@@ -348,14 +352,16 @@ export const applyCharacterAttributeBonuses = (
         calculated.derived.magicAttack + magicAttributeBonus + bonuses.magicAttack
       ),
       physicalDefense: roundAttribute(
-        calculated.derived.physicalDefense +
+        (calculated.derived.physicalDefense +
           bonuses.endurance +
-          bonuses.physicalDefense
+          bonuses.physicalDefense) *
+          (1 + bonuses.physicalDefensePercent / 100)
       ),
       magicDefense: roundAttribute(
-        calculated.derived.magicDefense +
+        (calculated.derived.magicDefense +
           magicAttributeBonus +
-          bonuses.magicDefense
+          bonuses.magicDefense) *
+          (1 + bonuses.magicDefensePercent / 100)
       ),
       speed: roundAttribute(
         speedBeforePercentage * (1 + bonuses.speedPercent / 100)
