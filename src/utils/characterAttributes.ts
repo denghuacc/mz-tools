@@ -102,7 +102,23 @@ export const LEVEL_ONE_PRIMARY_ATTRIBUTES: CharacterAllocation = {
 export const LEVEL_ONE_STATUS_ATTRIBUTES = {
   health: 234,
   mana: 157,
-  anger: 100,
+} as const;
+
+export const STATUS_ATTRIBUTE_POINTS_PER_UPGRADE = {
+  health: 11,
+  mana: 6,
+} as const;
+
+export const FIXED_TRUE_ENERGY = 100;
+
+export const LEVEL_69_FIXED_STATUS_ATTRIBUTES = {
+  health:
+    LEVEL_ONE_STATUS_ATTRIBUTES.health +
+    CHARACTER_UPGRADE_COUNT * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.health,
+  mana:
+    LEVEL_ONE_STATUS_ATTRIBUTES.mana +
+    CHARACTER_UPGRADE_COUNT * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.mana,
+  trueEnergy: FIXED_TRUE_ENERGY,
 } as const;
 
 export const LEVEL_ONE_DERIVED_ATTRIBUTES = {
@@ -350,8 +366,9 @@ export const applyCharacterAttributeBonuses = (
           bonuses.health) *
           (1 + bonuses.healthPercent / 100)
       ),
-      // 当前法力成长规则未知，只叠加明确填写的直接加成。
-      mana: roundAttribute(LEVEL_ONE_STATUS_ATTRIBUTES.mana + bonuses.mana),
+      mana: roundAttribute(
+        LEVEL_69_FIXED_STATUS_ATTRIBUTES.mana + bonuses.mana
+      ),
     },
     derived: {
       physicalAttack: roundAttribute(
@@ -440,7 +457,8 @@ export const calculateCharacterAttributes = (
   return {
     primary,
     derived: {
-      health: LEVEL_ONE_STATUS_ATTRIBUTES.health + constitutionGrowth * 3,
+      health:
+        LEVEL_69_FIXED_STATUS_ATTRIBUTES.health + constitutionGrowth * 3,
       magicAttack: roundAttribute(
         LEVEL_ONE_DERIVED_ATTRIBUTES.magicAttack +
           constitutionGrowth * 0.1 +

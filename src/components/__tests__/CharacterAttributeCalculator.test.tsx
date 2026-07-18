@@ -23,6 +23,13 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("基础属性 · 10 项")).toBeInTheDocument();
     expect(screen.getByText("五项派生初值待验证")).toBeInTheDocument();
     expect(screen.getByText("潜力 +680")).toBeInTheDocument();
+    expect(screen.getByText("1390")).toBeInTheDocument();
+    expect(screen.getByText("565")).toBeInTheDocument();
+    expect(screen.getByText("等级 +748")).toBeInTheDocument();
+    expect(screen.getByText("等级 +408")).toBeInTheDocument();
+    const trueEnergyRow = screen.getByText("真气").closest("div");
+    expect(trueEnergyRow).not.toBeNull();
+    expect(within(trueEnergyRow!).getByText("100")).toBeInTheDocument();
     expect(screen.queryByText("进阶属性与亲和")).not.toBeInTheDocument();
   });
 
@@ -103,8 +110,9 @@ describe("CharacterAttributeCalculator", () => {
 
     expect(screen.queryByText("潜力 +680")).not.toBeInTheDocument();
     expect(screen.queryByText("+技能 100")).not.toBeInTheDocument();
-    expect(screen.getByText("742")).toBeInTheDocument();
-    expect(screen.getByText("1 级基准 · 成长待补")).toBeInTheDocument();
+    expect(screen.getByText("1490")).toBeInTheDocument();
+    expect(screen.queryByText("等级 +748")).not.toBeInTheDocument();
+    expect(screen.queryByText("等级 +408")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
     expect(screen.queryByText("等级 +136")).not.toBeInTheDocument();
@@ -143,7 +151,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(
       within(allocationSummary).getByText("体 +136 · 耐 +136 · 敏 +408")
     ).toBeInTheDocument();
-    expect(screen.getByText("1050")).toBeInTheDocument();
+    expect(screen.getByText("1798")).toBeInTheDocument();
   });
 
   it("应该自由叠加多条技能属性并支持清空", async () => {
@@ -177,7 +185,7 @@ describe("CharacterAttributeCalculator", () => {
       "25"
     );
 
-    expect(screen.getByText("742")).toBeInTheDocument();
+    expect(screen.getByText("1490")).toBeInTheDocument();
     expect(screen.getByText("531")).toBeInTheDocument();
     expect(screen.getByText("+技能 100")).toBeInTheDocument();
 
@@ -187,7 +195,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(skillCard).not.toBeNull();
     await user.click(within(skillCard!).getByRole("button", { name: "清空" }));
 
-    expect(screen.queryByText("742")).not.toBeInTheDocument();
+    expect(screen.queryByText("1490")).not.toBeInTheDocument();
     expect(screen.queryByText("531")).not.toBeInTheDocument();
     expect(
       within(skillDialog).getByRole("spinbutton", {
@@ -903,8 +911,8 @@ describe("CharacterAttributeCalculator", () => {
     const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
     expect(within(derivedColumn).getByText("576.5")).toBeInTheDocument();
     expect(within(potentialColumn).getByText("865")).toBeInTheDocument();
-    expect(screen.getByText("951")).toBeInTheDocument();
-    expect(screen.getByText("466")).toBeInTheDocument();
+    expect(screen.getByText("1699")).toBeInTheDocument();
+    expect(screen.getByText("874")).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
     const resultPanel = within(screen.getByTestId("attribute-result-panel"));

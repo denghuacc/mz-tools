@@ -57,6 +57,7 @@ import {
   createEmptyCharacterAttributeBonuses,
   getPrimaryAttributeBonusTotal,
   LEVEL_ONE_ADVANCED_ATTRIBUTES,
+  LEVEL_69_FIXED_STATUS_ATTRIBUTES,
   LEVEL_ONE_STATUS_ATTRIBUTES,
   PRIMARY_ATTRIBUTE_KEYS,
   SEAL_HIT_POINTS_PER_UPGRADE,
@@ -1602,7 +1603,7 @@ const CharacterAttributeCalculator = ({
               <div>
                 <h2 className="text-base font-semibold text-slate-900">状态条</h2>
                 <p className="mt-1.5 text-xs leading-5 text-slate-500">
-                  气血按体力增长；法力只展示 1 级基准，怒气/真气沿用截图值。
+                  气血和法力均按等级成长；气血还会随体力增加，真气固定为 100。
                 </p>
               </div>
               <span className="shrink-0 text-xs text-slate-400">暂算值</span>
@@ -1618,6 +1619,13 @@ const CharacterAttributeCalculator = ({
                     bonuses={
                       areBonusDetailsVisible ? (
                         <>
+                          <span className="ml-2 inline-block whitespace-nowrap text-xs text-slate-500">
+                            等级 +
+                            {formatAttribute(
+                              LEVEL_69_FIXED_STATUS_ATTRIBUTES.health -
+                                LEVEL_ONE_STATUS_ATTRIBUTES.health
+                            )}
+                          </span>
                           {skillBonuses.health > 0 && (
                             <span className="ml-2 inline-block whitespace-nowrap text-xs text-emerald-600">
                               +技能 {formatAttribute(skillBonuses.health)}
@@ -1680,9 +1688,15 @@ const CharacterAttributeCalculator = ({
                   </span>
                   <AttributeValueLayout
                     bonuses={
-                      <>
-                        {areBonusDetailsVisible && (
-                          <>
+                      areBonusDetailsVisible ? (
+                        <>
+                          <span className="ml-2 inline-block whitespace-nowrap text-xs text-slate-500">
+                            等级 +
+                            {formatAttribute(
+                              LEVEL_69_FIXED_STATUS_ATTRIBUTES.mana -
+                                LEVEL_ONE_STATUS_ATTRIBUTES.mana
+                            )}
+                          </span>
                             {skillBonuses.mana > 0 && (
                               <span className="ml-2 inline-block whitespace-nowrap text-xs text-blue-600">
                                 +技能 {formatAttribute(skillBonuses.mana)}
@@ -1698,16 +1712,8 @@ const CharacterAttributeCalculator = ({
                                 +灵符 {formatAttribute(temporaryTalismanBonuses.mana)}
                               </span>
                             )}
-                          </>
-                        )}
-                        {skillBonuses.mana === 0 &&
-                          equipmentBonuses.mana === 0 &&
-                          temporaryTalismanBonuses.mana === 0 && (
-                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-slate-400">
-                              1 级基准 · 成长待补
-                            </span>
-                          )}
-                      </>
+                        </>
+                      ) : null
                     }
                     value={
                       <strong className="shrink-0 text-sm text-blue-700">
@@ -1721,10 +1727,10 @@ const CharacterAttributeCalculator = ({
               <div className="rounded-xl border border-amber-100 bg-amber-50/50 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm font-medium text-slate-700">
-                    怒气 / 真气
+                    真气
                   </span>
                   <strong className="text-sm text-amber-700">
-                    {LEVEL_ONE_STATUS_ATTRIBUTES.anger}
+                    {LEVEL_69_FIXED_STATUS_ATTRIBUTES.trueEnergy}
                   </strong>
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-amber-100">

@@ -9,10 +9,13 @@ import {
   createEmptyCharacterAttributeBonuses,
   EMPTY_CHARACTER_ALLOCATION,
   FIXED_PRIMARY_ATTRIBUTES,
+  FIXED_TRUE_ENERGY,
   getPrimaryAttributeBonusTotal,
   LEVEL_69_ADVANCED_ATTRIBUTES,
+  LEVEL_69_FIXED_STATUS_ATTRIBUTES,
   LEVEL_ONE_ADVANCED_ATTRIBUTES,
   SEAL_HIT_POINTS_PER_UPGRADE,
+  STATUS_ATTRIBUTE_POINTS_PER_UPGRADE,
   TOTAL_POTENTIAL_POINTS,
 } from "../characterAttributes";
 
@@ -65,7 +68,7 @@ describe("角色属性计算", () => {
 
     expect(effective.primary.strength).toBe(178);
     expect(effective.primary.endurance).toBe(162);
-    expect(effective.status.health).toBe(642);
+    expect(effective.status).toEqual({ health: 1390, mana: 565 });
     expect(effective.derived).toEqual({
       physicalAttack: 176,
       magicAttack: 239.4,
@@ -241,7 +244,7 @@ describe("角色属性计算", () => {
     expect(result.allocatedPoints).toBe(0);
     expect(result.remainingPoints).toBe(680);
     expect(result.derived).toEqual({
-      health: 642,
+      health: 1390,
       magicAttack: 236,
       magicDefense: 181,
       physicalAttack: 166,
@@ -259,7 +262,7 @@ describe("角色属性计算", () => {
       agility: 50,
     });
 
-    expect(result.derived.health).toBe(672);
+    expect(result.derived.health).toBe(1420);
     expect(result.derived.magicAttack).toBeCloseTo(260);
     expect(result.derived.magicDefense).toBeCloseTo(205);
     expect(result.derived.physicalAttack).toBe(181);
@@ -286,5 +289,18 @@ describe("角色属性计算", () => {
     });
     expect(emptyResult.advanced).toEqual(LEVEL_69_ADVANCED_ATTRIBUTES);
     expect(allocatedResult.advanced).toEqual(emptyResult.advanced);
+  });
+
+  it("应该让气血和法力随等级成长并保持真气不变", () => {
+    expect(STATUS_ATTRIBUTE_POINTS_PER_UPGRADE).toEqual({
+      health: 11,
+      mana: 6,
+    });
+    expect(LEVEL_69_FIXED_STATUS_ATTRIBUTES).toEqual({
+      health: 982,
+      mana: 565,
+      trueEnergy: 100,
+    });
+    expect(FIXED_TRUE_ENERGY).toBe(100);
   });
 });
