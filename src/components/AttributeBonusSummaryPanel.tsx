@@ -4,6 +4,7 @@ import type { AttributeBonusSummaryItem } from "./AttributeBonusSummaryCard";
 export type AttributeBonusSummarySource<SourceId extends string = string> = {
   id: SourceId;
   title: string;
+  badge?: string;
   items: readonly AttributeBonusSummaryItem[];
   validationError?: string | null;
 };
@@ -41,6 +42,7 @@ const AttributeBonusSummaryPanel = <SourceId extends string>({
           <AttributeBonusSummaryCard
             key={source.id}
             title={source.title}
+            badge={source.badge}
             items={source.items}
             validationError={source.validationError}
             onEdit={() => onEdit(source.id)}
@@ -52,4 +54,3 @@ const AttributeBonusSummaryPanel = <SourceId extends string>({
 };
 
 export default AttributeBonusSummaryPanel;
-

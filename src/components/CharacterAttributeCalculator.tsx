@@ -21,9 +21,14 @@ import StarBlessingBonusControl, {
 } from "./StarBlessingBonusControl";
 import TianshuBonusControl from "./TianshuBonusControl";
 import TalismanBonusControl from "./TalismanBonusControl";
+import TemporaryTalismanBonusControl from "./TemporaryTalismanBonusControl";
 import UniformAttributeBonusControl from "./UniformAttributeBonusControl";
 import type { TianshuBonusControlOption } from "./TianshuBonusControl";
 import type { StarBlessingBonusValue } from "./StarBlessingBonusControl";
+import type {
+  TemporaryTalismanBonusOption,
+  TemporaryTalismanStar,
+} from "./TemporaryTalismanBonusControl";
 import type {
   SatinBonusAttribute,
   SatinBonusSelection,
@@ -56,6 +61,7 @@ import type {
 } from "../utils/characterAttributes";
 import {
   CHARACTER_ATTRIBUTES_STORAGE_KEY,
+  LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY,
   loadCalculatorState,
   saveCalculatorState,
 } from "../utils/calculatorStorage";
@@ -68,6 +74,7 @@ const SKILL_BONUS_FIELDS = [
   { attribute: "physicalDefense", label: "物防" },
   { attribute: "magicDefense", label: "法防" },
   { attribute: "speed", label: "速度", allowNegative: true },
+  { attribute: "sealResistance", label: "抗封" },
 ] as const;
 
 const SOUL_ARTIFACT_BONUS_FIELDS = [
@@ -93,21 +100,23 @@ const DIVINE_SOUL_BONUS_FIELDS = [
 ] as const;
 
 const TEMPORARY_TALISMAN_BONUS_FIELDS = [
-  { attribute: "constitution", label: "体" },
-  { attribute: "spirit", label: "灵" },
-  { attribute: "strength", label: "力" },
-  { attribute: "endurance", label: "耐" },
-  { attribute: "agility", label: "敏" },
-  { attribute: "physicalAttack", label: "物攻" },
-  { attribute: "magicAttack", label: "法攻" },
-  { attribute: "physicalDefense", label: "物防" },
-  { attribute: "magicDefense", label: "法防" },
-  { attribute: "speed", label: "速度" },
-  { attribute: "health", label: "气血" },
-  { attribute: "mana", label: "法力" },
-  { attribute: "sealHit", label: "封印命中" },
-  { attribute: "healingPower", label: "治疗强度" },
-] as const;
+  { attribute: "health", label: "气血", value: 309 },
+  { attribute: "mana", label: "法力", value: 309 },
+  { attribute: "magicAttack", label: "法攻", value: 62 },
+  { attribute: "magicDefense", label: "法防", value: 62 },
+  { attribute: "physicalAttack", label: "物攻", value: 62 },
+  { attribute: "physicalDefense", label: "物防", value: 62 },
+  { attribute: "speed", label: "速度", value: 19 },
+  { attribute: "healingPower", label: "治疗强度", value: 31 },
+  { attribute: "battleEntryAnger", label: "进战怒气", value: 17 },
+  { attribute: "strength", label: "力", value: 17 },
+  { attribute: "spirit", label: "灵", value: 17 },
+  { attribute: "constitution", label: "体", value: 17 },
+  { attribute: "agility", label: "敏", value: 17 },
+] as const satisfies readonly TemporaryTalismanBonusOption[];
+
+type TemporaryTalismanBonusAttribute =
+  (typeof TEMPORARY_TALISMAN_BONUS_FIELDS)[number]["attribute"];
 
 const TRANSFORMATION_TALISMAN_BONUS_FIELDS = [
   { attribute: "physicalAttack", label: "物攻" },
@@ -139,22 +148,25 @@ const GUILD_BLESSING_FIELDS = [
 const TALISMAN_BONUS_OPTIONS = [
   {
     id: "physical-attack",
-    title: "物攻法宝",
-    effectLabel: `+${CHARACTER_LEVEL * 0.6} 物攻`,
+    name: "天魔幡",
+    title: "物攻法宝：天魔幡",
+    effectLabel: "等级 × 0.6 物攻",
     bonuses: { physicalAttack: CHARACTER_LEVEL * 0.6 },
   },
   {
     id: "magic-attack",
-    title: "法攻法宝",
-    effectLabel: `+${CHARACTER_LEVEL * 0.6} 法攻`,
+    name: "四灵幡",
+    title: "法攻法宝：四灵幡",
+    effectLabel: "等级 × 0.6 法攻",
     bonuses: { magicAttack: CHARACTER_LEVEL * 0.6 },
   },
   {
     id: "speed-defense",
-    title: "速度与防御法宝",
-    effectLabel: `+${CHARACTER_LEVEL * 0.4} 速度 · +5% 物防 · +5% 法防`,
+    name: "鹤云幡",
+    title: "辅助 / 封印法宝：鹤云幡",
+    effectLabel: "等级 × 0.4 物攻 · 血炼 +5% 物防 · +5% 法防",
     bonuses: {
-      speed: CHARACTER_LEVEL * 0.4,
+      physicalAttack: CHARACTER_LEVEL * 0.4,
       physicalDefensePercent: 5,
       magicDefensePercent: 5,
     },
@@ -166,7 +178,6 @@ type TalismanBonusOptionId = (typeof TALISMAN_BONUS_OPTIONS)[number]["id"];
 const TALISMAN_BONUS_SUMMARY_FIELDS = [
   { attribute: "physicalAttack", label: "物攻" },
   { attribute: "magicAttack", label: "法攻" },
-  { attribute: "speed", label: "速度" },
   { attribute: "physicalDefensePercent", label: "物防", unit: "%" },
   { attribute: "magicDefensePercent", label: "法防", unit: "%" },
 ] as const;
@@ -260,6 +271,13 @@ const TIANSHU_BONUS_OPTIONS = [
     effectLabel: "+2 封印抵抗",
     attribute: "sealResistance",
     value: 2,
+  },
+  {
+    id: "seal-resistance-3",
+    title: "3封印抗性",
+    effectLabel: "+3 封印抵抗",
+    attribute: "sealResistance",
+    value: 3,
   },
   {
     id: "speed-percent-2",
@@ -363,6 +381,7 @@ const ADVANCED_ATTRIBUTE_COLUMNS = [
     { label: "治疗强度", attribute: "healingPower", unit: "" },
     { label: "封印命中", attribute: "sealHit", unit: "", growsWithLevel: true },
     { label: "封印抵抗", attribute: "sealResistance", unit: "" },
+    { label: "进战怒气", attribute: "battleEntryAnger", unit: "" },
   ],
 ] as const;
 
@@ -424,6 +443,23 @@ const createSelectedAttributeBonuses = (
 
   for (const selection of selections) {
     bonuses[selection.attribute] = selection.value;
+  }
+
+  return bonuses;
+};
+
+const createTemporaryTalismanBonuses = (
+  star: TemporaryTalismanStar | null,
+  attributes: readonly TemporaryTalismanBonusAttribute[]
+) => {
+  const bonuses = createEmptyCharacterAttributeBonuses();
+  if (star !== 6) return bonuses;
+
+  const selectedAttributes = new Set<CharacterBonusAttribute>(attributes);
+  for (const { attribute, value } of TEMPORARY_TALISMAN_BONUS_FIELDS) {
+    if (selectedAttributes.has(attribute)) {
+      bonuses[attribute] = value;
+    }
   }
 
   return bonuses;
@@ -491,7 +527,8 @@ const createStarBlessingBonuses = (
 type CharacterCalculatorState = {
   selectedPresetId: CharacterAllocationPresetId;
   skillBonuses: CharacterAttributeBonuses;
-  temporaryTalismanBonuses: CharacterAttributeBonuses;
+  temporaryTalismanStar: TemporaryTalismanStar | null;
+  temporaryTalismanAttributes: readonly TemporaryTalismanBonusAttribute[];
   soulArtifactBonuses: CharacterAttributeBonuses;
   divineSoulValue: number;
   tianshuBonusCounts: Readonly<Record<string, number>>;
@@ -510,7 +547,8 @@ type CharacterCalculatorState = {
 const createDefaultCharacterCalculatorState = (): CharacterCalculatorState => ({
   selectedPresetId: CHARACTER_ALLOCATION_PRESETS[0].id,
   skillBonuses: createEmptyCharacterAttributeBonuses(),
-  temporaryTalismanBonuses: createEmptyCharacterAttributeBonuses(),
+  temporaryTalismanStar: null,
+  temporaryTalismanAttributes: [],
   soulArtifactBonuses: createEmptyCharacterAttributeBonuses(),
   divineSoulValue: 0,
   tianshuBonusCounts: {},
@@ -560,6 +598,9 @@ const SATIN_ATTRIBUTE_SET = new Set<string>(
 );
 const TRANSFORMATION_TALISMAN_ATTRIBUTE_SET = new Set<string>(
   TRANSFORMATION_TALISMAN_BONUS_FIELDS.map(({ attribute }) => attribute)
+);
+const TEMPORARY_TALISMAN_ATTRIBUTE_SET = new Set<string>(
+  TEMPORARY_TALISMAN_BONUS_FIELDS.map(({ attribute }) => attribute)
 );
 
 const isPrimaryAttribute = (value: unknown): value is PrimaryAttribute =>
@@ -639,6 +680,24 @@ const normalizePrimaryAttributes = (value: unknown): PrimaryAttribute[] => {
     .slice(0, STAR_BLESSING_ATTRIBUTE_COUNT);
 };
 
+const normalizeTemporaryTalismanAttributes = (
+  value: unknown
+): TemporaryTalismanBonusAttribute[] => {
+  if (!Array.isArray(value)) return [];
+
+  const storedAttributes = new Set(
+    value.filter(
+      (attribute): attribute is string =>
+        typeof attribute === "string" &&
+        TEMPORARY_TALISMAN_ATTRIBUTE_SET.has(attribute)
+    )
+  );
+
+  return TEMPORARY_TALISMAN_BONUS_FIELDS.map(({ attribute }) => attribute).filter(
+    (attribute) => storedAttributes.has(attribute)
+  );
+};
+
 const normalizeCharacterCalculatorState = (
   value: unknown
 ): CharacterCalculatorState | null => {
@@ -654,13 +713,19 @@ const normalizeCharacterCalculatorState = (
     TALISMAN_OPTION_ID_SET.has(value.talismanOptionId)
       ? (value.talismanOptionId as TalismanBonusOptionId)
       : null;
+  const temporaryTalismanStar =
+    value.temporaryTalismanStar === 6 ? 6 : null;
 
   return {
     selectedPresetId,
     skillBonuses: normalizeCharacterBonuses(value.skillBonuses),
-    temporaryTalismanBonuses: normalizeCharacterBonuses(
-      value.temporaryTalismanBonuses
-    ),
+    temporaryTalismanStar,
+    temporaryTalismanAttributes:
+      temporaryTalismanStar === 6
+        ? normalizeTemporaryTalismanAttributes(
+            value.temporaryTalismanAttributes
+          )
+        : [],
     soulArtifactBonuses: normalizeCharacterBonuses(value.soulArtifactBonuses),
     divineSoulValue: normalizeNonNegativeNumber(value.divineSoulValue),
     tianshuBonusCounts: normalizeTianshuCounts(value.tianshuBonusCounts),
@@ -696,12 +761,21 @@ const normalizeCharacterCalculatorState = (
   };
 };
 
-const loadCharacterCalculatorState = (): CharacterCalculatorState =>
-  loadCalculatorState(
+const loadCharacterCalculatorState = (): CharacterCalculatorState => {
+  const currentState = loadCalculatorState<CharacterCalculatorState | null>(
     CHARACTER_ATTRIBUTES_STORAGE_KEY,
+    null,
+    normalizeCharacterCalculatorState
+  );
+
+  if (currentState) return currentState;
+
+  return loadCalculatorState(
+    LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY,
     createDefaultCharacterCalculatorState(),
     normalizeCharacterCalculatorState
   );
+};
 
 type CharacterAttributeCalculatorProps = {
   equipmentBonuses?: CharacterAttributeBonuses;
@@ -721,8 +795,12 @@ const CharacterAttributeCalculator = ({
   const [skillBonuses, setSkillBonuses] = useState<CharacterAttributeBonuses>(
     initialState.skillBonuses
   );
-  const [temporaryTalismanBonuses, setTemporaryTalismanBonuses] = useState(
-    initialState.temporaryTalismanBonuses
+  const [temporaryTalismanStar, setTemporaryTalismanStar] =
+    useState<TemporaryTalismanStar | null>(initialState.temporaryTalismanStar);
+  const [temporaryTalismanAttributes, setTemporaryTalismanAttributes] = useState<
+    readonly TemporaryTalismanBonusAttribute[]
+  >(
+    initialState.temporaryTalismanAttributes
   );
   const [soulArtifactBonuses, setSoulArtifactBonuses] = useState(
     initialState.soulArtifactBonuses
@@ -769,7 +847,8 @@ const CharacterAttributeCalculator = ({
       {
         selectedPresetId,
         skillBonuses,
-        temporaryTalismanBonuses,
+        temporaryTalismanStar,
+        temporaryTalismanAttributes,
         soulArtifactBonuses,
         divineSoulValue,
         tianshuBonusCounts,
@@ -788,7 +867,8 @@ const CharacterAttributeCalculator = ({
   }, [
     selectedPresetId,
     skillBonuses,
-    temporaryTalismanBonuses,
+    temporaryTalismanStar,
+    temporaryTalismanAttributes,
     soulArtifactBonuses,
     divineSoulValue,
     tianshuBonusCounts,
@@ -850,6 +930,14 @@ const CharacterAttributeCalculator = ({
   const talismanBonuses = useMemo(
     () => createTalismanBonuses(talismanOptionId),
     [talismanOptionId]
+  );
+  const temporaryTalismanBonuses = useMemo(
+    () =>
+      createTemporaryTalismanBonuses(
+        temporaryTalismanStar,
+        temporaryTalismanAttributes
+      ),
+    [temporaryTalismanStar, temporaryTalismanAttributes]
   );
   const charmBonuses = useMemo(
     () => createSinglePrimaryAttributeBonuses(charmAttribute, charmValue),
@@ -952,10 +1040,20 @@ const CharacterAttributeCalculator = ({
     TIANSHU_BONUS_SUMMARY_FIELDS,
     tianshuBonuses
   );
+  const selectedTalismanOption = TALISMAN_BONUS_OPTIONS.find(
+    ({ id }) => id === talismanOptionId
+  );
   const talismanSummaryItems = createBonusSummaryItems(
     TALISMAN_BONUS_SUMMARY_FIELDS,
     talismanBonuses
+  ).map((item, index) =>
+    index === 0 && selectedTalismanOption
+      ? { ...item, label: `${selectedTalismanOption.name} · ${item.label}` }
+      : item
   );
+  const talismanSourceLabel = selectedTalismanOption
+    ? `法宝（${selectedTalismanOption.name}）`
+    : "法宝";
   const seasonArtifactSummaryItems =
     seasonArtifactAttribute && seasonArtifactValue !== 0
       ? [
@@ -1026,16 +1124,6 @@ const CharacterAttributeCalculator = ({
     value: number
   ) => {
     setSkillBonuses((current) => ({ ...current, [attribute]: value }));
-  };
-
-  const updateTemporaryTalismanBonus = (
-    attribute: CharacterBonusAttribute,
-    value: number
-  ) => {
-    setTemporaryTalismanBonuses((current) => ({
-      ...current,
-      [attribute]: value,
-    }));
   };
 
   const updateSoulArtifactBonus = (
@@ -1227,19 +1315,22 @@ const CharacterAttributeCalculator = ({
     {
       id: "temporaryTalisman",
       title: "灵符",
+      badge: temporaryTalismanStar
+        ? `${temporaryTalismanStar}星灵符`
+        : undefined,
       items: temporaryTalismanSummaryItems,
       renderContent: (title) => (
-        <AttributeBonusCard
+        <TemporaryTalismanBonusControl
           title={title}
-          description="可填写基础属性、气血、法力、封印命中与治疗强度的实际加成。"
-          fields={TEMPORARY_TALISMAN_BONUS_FIELDS}
-          values={temporaryTalismanBonuses}
-          onChange={updateTemporaryTalismanBonus}
-          onReset={() =>
-            setTemporaryTalismanBonuses(
-              createEmptyCharacterAttributeBonuses()
-            )
-          }
+          options={TEMPORARY_TALISMAN_BONUS_FIELDS}
+          selectedStar={temporaryTalismanStar}
+          selectedAttributes={temporaryTalismanAttributes}
+          onStarChange={setTemporaryTalismanStar}
+          onSelectedAttributesChange={setTemporaryTalismanAttributes}
+          onReset={() => {
+            setTemporaryTalismanStar(null);
+            setTemporaryTalismanAttributes([]);
+          }}
         />
       ),
     },
@@ -1585,19 +1676,19 @@ const CharacterAttributeCalculator = ({
                                 )}
                                 {talismanBonuses[attribute] > 0 && (
                                   <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-indigo-600">
-                                    法宝 {formatBonus(talismanBonuses[attribute])}
+                                    {talismanSourceLabel} {formatBonus(talismanBonuses[attribute])}
                                   </span>
                                 )}
                                 {attribute === "physicalDefense" &&
                                   talismanBonuses.physicalDefensePercent > 0 && (
                                     <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-indigo-600">
-                                      法宝 +{formatAttribute(talismanBonuses.physicalDefensePercent)}%
+                                      {talismanSourceLabel} +{formatAttribute(talismanBonuses.physicalDefensePercent)}%
                                     </span>
                                   )}
                                 {attribute === "magicDefense" &&
                                   talismanBonuses.magicDefensePercent > 0 && (
                                     <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-indigo-600">
-                                      法宝 +{formatAttribute(talismanBonuses.magicDefensePercent)}%
+                                      {talismanSourceLabel} +{formatAttribute(talismanBonuses.magicDefensePercent)}%
                                     </span>
                                   )}
                                 {attribute === "speed" &&
@@ -1729,7 +1820,7 @@ const CharacterAttributeCalculator = ({
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div>
                     <h2 className="text-base font-semibold text-slate-900">
-                      进阶属性 · 8 项
+                      进阶属性 · 9 项
                     </h2>
                     <p className="mt-1.5 text-xs leading-5 text-slate-500">
                       潜力点不影响进阶属性；封印命中每次升级固定增加 {SEAL_HIT_POINTS_PER_UPGRADE} 点。
@@ -1767,8 +1858,17 @@ const CharacterAttributeCalculator = ({
                                         LEVEL_ONE_ADVANCED_ATTRIBUTES.sealHit}
                                     </span>
                                   )}
+                                  {attribute.attribute === "sealResistance" &&
+                                    skillBonuses.sealResistance !== 0 && (
+                                      <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-600">
+                                        技能 {formatBonus(
+                                          skillBonuses.sealResistance
+                                        )}
+                                      </span>
+                                    )}
                                   {(attribute.attribute === "healingPower" ||
-                                    attribute.attribute === "sealHit") &&
+                                    attribute.attribute === "sealHit" ||
+                                    attribute.attribute === "battleEntryAnger") &&
                                     temporaryTalismanBonuses[
                                       attribute.attribute
                                     ] > 0 && (

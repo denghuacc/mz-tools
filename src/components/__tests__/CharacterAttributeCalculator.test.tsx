@@ -7,7 +7,10 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CharacterAttributeCalculator from "../CharacterAttributeCalculator";
-import { CHARACTER_ATTRIBUTES_STORAGE_KEY } from "../../utils/calculatorStorage";
+import {
+  CHARACTER_ATTRIBUTES_STORAGE_KEY,
+  LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY,
+} from "../../utils/calculatorStorage";
 
 describe("CharacterAttributeCalculator", () => {
   it("应该展示角色属性计算结构", () => {
@@ -36,28 +39,44 @@ describe("CharacterAttributeCalculator", () => {
     });
   });
 
-  it("应该只选择一种法宝加成并按等级计算属性", async () => {
+  it("应该显示法宝名称和加成公式，并按等级计算互斥属性", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
     const talismanDialog = await openBonusEditor(user, "法宝");
 
     const physicalAttackOption = within(talismanDialog).getByRole("radio", {
-      name: /物攻法宝/,
+      name: /物攻法宝：天魔幡/,
     });
-    const speedDefenseOption = within(talismanDialog).getByRole("radio", {
-      name: /速度与防御法宝/,
+    const magicAttackOption = within(talismanDialog).getByRole("radio", {
+      name: /法攻法宝：四灵幡/,
     });
+    const supportOption = within(talismanDialog).getByRole("radio", {
+      name: /辅助 \/ 封印法宝：鹤云幡/,
+    });
+    expect(within(talismanDialog).getByText("等级 × 0.6 物攻")).toBeInTheDocument();
+    expect(within(talismanDialog).getByText("等级 × 0.6 法攻")).toBeInTheDocument();
+    expect(
+      within(talismanDialog).getByText(
+        "等级 × 0.4 物攻 · 血炼 +5% 物防 · +5% 法防"
+      )
+    ).toBeInTheDocument();
 
     await user.click(physicalAttackOption);
     expect(physicalAttackOption).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByText("法宝 +41.4")).toBeInTheDocument();
+    expect(screen.getByText("天魔幡 · 物攻 +41.4")).toBeInTheDocument();
+    expect(screen.getByText("法宝（天魔幡） +41.4")).toBeInTheDocument();
 
-    await user.click(speedDefenseOption);
+    await user.click(magicAttackOption);
     expect(physicalAttackOption).toHaveAttribute("aria-checked", "false");
-    expect(speedDefenseOption).toHaveAttribute("aria-checked", "true");
-    expect(screen.queryByText("法宝 +41.4")).not.toBeInTheDocument();
-    expect(screen.getByText("法宝 +27.6")).toBeInTheDocument();
-    expect(screen.getAllByText("法宝 +5%")).toHaveLength(2);
+    expect(magicAttackOption).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("四灵幡 · 法攻 +41.4")).toBeInTheDocument();
+
+    await user.click(supportOption);
+    expect(magicAttackOption).toHaveAttribute("aria-checked", "false");
+    expect(supportOption).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByText("鹤云幡 · 物攻 +27.6")).toBeInTheDocument();
+    expect(screen.getByText("法宝（鹤云幡） +27.6")).toBeInTheDocument();
+    expect(screen.getAllByText("法宝（鹤云幡） +5%")).toHaveLength(2);
   });
 
   it("应该一键隐藏并恢复全部属性加成明细", async () => {
@@ -143,7 +162,7 @@ describe("CharacterAttributeCalculator", () => {
       SKILL_INPUT_LABELS.map((label) =>
         within(skillDialog).getByRole("spinbutton", { name: label })
       )
-    ).toHaveLength(7);
+    ).toHaveLength(8);
 
     await user.type(
       within(skillDialog).getByRole("spinbutton", {
@@ -202,6 +221,34 @@ describe("CharacterAttributeCalculator", () => {
     expect(
       within(skillCard!).getByRole("button", { name: "清空" })
     ).toBeEnabled();
+  });
+
+  it("应该把技能抗封映射到进阶属性封印抵抗", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const skillDialog = await openBonusEditor(user, "技能");
+
+    await user.type(
+      within(skillDialog).getByRole("spinbutton", { name: "技能：抗封" }),
+      "3"
+    );
+
+    const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
+      .getByRole("heading", { name: "技能" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    expect(within(summaryCard!).getByText("抗封 +3")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "进阶属性" }));
+    const resultPanel = within(screen.getByTestId("attribute-result-panel"));
+    const sealResistanceRow = resultPanel
+      .getByText("封印抵抗")
+      .closest("div");
+    expect(sealResistanceRow).not.toBeNull();
+    expect(
+      within(sealResistanceRow!).getByText("技能 +3")
+    ).toBeInTheDocument();
+    expect(within(sealResistanceRow!).getByText("5")).toBeInTheDocument();
   });
 
   it("应该叠加总和为零的魂器五维和直接属性", async () => {
@@ -293,7 +340,7 @@ describe("CharacterAttributeCalculator", () => {
 
     expect(
       within(tianshuDialog).getAllByRole("button", { name: /^增加天书：/ })
-    ).toHaveLength(19);
+    ).toHaveLength(20);
 
     for (const optionTitle of [
       "20体",
@@ -303,6 +350,7 @@ describe("CharacterAttributeCalculator", () => {
       "等级 × 0.2 法攻",
       "等级 × 0.3 法攻",
       "2封印抵抗",
+      "3封印抗性",
       "2%速度",
       "2点火系亲和",
       "2点火系亲和",
@@ -318,7 +366,7 @@ describe("CharacterAttributeCalculator", () => {
       within(tianshuDialog).getByLabelText("20体已选次数")
     ).toHaveTextContent("×2");
     expect(
-      within(tianshuDialog).getByLabelText("天书已选择 10 次")
+      within(tianshuDialog).getByLabelText("天书已选择 11 次")
     ).toBeInTheDocument();
 
     const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
@@ -329,7 +377,7 @@ describe("CharacterAttributeCalculator", () => {
       "体 +40",
       "气血 +69",
       "法攻 +48.3",
-      "封印抵抗 +2",
+      "封印抵抗 +5",
       "速度 +2%",
       "火系亲和 +4",
     ]) {
@@ -348,8 +396,8 @@ describe("CharacterAttributeCalculator", () => {
     const fireAffinityCard = screen.getByText("火系亲和").closest("div");
     expect(sealResistanceRow).not.toBeNull();
     expect(fireAffinityCard).not.toBeNull();
-    expect(within(sealResistanceRow!).getByText("天书 +2")).toBeInTheDocument();
-    expect(within(sealResistanceRow!).getByText("4")).toBeInTheDocument();
+    expect(within(sealResistanceRow!).getByText("天书 +5")).toBeInTheDocument();
+    expect(within(sealResistanceRow!).getByText("7")).toBeInTheDocument();
     expect(within(fireAffinityCard!).getByText("天书 +4")).toBeInTheDocument();
     expect(within(fireAffinityCard!).getByText("4")).toBeInTheDocument();
   });
@@ -649,7 +697,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(advancedTab).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("heading", { name: "状态条" })).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "进阶属性 · 8 项" })
+      screen.getByRole("heading", { name: "进阶属性 · 9 项" })
     ).toBeInTheDocument();
     expect(screen.getByText("物理暴击")).toBeInTheDocument();
     expect(screen.getByText("100%")).toBeInTheDocument();
@@ -682,51 +730,68 @@ describe("CharacterAttributeCalculator", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("应该通过灵符叠加基础、状态条和进阶属性", async () => {
+  it("应该选择 6 星灵符并勾选固定满属性", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
     const talismanDialog = await openBonusEditor(user, "灵符");
 
-    expect(
-      TEMPORARY_TALISMAN_INPUT_LABELS.map((label) =>
-        within(talismanDialog).getByRole("spinbutton", { name: label })
-      )
-    ).toHaveLength(14);
+    expect(within(talismanDialog).queryAllByRole("spinbutton")).toHaveLength(0);
+    const sixStarOption = within(talismanDialog).getByRole("radio", {
+      name: /6 星灵符/,
+    });
+    const attributeOptions = within(talismanDialog).getAllByRole("checkbox");
+    expect(attributeOptions).toHaveLength(13);
+    expect(attributeOptions.every((option) => option.hasAttribute("disabled"))).toBe(
+      true
+    );
 
-    for (const [label, value] of [
-      ["灵符：力", "10"],
-      ["灵符：物攻", "20"],
-      ["灵符：气血", "100"],
-      ["灵符：法力", "50"],
-      ["灵符：封印命中", "42"],
-      ["灵符：治疗强度", "36"],
-    ] as const) {
-      await user.type(
-        within(talismanDialog).getByRole("spinbutton", { name: label }),
-        value
+    await user.click(sixStarOption);
+    expect(sixStarOption).toHaveAttribute("aria-checked", "true");
+
+    for (const optionName of [
+      "力 +17",
+      "物攻 +62",
+      "气血 +309",
+      "法力 +309",
+      "治疗强度 +31",
+      "进战怒气 +17",
+    ]) {
+      await user.click(
+        within(talismanDialog).getByRole("checkbox", { name: optionName })
       );
     }
 
     const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
     const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
-    expect(within(derivedColumn).getByText("531")).toBeInTheDocument();
-    expect(within(potentialColumn).getByText("858")).toBeInTheDocument();
-    expect(screen.getByText("742")).toBeInTheDocument();
-    expect(screen.getByText("207")).toBeInTheDocument();
+    expect(within(derivedColumn).getByText("576.5")).toBeInTheDocument();
+    expect(within(potentialColumn).getByText("865")).toBeInTheDocument();
+    expect(screen.getByText("951")).toBeInTheDocument();
+    expect(screen.getByText("466")).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
-    expect(screen.getByText("190")).toBeInTheDocument();
-    expect(screen.getByText("36")).toBeInTheDocument();
-    expect(screen.getByText("灵符 +42")).toBeInTheDocument();
-    expect(screen.getByText("灵符 +36")).toBeInTheDocument();
+    const resultPanel = within(screen.getByTestId("attribute-result-panel"));
+    const healingRow = resultPanel.getByText("治疗强度").closest("div");
+    const battleEntryAngerRow = resultPanel
+      .getByText("进战怒气")
+      .closest("div");
+    expect(healingRow).not.toBeNull();
+    expect(battleEntryAngerRow).not.toBeNull();
+    expect(within(healingRow!).getByText("灵符 +31")).toBeInTheDocument();
+    expect(within(healingRow!).getByText("31")).toBeInTheDocument();
+    expect(
+      within(battleEntryAngerRow!).getByText("灵符 +17")
+    ).toBeInTheDocument();
+    expect(within(battleEntryAngerRow!).getByText("17")).toBeInTheDocument();
 
     const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
       .getByRole("heading", { name: "灵符" })
       .closest("article");
     expect(summaryCard).not.toBeNull();
-    expect(within(summaryCard!).getByText("力 +10")).toBeInTheDocument();
-    expect(within(summaryCard!).getByText("封印命中 +42")).toBeInTheDocument();
-    expect(within(summaryCard!).getByText("治疗强度 +36")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("6星灵符")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("力 +17")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("物攻 +62")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("进战怒气 +17")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("治疗强度 +31")).toBeInTheDocument();
   });
 
   it("应该只提供当前阶段允许的七种加点方案", async () => {
@@ -805,11 +870,24 @@ describe("CharacterAttributeCalculator", () => {
     );
     await user.click(within(skillDialog).getByRole("button", { name: "完成" }));
 
+    const talismanDialog = await openBonusEditor(user, "灵符");
+    await user.click(
+      within(talismanDialog).getByRole("radio", { name: /6 星灵符/ })
+    );
+    await user.click(
+      within(talismanDialog).getByRole("checkbox", { name: "气血 +309" })
+    );
+    await user.click(
+      within(talismanDialog).getByRole("button", { name: "完成" })
+    );
+
     await waitFor(() => {
       const stored = JSON.parse(
         window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
       );
       expect(stored.skillBonuses.health).toBe(100);
+      expect(stored.temporaryTalismanStar).toBe(6);
+      expect(stored.temporaryTalismanAttributes).toEqual(["health"]);
       expect(Object.keys(stored).sort()).toEqual(
         [
           "charmAttribute",
@@ -825,7 +903,8 @@ describe("CharacterAttributeCalculator", () => {
           "starBlessingAttributes",
           "starBlessingValue",
           "talismanOptionId",
-          "temporaryTalismanBonuses",
+          "temporaryTalismanAttributes",
+          "temporaryTalismanStar",
           "tianshuBonusCounts",
           "transformationTalismanSelections",
         ].sort()
@@ -836,10 +915,42 @@ describe("CharacterAttributeCalculator", () => {
     render(<CharacterAttributeCalculator />);
 
     expect(screen.getByText("+技能 100")).toBeInTheDocument();
+    expect(screen.getByText("+灵符 309")).toBeInTheDocument();
     const restoredDialog = await openBonusEditor(user, "技能");
     expect(
       within(restoredDialog).getByRole("spinbutton", { name: "技能：气血" })
     ).toHaveValue(100);
+  });
+
+  it("应该迁移旧版角色配置并安全清空自由灵符数值", async () => {
+    window.localStorage.setItem(
+      LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY,
+      JSON.stringify({
+        skillBonuses: { health: 100 },
+        temporaryTalismanBonuses: { health: 200 },
+      })
+    );
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    expect(screen.getByText("+技能 100")).toBeInTheDocument();
+    const talismanSummaryCard = screen
+      .getByRole("heading", { name: "灵符" })
+      .closest("article");
+    expect(talismanSummaryCard).not.toBeNull();
+    expect(
+      within(talismanSummaryCard!).queryByText("气血 +200")
+    ).not.toBeInTheDocument();
+
+    const talismanDialog = await openBonusEditor(user, "灵符");
+    expect(
+      within(talismanDialog).getByRole("radio", { name: /6 星灵符/ })
+    ).toHaveAttribute("aria-checked", "false");
+    expect(
+      within(talismanDialog)
+        .getAllByRole("checkbox")
+        .every((option) => option.hasAttribute("disabled"))
+    ).toBe(true);
   });
 });
 
@@ -862,21 +973,5 @@ const SKILL_INPUT_LABELS = [
   "技能：物防",
   "技能：法防",
   "技能：速度",
-];
-
-const TEMPORARY_TALISMAN_INPUT_LABELS = [
-  "灵符：体",
-  "灵符：灵",
-  "灵符：力",
-  "灵符：耐",
-  "灵符：敏",
-  "灵符：物攻",
-  "灵符：法攻",
-  "灵符：物防",
-  "灵符：法防",
-  "灵符：速度",
-  "灵符：气血",
-  "灵符：法力",
-  "灵符：封印命中",
-  "灵符：治疗强度",
+  "技能：抗封",
 ];

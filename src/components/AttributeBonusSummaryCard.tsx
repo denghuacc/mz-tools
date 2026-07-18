@@ -8,6 +8,7 @@ export type AttributeBonusSummaryItem = {
 
 type AttributeBonusSummaryCardProps = {
   title: string;
+  badge?: string;
   items: readonly AttributeBonusSummaryItem[];
   onEdit: () => void;
   validationError?: string | null;
@@ -24,6 +25,7 @@ const formatValue = (value: number, unit = "") => {
 /** 紧凑展示一类属性来源的已配置变更，完整录入交给独立编辑弹层。 */
 const AttributeBonusSummaryCard = ({
   title,
+  badge,
   items,
   onEdit,
   validationError,
@@ -36,9 +38,16 @@ const AttributeBonusSummaryCard = ({
       }`}
     >
       <div className="flex items-center justify-between gap-1">
-        <h3 className="truncate text-[13px] font-semibold text-slate-800">
-          {title}
-        </h3>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <h3 className="truncate text-[13px] font-semibold text-slate-800">
+            {title}
+          </h3>
+          {badge && (
+            <span className="shrink-0 rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700">
+              {badge}
+            </span>
+          )}
+        </div>
         <EditIconButton label={`编辑${title}`} onClick={onEdit} />
       </div>
 

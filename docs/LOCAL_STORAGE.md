@@ -26,7 +26,7 @@
 
 | 用途 | localStorage key |
 | --- | --- |
-| 角色属性配置 | `mz-tools.character-attributes.v1` |
+| 角色属性配置 | `mz-tools.character-attributes.v2` |
 | 角色等级与八件装备配置 | `mz-tools.equipment-attributes.v2` |
 | 计算器选择偏好 | `mz-tools.preferences.v1` |
 | 本地收藏 | `mz-tools.favorites.v1` |
@@ -34,6 +34,8 @@
 版本号是数据结构的一部分。存在不兼容变更时，应升级 key 的版本，并明确选择迁移旧数据或安全回退默认值。
 
 装备配置 v2 在根状态中新增角色等级，并为每件装备增加宝石配置。读取不到 v2 时会自动从 `mz-tools.equipment-attributes.v1` 迁移原有八件装备，角色等级使用默认值 69；旧 key 暂时保留用于兼容，不再写入。
+
+角色属性配置 v2 将灵符从自由数值改为“星级 + 属性选项”。读取不到 v2 时会从 `mz-tools.character-attributes.v1` 恢复其他角色配置，旧版灵符自由数值不迁移；旧 key 保留兼容，不再写入。
 
 ## 新增计算器或字段检查清单
 

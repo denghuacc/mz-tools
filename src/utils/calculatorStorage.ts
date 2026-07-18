@@ -1,5 +1,7 @@
-export const CHARACTER_ATTRIBUTES_STORAGE_KEY =
+export const LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY =
   "mz-tools.character-attributes.v1";
+export const CHARACTER_ATTRIBUTES_STORAGE_KEY =
+  "mz-tools.character-attributes.v2";
 export const LEGACY_EQUIPMENT_ATTRIBUTES_STORAGE_KEY =
   "mz-tools.equipment-attributes.v1";
 export const EQUIPMENT_ATTRIBUTES_STORAGE_KEY =

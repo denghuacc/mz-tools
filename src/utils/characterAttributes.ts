@@ -133,6 +133,7 @@ export const CHARACTER_ADVANCED_BONUS_ATTRIBUTE_KEYS = [
   "healingPower",
   "sealHit",
   "sealResistance",
+  "battleEntryAnger",
 ] as const;
 
 export type CharacterAdvancedBonusAttribute =
@@ -192,6 +193,7 @@ export const createEmptyCharacterAttributeBonuses =
     healingPower: 0,
     sealHit: 0,
     sealResistance: 0,
+    battleEntryAnger: 0,
     healthPercent: 0,
     speedPercent: 0,
     physicalDefensePercent: 0,
@@ -241,6 +243,7 @@ export type AdvancedAttributes = {
   healingPower: number;
   sealHit: number;
   sealResistance: number;
+  battleEntryAnger: number;
 };
 
 export const LEVEL_ONE_ADVANCED_ATTRIBUTES: AdvancedAttributes = {
@@ -252,6 +255,7 @@ export const LEVEL_ONE_ADVANCED_ATTRIBUTES: AdvancedAttributes = {
   healingPower: 0,
   sealHit: 12,
   sealResistance: 2,
+  battleEntryAnger: 0,
 };
 
 export const SEAL_HIT_POINTS_PER_UPGRADE = 2;
@@ -391,6 +395,9 @@ export const applyCharacterAttributeBonuses = (
       sealHit: roundAttribute(calculated.advanced.sealHit + bonuses.sealHit),
       sealResistance: roundAttribute(
         calculated.advanced.sealResistance + bonuses.sealResistance
+      ),
+      battleEntryAnger: roundAttribute(
+        calculated.advanced.battleEntryAnger + bonuses.battleEntryAnger
       ),
     },
     affinity: {

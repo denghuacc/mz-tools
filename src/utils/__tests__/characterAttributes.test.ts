@@ -78,21 +78,21 @@ describe("角色属性计算", () => {
     expect(calculated.remainingPoints).toBe(TOTAL_POTENTIAL_POINTS);
   });
 
-  it("应该把灵符的治疗强度和封印命中计入进阶属性", () => {
+  it("应该把灵符的治疗强度和进战怒气计入进阶属性", () => {
     const calculated = calculateCharacterAttributes(
       EMPTY_CHARACTER_ALLOCATION
     );
     const bonuses = {
       ...createEmptyCharacterAttributeBonuses(),
-      healingPower: 36,
-      sealHit: 42,
+      healingPower: 31,
+      battleEntryAnger: 17,
     };
     const effective = applyCharacterAttributeBonuses(calculated, bonuses);
 
     expect(effective.advanced).toEqual({
       ...calculated.advanced,
-      healingPower: 36,
-      sealHit: 190,
+      healingPower: 31,
+      battleEntryAnger: 17,
     });
   });
 
