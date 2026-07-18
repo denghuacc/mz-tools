@@ -1,7 +1,7 @@
 import type { Sect, WeaponLevel } from "../types";
 import { SectEnum } from "../types";
 
-export type CalculatorTool = "character" | "weapon" | "ring";
+export type CalculatorTool = "character" | "equipment" | "weapon" | "ring";
 
 export type UserPreferences = {
   activeTool: CalculatorTool;
@@ -29,7 +29,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
 const isCalculatorTool = (value: unknown): value is CalculatorTool =>
-  value === "character" || value === "weapon" || value === "ring";
+  value === "character" ||
+  value === "equipment" ||
+  value === "weapon" ||
+  value === "ring";
 
 const isWeaponLevel = (value: unknown): value is WeaponLevel =>
   value === 60 || value === "60-standard" || value === 80 || value === 110;

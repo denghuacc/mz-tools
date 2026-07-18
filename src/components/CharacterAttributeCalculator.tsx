@@ -42,6 +42,7 @@ import {
 } from "../utils/characterAttributes";
 import type {
   CharacterAllocationPresetId,
+  CharacterAttributeBonuses,
   CharacterBonusAttribute,
   PrimaryAttribute,
 } from "../utils/characterAttributes";
@@ -473,7 +474,15 @@ const createStarBlessingBonuses = (
   return bonuses;
 };
 
-const CharacterAttributeCalculator = () => {
+type CharacterAttributeCalculatorProps = {
+  equipmentBonuses?: CharacterAttributeBonuses;
+  equipmentItemCount?: number;
+};
+
+const CharacterAttributeCalculator = ({
+  equipmentBonuses = createEmptyCharacterAttributeBonuses(),
+  equipmentItemCount = 0,
+}: CharacterAttributeCalculatorProps) => {
   const [selectedPresetId, setSelectedPresetId] =
     useState<CharacterAllocationPresetId>(CHARACTER_ALLOCATION_PRESETS[0].id);
   const [activeAttributeTab, setActiveAttributeTab] =
@@ -609,6 +618,7 @@ const CharacterAttributeCalculator = () => {
   const totalBonuses = useMemo(
     () =>
       combineCharacterAttributeBonuses(
+        equipmentBonuses,
         skillBonuses,
         areSoulArtifactBonusesValid ? soulArtifactBonuses : {},
         divineSoulBonuses,
@@ -623,6 +633,7 @@ const CharacterAttributeCalculator = () => {
         temporaryTalismanBonuses
       ),
     [
+      equipmentBonuses,
       skillBonuses,
       soulArtifactBonuses,
       divineSoulBonuses,
@@ -992,6 +1003,17 @@ const CharacterAttributeCalculator = () => {
 
   return (
     <div className="space-y-5">
+      {equipmentItemCount > 0 && (
+        <section
+          className="flex items-center justify-between gap-4 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs text-blue-900"
+          aria-label="装备属性接入状态"
+        >
+          <span>
+            已将角色装备中的可映射字段计入最终属性，装备词条明细可在“角色装备”中编辑。
+          </span>
+          <strong className="shrink-0 font-semibold">{equipmentItemCount} / 8 件</strong>
+        </section>
+      )}
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(520px,1.2fr)_minmax(360px,0.8fr)]">
         <div
           className="order-1 space-y-4 xl:order-2 xl:max-h-[var(--attribute-panel-height)] xl:overflow-y-auto xl:overscroll-contain xl:pr-1"
@@ -1033,6 +1055,16 @@ const CharacterAttributeCalculator = () => {
                           {skillBonuses.health > 0 && (
                             <span className="ml-2 inline-block whitespace-nowrap text-xs text-emerald-600">
                               +技能 {formatAttribute(skillBonuses.health)}
+                            </span>
+                          )}
+                          {equipmentBonuses.health > 0 && (
+                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-blue-700">
+                              +装备 {formatAttribute(equipmentBonuses.health)}
+                            </span>
+                          )}
+                          {equipmentBonuses.healthPercent > 0 && (
+                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-blue-700">
+                              装备 {formatBonus(equipmentBonuses.healthPercent)}%
                             </span>
                           )}
                           {areSoulArtifactBonusesValid &&
@@ -1090,6 +1122,11 @@ const CharacterAttributeCalculator = () => {
                                 +技能 {formatAttribute(skillBonuses.mana)}
                               </span>
                             )}
+                            {equipmentBonuses.mana > 0 && (
+                              <span className="ml-2 inline-block whitespace-nowrap text-xs text-blue-700">
+                                +装备 {formatAttribute(equipmentBonuses.mana)}
+                              </span>
+                            )}
                             {temporaryTalismanBonuses.mana > 0 && (
                               <span className="ml-2 inline-block whitespace-nowrap text-xs text-violet-600">
                                 +灵符 {formatAttribute(temporaryTalismanBonuses.mana)}
@@ -1098,6 +1135,7 @@ const CharacterAttributeCalculator = () => {
                           </>
                         )}
                         {skillBonuses.mana === 0 &&
+                          equipmentBonuses.mana === 0 &&
                           temporaryTalismanBonuses.mana === 0 && (
                             <span className="ml-2 inline-block whitespace-nowrap text-xs text-slate-400">
                               1 级基准 · 成长待补
@@ -1239,6 +1277,17 @@ const CharacterAttributeCalculator = () => {
                                     {formatBonus(skillBonuses[attribute])}
                                   </span>
                                 )}
+                                {equipmentBonuses[attribute] !== 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-700">
+                                    装备 {formatBonus(equipmentBonuses[attribute])}
+                                  </span>
+                                )}
+                                {attribute === "speed" &&
+                                  equipmentBonuses.speedPercent !== 0 && (
+                                    <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-700">
+                                      装备 {formatBonus(equipmentBonuses.speedPercent)}%
+                                    </span>
+                                  )}
                                 {areSoulArtifactBonusesValid &&
                                   soulArtifactBonuses[attribute] !== 0 && (
                                     <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-600">
@@ -1327,6 +1376,11 @@ const CharacterAttributeCalculator = () => {
                                 {allocation[attribute] > 0 && (
                                   <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-emerald-600">
                                     潜力 +{allocation[attribute]}
+                                  </span>
+                                )}
+                                {equipmentBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-700">
+                                    装备 {formatBonus(equipmentBonuses[attribute])}
                                   </span>
                                 )}
                                 {skillBonuses[attribute] > 0 && (
@@ -1444,6 +1498,18 @@ const CharacterAttributeCalculator = () => {
                                           temporaryTalismanBonuses[
                                             attribute.attribute
                                           ]
+                                        )}
+                                      </span>
+                                    )}
+                                  {(attribute.attribute === "healingPower" ||
+                                    attribute.attribute === "sealHit" ||
+                                    attribute.attribute === "sealResistance" ||
+                                    attribute.attribute === "physicalCritical" ||
+                                    attribute.attribute === "magicalCritical") &&
+                                    equipmentBonuses[attribute.attribute] !== 0 && (
+                                      <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-700">
+                                        装备 {formatBonus(
+                                          equipmentBonuses[attribute.attribute]
                                         )}
                                       </span>
                                     )}

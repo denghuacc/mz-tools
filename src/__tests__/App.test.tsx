@@ -129,6 +129,28 @@ describe("App 组件", () => {
     expect(loadPreferences().activeTool).toBe("character");
   });
 
+  it("应该在角色属性后提供角色装备并把装备加成接入角色属性", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const calculatorTabs = screen.getAllByRole("tab").map((tab) => tab.textContent);
+    expect(calculatorTabs).toEqual([
+      "武器转换",
+      "戒指转换",
+      "角色属性",
+      "角色装备",
+    ]);
+
+    await user.click(screen.getByRole("tab", { name: "角色装备" }));
+    expect(screen.getByRole("heading", { name: "装备总属性" })).toBeInTheDocument();
+    expect(screen.getByText("8 / 8 件")).toBeInTheDocument();
+    expect(loadPreferences().activeTool).toBe("equipment");
+
+    await user.click(screen.getByRole("tab", { name: "角色属性" }));
+    expect(screen.getByLabelText("装备属性接入状态")).toHaveTextContent("8 / 8 件");
+    expect(screen.getByText("装备 +138")).toBeInTheDocument();
+  });
+
   it("应该从本地偏好恢复上次使用的工具", () => {
     updatePreferences({ activeTool: "ring" });
 

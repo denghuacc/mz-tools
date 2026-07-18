@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import RingConverter from "./components/RingConverter";
 import WeaponConverter from "./components/WeaponConverter";
 import CharacterAttributeCalculator from "./components/CharacterAttributeCalculator";
+import EquipmentCalculator from "./components/EquipmentCalculator";
 import DataPage from "./pages/DataPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import GuidePage from "./pages/GuidePage";
@@ -18,6 +19,10 @@ import {
   toggleFavorite,
 } from "./utils/favorites";
 import type { FavoriteKind } from "./utils/favorites";
+import {
+  calculateEquipmentSummary,
+  createInitialEquipmentSet,
+} from "./utils/equipmentAttributes";
 
 type PageId =
   | "home"
@@ -117,13 +122,24 @@ const CalculatorPage = () => {
   const [activeTool, setActiveTool] = useState<CalculatorTool>(
     () => loadPreferences().activeTool
   );
+  const [equipment, setEquipment] = useState(createInitialEquipmentSet);
   const isWeapon = activeTool === "weapon";
   const isCharacter = activeTool === "character";
+  const isEquipment = activeTool === "equipment";
+  const equipmentSummary = useMemo(
+    () => calculateEquipmentSummary(equipment),
+    [equipment]
+  );
 
-  const toolMeta = isCharacter
+  const toolMeta = isEquipment
+    ? {
+        title: "角色装备计算器",
+        description: "录入八件装备，汇总装备属性并同步到角色属性。",
+      }
+    : isCharacter
     ? {
         title: "角色属性计算器",
-        description: "分配 69 级角色潜力点，查看当前已知规则下的裸属性。",
+        description: "分配 69 级角色潜力点，查看装备和其它加成后的属性。",
       }
     : isWeapon
       ? {
@@ -148,7 +164,7 @@ const CalculatorPage = () => {
           游戏数值计算
         </h1>
         <p className="mt-2 text-sm text-slate-500">
-          计算角色裸属性，或查看装备转换至目标门派后的数值变化。
+          计算角色与装备属性，或查看装备转换至目标门派后的数值变化。
         </p>
       </div>
 
@@ -162,6 +178,7 @@ const CalculatorPage = () => {
             ["weapon", "武器转换"],
             ["ring", "戒指转换"],
             ["character", "角色属性"],
+            ["equipment", "角色装备"],
           ] as const
         ).map(([tool, label]) => (
           <button
@@ -169,7 +186,7 @@ const CalculatorPage = () => {
             type="button"
             role="tab"
             aria-selected={activeTool === tool}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 sm:px-4 sm:text-sm ${
               activeTool === tool
                 ? "bg-blue-600 text-white"
                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
@@ -183,20 +200,25 @@ const CalculatorPage = () => {
 
       <div
         className={`grid items-start gap-5 ${
-          isCharacter
+          isCharacter || isEquipment
             ? ""
             : "xl:grid-cols-[minmax(0,672px)_minmax(260px,1fr)]"
         }`}
       >
         {isCharacter ? (
-          <CharacterAttributeCalculator />
+          <CharacterAttributeCalculator
+            equipmentBonuses={equipmentSummary.characterBonuses}
+            equipmentItemCount={equipmentSummary.activeItemCount}
+          />
+        ) : isEquipment ? (
+          <EquipmentCalculator equipment={equipment} onChange={setEquipment} />
         ) : isWeapon ? (
           <WeaponConverter />
         ) : (
           <RingConverter />
         )}
 
-        {!isCharacter && <aside className="space-y-4 xl:sticky xl:top-24">
+        {!isCharacter && !isEquipment && <aside className="space-y-4 xl:sticky xl:top-24">
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="mb-5 hidden border-b border-slate-100 pb-5 xl:block">
               <h2 className="text-xl font-semibold tracking-tight text-slate-900">

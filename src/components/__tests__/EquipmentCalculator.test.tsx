@@ -1,0 +1,385 @@
+import { useState } from "react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import EquipmentCalculator from "../EquipmentCalculator";
+import { createInitialEquipmentSet } from "../../utils/equipmentAttributes";
+
+const EquipmentCalculatorHarness = () => {
+  const [equipment, setEquipment] = useState(createInitialEquipmentSet);
+
+  return <EquipmentCalculator equipment={equipment} onChange={setEquipment} />;
+};
+
+describe("EquipmentCalculator", () => {
+  it("应该按固定顺序展示八件装备和截图示例总属性", () => {
+    render(<EquipmentCalculatorHarness />);
+
+    expect(screen.getByRole("heading", { name: "装备总属性" })).toBeInTheDocument();
+    expect(screen.getByText("8 / 8 件")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^编辑/ })).toHaveLength(8);
+
+    const cards = screen.getByRole("heading", { name: "八件装备" })
+      .closest("section");
+    expect(cards).not.toBeNull();
+    expect(
+      within(cards!).getAllByRole("heading", { level: 3 }).map((heading) =>
+        heading.textContent
+      )
+    ).toEqual(["武器", "上衣", "发冠", "下装", "饰品", "鞋子", "戒指", "项链"]);
+
+    const weaponCard = within(cards!).getByRole("heading", { name: "武器" })
+      .closest("article");
+    expect(weaponCard).not.toBeNull();
+    expect(weaponCard).toHaveTextContent("力 +33");
+    expect(weaponCard).toHaveTextContent("敏 +32");
+  });
+
+  it("应该将一至两条附加五维与百炼分开编辑和汇总", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    await user.click(screen.getByRole("button", { name: "编辑武器" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑武器" });
+
+    expect(
+      within(dialog)
+        .getAllByRole("heading", { level: 3 })
+        .map((heading) => heading.textContent)
+    ).toEqual([
+      "武器状态",
+      "装备属性",
+      "附加五维与百炼",
+      "宝石",
+      "铸灵属性",
+      "加持",
+      "特效与特技",
+    ]);
+
+    expect(
+      within(dialog).getByRole("combobox", { name: "武器：附加五维 1" })
+    ).toHaveValue("strength");
+    expect(
+      within(dialog).getByRole("spinbutton", { name: "附加五维 1 数值" })
+    ).toHaveValue(33);
+    expect(
+      within(dialog).getByRole("combobox", { name: "武器：附加五维 2" })
+    ).toHaveValue("agility");
+    expect(
+      within(dialog).getByRole("spinbutton", { name: "附加五维 2 数值" })
+    ).toHaveValue(32);
+    expect(
+      within(dialog).getByRole("spinbutton", { name: "武器：百炼数值" })
+    ).toHaveValue(25);
+
+    const firstPrimaryAttribute = within(dialog).getByRole("combobox", {
+      name: "武器：附加五维 1",
+    });
+    const secondPrimaryAttribute = within(dialog).getByRole("combobox", {
+      name: "武器：附加五维 2",
+    });
+    expect(
+      within(firstPrimaryAttribute).getByRole("option", { name: "敏" })
+    ).toBeDisabled();
+    expect(
+      within(secondPrimaryAttribute).getByRole("option", { name: "力" })
+    ).toBeDisabled();
+
+    const temperingAttribute = within(dialog).getByRole("combobox", {
+      name: "武器：百炼属性",
+    });
+    expect(
+      within(temperingAttribute).getByRole("option", { name: "力" })
+    ).toBeEnabled();
+  });
+
+  it("应该限制加持五维不能与普通附加五维重复", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    await user.click(screen.getByRole("button", { name: "编辑上衣" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑上衣" });
+    const supportAttribute = within(dialog).getByRole("combobox", {
+      name: "上衣：加持属性",
+    });
+
+    expect(supportAttribute).toHaveValue("endurance");
+    expect(
+      within(supportAttribute).getByRole("option", { name: "体" })
+    ).toBeDisabled();
+    expect(
+      within(supportAttribute).queryByRole("option", { name: "物攻" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("应该编辑装备面板值并实时更新总属性", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    await user.click(screen.getByRole("button", { name: "编辑武器" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑武器" });
+    const physicalAttackInput = within(dialog).getByRole("spinbutton", {
+      name: "武器：物攻",
+    });
+
+    await user.clear(physicalAttackInput);
+    await user.type(physicalAttackInput, "700");
+
+    expect(screen.getByText("+799")).toBeInTheDocument();
+  });
+
+  it("应该将鞋子疾风作为速度百分比汇总", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    await user.click(screen.getByRole("button", { name: "编辑鞋子" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑鞋子" });
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: /疾风/ })
+    );
+
+    expect(screen.getAllByText("+3%")).toHaveLength(2);
+  });
+
+  it("应该按赛年神装规则编辑戒指并切换职业对应属性", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    const cards = screen.getByRole("heading", { name: "八件装备" })
+      .closest("section");
+    expect(cards).not.toBeNull();
+    const ringCard = within(cards!).getByRole("heading", { name: "戒指" })
+      .closest("article");
+    expect(ringCard).not.toBeNull();
+    expect(ringCard).toHaveTextContent("全等级 · 已计入");
+    expect(ringCard).toHaveTextContent("赛年神装");
+
+    await user.click(screen.getByRole("button", { name: "编辑戒指" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑戒指" });
+
+    expect(
+      within(dialog)
+        .getAllByRole("heading", { level: 3 })
+        .map((heading) => heading.textContent)
+    ).toEqual(["戒指状态", "装备属性", "百炼与副属性", "神装特效"]);
+    expect(within(dialog).getByText("全等级装备")).toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("spinbutton", { name: "戒指：装备等级" })
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("heading", { name: "宝石" })
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("heading", { name: "铸灵属性" })
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("heading", { name: "加持" })
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("heading", { name: "特效与特技" })
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("textbox", { name: "戒指：特技" })
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("combobox", { name: "戒指：副属性 1" })
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("textbox", { name: "戒指：神装特效" })
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("combobox", { name: "戒指：神装特效等级" })
+    ).toHaveValue("0");
+
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "戒指：职业对应属性" }),
+      "magicAttack"
+    );
+    expect(
+      within(dialog).getByRole("spinbutton", { name: "戒指：法攻" })
+    ).toHaveValue(18);
+    expect(ringCard).toHaveTextContent("法攻 +43");
+    expect(ringCard).not.toHaveTextContent("物攻 +42");
+  });
+
+  it("应该允许赛年神装选择一至三条互不重复的副属性", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    await user.click(screen.getByRole("button", { name: "编辑戒指" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑戒指" });
+    const affixCount = within(dialog).getByRole("combobox", {
+      name: "戒指：副属性条数",
+    });
+    const firstAffix = within(dialog).getByRole("combobox", {
+      name: "戒指：副属性 1",
+    });
+    const secondAffix = within(dialog).getByRole("combobox", {
+      name: "戒指：副属性 2",
+    });
+
+    expect(affixCount).toHaveValue("3");
+    expect(
+      within(firstAffix).getByRole("option", { name: "法攻" })
+    ).toBeDisabled();
+    expect(
+      within(secondAffix).getByRole("option", { name: "物攻" })
+    ).toBeDisabled();
+
+    await user.selectOptions(affixCount, "1");
+
+    expect(
+      within(dialog).getAllByRole("combobox", {
+        name: /^戒指：副属性 \d+$/,
+      })
+    ).toHaveLength(1);
+    expect(
+      within(dialog).getByRole("button", { name: "删除戒指副属性 1" })
+    ).toBeDisabled();
+
+    await user.selectOptions(affixCount, "3");
+
+    const selectedAttributes = within(dialog)
+      .getAllByRole("combobox", { name: /^戒指：副属性 \d+$/ })
+      .map((select) => (select as HTMLSelectElement).value);
+    expect(new Set(selectedAttributes).size).toBe(3);
+  });
+
+  it("应该从气血、物防、法防中为项链选择两条不重复属性", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    const cards = screen.getByRole("heading", { name: "八件装备" })
+      .closest("section");
+    expect(cards).not.toBeNull();
+    const necklaceCard = within(cards!).getByRole("heading", { name: "项链" })
+      .closest("article");
+    expect(necklaceCard).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "编辑项链" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑项链" });
+    const firstAttribute = within(dialog).getByRole("combobox", {
+      name: "项链：装备属性 1",
+    });
+    const secondAttribute = within(dialog).getByRole("combobox", {
+      name: "项链：装备属性 2",
+    });
+
+    expect(firstAttribute).toHaveValue("health");
+    expect(secondAttribute).toHaveValue("physicalDefense");
+    expect(
+      within(firstAttribute).getByRole("option", { name: "物防" })
+    ).toBeDisabled();
+    expect(
+      within(secondAttribute).getByRole("option", { name: "气血" })
+    ).toBeDisabled();
+
+    await user.selectOptions(firstAttribute, "magicDefense");
+
+    expect(
+      within(dialog).getByRole("combobox", { name: "项链：装备属性 1" })
+    ).toHaveValue("magicDefense");
+    expect(
+      within(dialog).getByRole("spinbutton", {
+        name: "项链：装备属性 1 数值",
+      })
+    ).toHaveValue(99);
+    expect(necklaceCard).toHaveTextContent("法防 +112");
+    expect(necklaceCard).not.toHaveTextContent("气血 +99");
+  });
+
+  it("应该为上衣配置固定增加 3 点的系别亲和特效", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    const cards = screen.getByRole("heading", { name: "八件装备" })
+      .closest("section");
+    expect(cards).not.toBeNull();
+    const armorCard = within(cards!).getByRole("heading", { name: "上衣" })
+      .closest("article");
+    expect(armorCard).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "编辑上衣" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑上衣" });
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: /系别亲和/ })
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "上衣：系别亲和" }),
+      "electricAffinity"
+    );
+
+    expect(armorCard).toHaveTextContent("电系亲和 +3");
+    const affinitySummary = screen.getByRole("heading", {
+      name: "元素亲和",
+    }).parentElement;
+    expect(affinitySummary).not.toBeNull();
+    expect(within(affinitySummary!).getByText("电系亲和")).toBeInTheDocument();
+    expect(within(affinitySummary!).getByText("+3")).toBeInTheDocument();
+  });
+
+  it("应该将加持计入基础装备最多两个特效的限制", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    await user.click(screen.getByRole("button", { name: "编辑鞋子" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑鞋子" });
+    const blessing = within(dialog).getByRole("checkbox", { name: /祝福/ });
+    const growth = within(dialog).getByRole("checkbox", { name: /成长/ });
+    const gale = within(dialog).getByRole("checkbox", { name: /疾风/ });
+    const customEffect = within(dialog).getByRole("textbox", {
+      name: "鞋子：其它特效",
+    });
+    const customEffectAttribute = within(dialog).getByRole("checkbox", {
+      name: "其它特效提供属性",
+    });
+    const specialSkill = within(dialog).getByRole("textbox", {
+      name: "鞋子：特技",
+    });
+    const support = within(dialog).getByRole("checkbox", {
+      name: "这件装备拥有加持",
+    });
+
+    expect(support).toBeChecked();
+    expect(within(dialog).getByText("1 / 2")).toBeInTheDocument();
+    await user.click(blessing);
+
+    expect(within(dialog).getByText("2 / 2")).toBeInTheDocument();
+    expect(growth).toBeDisabled();
+    expect(gale).toBeDisabled();
+    expect(customEffect).toBeDisabled();
+    expect(customEffectAttribute).toBeDisabled();
+    expect(specialSkill).toBeEnabled();
+    expect(
+      within(dialog).getAllByRole("textbox", { name: "鞋子：特技" })
+    ).toHaveLength(1);
+
+    await user.click(blessing);
+
+    expect(growth).toBeEnabled();
+    expect(gale).toBeEnabled();
+    expect(customEffect).toBeEnabled();
+    expect(customEffectAttribute).toBeEnabled();
+  });
+
+  it("应该为饰品配置增加 5% 气血的体魄特效", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    const cards = screen.getByRole("heading", { name: "八件装备" })
+      .closest("section");
+    expect(cards).not.toBeNull();
+    const accessoryCard = within(cards!).getByRole("heading", {
+      name: "饰品",
+    }).closest("article");
+    expect(accessoryCard).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "编辑饰品" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑饰品" });
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: /体魄/ })
+    );
+
+    expect(accessoryCard).toHaveTextContent("体魄 · 气血 +5%");
+    expect(screen.getAllByText("+5%")).toHaveLength(2);
+  });
+});

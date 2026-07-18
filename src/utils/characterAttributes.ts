@@ -138,6 +138,7 @@ export type CharacterAdvancedBonusAttribute =
   (typeof CHARACTER_ADVANCED_BONUS_ATTRIBUTE_KEYS)[number];
 
 export const CHARACTER_PERCENTAGE_BONUS_ATTRIBUTE_KEYS = [
+  "healthPercent",
   "speedPercent",
   "physicalDefensePercent",
   "magicDefensePercent",
@@ -189,6 +190,7 @@ export const createEmptyCharacterAttributeBonuses =
     healingPower: 0,
     sealHit: 0,
     sealResistance: 0,
+    healthPercent: 0,
     speedPercent: 0,
     physicalDefensePercent: 0,
     magicDefensePercent: 0,
@@ -337,7 +339,10 @@ export const applyCharacterAttributeBonuses = (
     },
     status: {
       health: roundAttribute(
-        calculated.derived.health + bonuses.constitution * 3 + bonuses.health
+        (calculated.derived.health +
+          bonuses.constitution * 3 +
+          bonuses.health) *
+          (1 + bonuses.healthPercent / 100)
       ),
       // 当前法力成长规则未知，只叠加明确填写的直接加成。
       mana: roundAttribute(LEVEL_ONE_STATUS_ATTRIBUTES.mana + bonuses.mana),

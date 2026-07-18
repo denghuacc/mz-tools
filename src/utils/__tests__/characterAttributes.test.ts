@@ -153,6 +153,29 @@ describe("角色属性计算", () => {
     expect(effective.derived.magicDefense).toBe(211.05);
   });
 
+  it("应该在直接气血和体力气血之后应用气血百分比", () => {
+    const calculated = calculateCharacterAttributes(
+      EMPTY_CHARACTER_ALLOCATION
+    );
+    const baseBonuses = {
+      ...createEmptyCharacterAttributeBonuses(),
+      constitution: 10,
+      health: 100,
+    };
+    const healthBeforePercentage = applyCharacterAttributeBonuses(
+      calculated,
+      baseBonuses
+    ).status.health;
+    const effective = applyCharacterAttributeBonuses(calculated, {
+      ...baseBonuses,
+      healthPercent: 5,
+    });
+
+    expect(effective.status.health).toBeCloseTo(
+      healthBeforePercentage * 1.05
+    );
+  });
+
   it("应该支持技能直接减少速度", () => {
     const calculated = calculateCharacterAttributes(
       EMPTY_CHARACTER_ALLOCATION

@@ -1,3 +1,5 @@
+import EditIconButton from "./EditIconButton";
+
 export type AttributeBonusSummaryItem = {
   label: string;
   value: number;
@@ -37,27 +39,7 @@ const AttributeBonusSummaryCard = ({
         <h3 className="truncate text-[13px] font-semibold text-slate-800">
           {title}
         </h3>
-        <button
-          type="button"
-          className="flex size-7 shrink-0 items-center justify-center rounded-md text-blue-600 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          aria-label={`编辑${title}`}
-          title={`编辑${title}`}
-          onClick={onEdit}
-        >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            className="size-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-          </svg>
-        </button>
+        <EditIconButton label={`编辑${title}`} onClick={onEdit} />
       </div>
 
       <div className="mt-2 flex min-h-10 flex-1 flex-wrap content-start gap-1">
