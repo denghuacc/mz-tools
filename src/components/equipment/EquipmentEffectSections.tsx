@@ -11,10 +11,12 @@ import {
   EQUIPMENT_SLOTS,
   EQUIPMENT_SLOT_LABELS,
   MAX_GEM_EQUIPMENT_COUNT,
+  SEASON_EQUIPMENT_EFFECT_OPTIONS,
   calculateEquipmentGemBonus,
   canEnableBaseEquipmentEffect,
   getBaseEquipmentEffectIds,
   getGemLevelLimit,
+  getSeasonEquipmentEffectOption,
 } from "../../utils/equipmentAttributes";
 import type {
   BaseEquipmentEffectId,
@@ -467,49 +469,76 @@ export const StandardEquipmentSections = ({
 export const SeasonEquipmentEffectSection = ({
   item,
   onChange,
-}: EquipmentSectionProps) => (
-  <EquipmentEditorSection
-    title="神装特效"
-    description="赛年神装最多配置一个独立特效，最高 5 级；具体效果后续补充。"
-  >
-    <div className="grid gap-3 sm:grid-cols-2">
-      <label>
-        <EquipmentFieldLabel>神装特效</EquipmentFieldLabel>
-        <input
-          type="text"
-          aria-label={`${EQUIPMENT_SLOT_LABELS[item.slot]}：神装特效`}
-          className={equipmentEditorInputClassName}
-          value={item.specialEffect}
-          placeholder="后续补充具体特效"
-          onChange={(event) =>
-            onChange({ ...item, specialEffect: event.target.value })
-          }
-        />
-      </label>
-      <label>
-        <EquipmentFieldLabel>特效等级</EquipmentFieldLabel>
-        <select
-          aria-label={`${EQUIPMENT_SLOT_LABELS[item.slot]}：神装特效等级`}
-          className={equipmentEditorInputClassName}
-          value={item.seasonEffectLevel}
-          onChange={(event) =>
-            onChange({
-              ...item,
-              seasonEffectLevel: Number(event.target.value) as SeasonEffectLevel,
-            })
-          }
-        >
-          <option value={0}>未配置</option>
-          {[1, 2, 3, 4, 5].map((level) => (
-            <option key={level} value={level}>
-              {level} 级
+}: EquipmentSectionProps) => {
+  const selectedEffect = getSeasonEquipmentEffectOption(item.specialEffect);
+
+  return (
+    <EquipmentEditorSection
+      title="神装特效"
+      description="当前仅收录面板属性特效；疾风神固每级增加 10 点速度。"
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label>
+          <EquipmentFieldLabel>神装特效</EquipmentFieldLabel>
+          <select
+            aria-label={`${EQUIPMENT_SLOT_LABELS[item.slot]}：神装特效`}
+            className={equipmentEditorInputClassName}
+            value={selectedEffect?.effect ?? ""}
+            onChange={(event) =>
+              onChange({
+                ...item,
+                specialEffect: event.target.value,
+                seasonEffectLevel: event.target.value
+                  ? item.seasonEffectLevel || 1
+                  : 0,
+              })
+            }
+          >
+            <option value="">未配置</option>
+            {SEASON_EQUIPMENT_EFFECT_OPTIONS.map((effect) => (
+              <option key={effect.effect} value={effect.effect}>
+                {effect.effect}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <EquipmentFieldLabel>特效等级</EquipmentFieldLabel>
+          <select
+            aria-label={`${EQUIPMENT_SLOT_LABELS[item.slot]}：神装特效等级`}
+            className={equipmentEditorInputClassName}
+            disabled={!selectedEffect}
+            value={selectedEffect ? item.seasonEffectLevel : 0}
+            onChange={(event) =>
+              onChange({
+                ...item,
+                seasonEffectLevel: Number(
+                  event.target.value
+                ) as SeasonEffectLevel,
+              })
+            }
+          >
+            <option value={0} disabled>
+              请选择特效
             </option>
-          ))}
-        </select>
-      </label>
-    </div>
-    <p className="mt-3 rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2 text-xs leading-5 text-amber-800">
-      赛年神装不能镶嵌宝石或铸灵，也没有祝福、加持、成长和特技。
-    </p>
-  </EquipmentEditorSection>
-);
+            {[1, 2, 3, 4, 5].map((level) => (
+              <option key={level} value={level}>
+                {level} 级
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {selectedEffect && item.seasonEffectLevel > 0 ? (
+        <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs leading-5 text-blue-800">
+          当前提供速度 +
+          {selectedEffect.valuePerLevel * item.seasonEffectLevel}。
+        </p>
+      ) : null}
+      <p className="mt-3 rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2 text-xs leading-5 text-amber-800">
+        戒指与项链的同名特效等级和达到 4 / 6 / 8 / 9 / 10
+        时产生共鸣；套装属性暂无可靠数据，暂不计入计算。
+      </p>
+    </EquipmentEditorSection>
+  );
+};

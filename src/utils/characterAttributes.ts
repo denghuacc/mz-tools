@@ -129,6 +129,7 @@ export type CharacterDirectBonusAttribute =
 export const CHARACTER_ADVANCED_BONUS_ATTRIBUTE_KEYS = [
   "physicalCritical",
   "magicalCritical",
+  "dodgeRate",
   "healingPower",
   "sealHit",
   "sealResistance",
@@ -187,6 +188,7 @@ export const createEmptyCharacterAttributeBonuses =
     agility: 0,
     physicalCritical: 0,
     magicalCritical: 0,
+    dodgeRate: 0,
     healingPower: 0,
     sealHit: 0,
     sealResistance: 0,
@@ -379,6 +381,9 @@ export const applyCharacterAttributeBonuses = (
       ),
       magicalCritical: roundAttribute(
         calculated.advanced.magicalCritical + bonuses.magicalCritical
+      ),
+      dodgeRate: roundAttribute(
+        calculated.advanced.dodgeRate + bonuses.dodgeRate
       ),
       healingPower: roundAttribute(
         calculated.advanced.healingPower + bonuses.healingPower

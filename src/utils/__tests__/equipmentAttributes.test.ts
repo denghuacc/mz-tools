@@ -8,6 +8,8 @@ import {
   createInitialEquipmentCalculatorState,
   createInitialEquipmentSet,
   getGemLevelLimit,
+  getEquipmentEffectLabels,
+  getSeasonEquipmentResonance,
   normalizeEquipmentCalculatorState,
 } from "../equipmentAttributes";
 import type { EquipmentGemType } from "../equipmentAttributes";
@@ -132,6 +134,27 @@ describe("角色装备属性汇总", () => {
     ).toEqual({ type: "diamond", level: 8, breakthrough: false });
   });
 
+  it("应该恢复赛年神装新增的进阶副属性和特效", () => {
+    const state = createInitialEquipmentCalculatorState();
+    state.equipment.ring = {
+      ...state.equipment.ring,
+      affixes: [
+        { attribute: "sealHit", value: 12 },
+        { attribute: "sealResistance", value: 8 },
+        { attribute: "dodgeRate", value: 3 },
+      ],
+      specialEffect: "疾风神固",
+      seasonEffectLevel: 5,
+    };
+
+    const restoredRing =
+      normalizeEquipmentCalculatorState(state)?.equipment.ring;
+
+    expect(restoredRing?.affixes).toEqual(state.equipment.ring.affixes);
+    expect(restoredRing?.specialEffect).toBe("疾风神固");
+    expect(restoredRing?.seasonEffectLevel).toBe(5);
+  });
+
   it("应该正确区分上衣和下装的装备属性", () => {
     const equipment = createInitialEquipmentSet();
 
@@ -254,6 +277,85 @@ describe("角色装备属性汇总", () => {
     expect(attributes.physicalAttack).toBe(42);
     expect(attributes.magicAttack).toBe(25);
   });
+
+  it("赛年神装进阶副属性应该映射到角色进阶属性", () => {
+    const equipment = createInitialEquipmentSet();
+    equipment.ring = {
+      ...equipment.ring,
+      affixes: [
+        { attribute: "sealHit", value: 12 },
+        { attribute: "sealResistance", value: 8 },
+        { attribute: "dodgeRate", value: 3 },
+      ],
+    };
+
+    const summary = calculateEquipmentSummary(equipment);
+
+    expect(summary.allAttributes).toMatchObject({
+      sealHit: 12,
+      sealResistance: 8,
+      dodgeRate: 3,
+    });
+    expect(summary.characterBonuses).toMatchObject({
+      sealHit: 12,
+      sealResistance: 8,
+      dodgeRate: 3,
+    });
+  });
+
+  it("疾风神固应该按特效等级增加速度并忽略旧的自定义属性", () => {
+    const item = createInitialEquipmentSet().ring;
+    const configuredItem = {
+      ...item,
+      baseAttributes: {},
+      tempering: { attribute: "strength" as const, value: 0 },
+      affixes: [],
+      specialEffect: "疾风神固",
+      seasonEffectLevel: 3 as const,
+      specialEffectAttribute: { attribute: "magicAttack" as const, value: 999 },
+    };
+
+    const attributes = calculateEquipmentItemAttributes(configuredItem);
+
+    expect(attributes.speed).toBe(30);
+    expect(attributes.magicAttack).toBeUndefined();
+    expect(getEquipmentEffectLabels(configuredItem)).toEqual([
+      "赛年神装",
+      "疾风神固 · 3级",
+    ]);
+  });
+
+  it.each([
+    [1, 1, null, 4],
+    [2, 2, 4, 6],
+    [3, 2, 4, 6],
+    [3, 3, 6, 8],
+    [4, 4, 8, 9],
+    [4, 5, 9, 10],
+    [5, 5, 10, null],
+  ] as const)(
+    "疾风神固等级 %i + %i 应匹配共鸣档位 %s",
+    (ringLevel, necklaceLevel, reachedThreshold, nextThreshold) => {
+      const equipment = createInitialEquipmentSet();
+      equipment.ring = {
+        ...equipment.ring,
+        specialEffect: "疾风神固",
+        seasonEffectLevel: ringLevel,
+      };
+      equipment.necklace = {
+        ...equipment.necklace,
+        specialEffect: "疾风神固",
+        seasonEffectLevel: necklaceLevel,
+      };
+
+      expect(getSeasonEquipmentResonance(equipment)).toEqual({
+        effect: "疾风神固",
+        totalLevel: ringLevel + necklaceLevel,
+        reachedThreshold,
+        nextThreshold,
+      });
+    }
+  );
 
   it("项链应该只计算气血、物防、法防中的两条装备属性", () => {
     const item = createInitialEquipmentSet().necklace;

@@ -1783,6 +1783,7 @@ const CharacterAttributeCalculator = ({
                                   {(attribute.attribute === "healingPower" ||
                                     attribute.attribute === "sealHit" ||
                                     attribute.attribute === "sealResistance" ||
+                                    attribute.attribute === "dodgeRate" ||
                                     attribute.attribute === "physicalCritical" ||
                                     attribute.attribute === "magicalCritical") &&
                                     equipmentBonuses[attribute.attribute] !== 0 && (

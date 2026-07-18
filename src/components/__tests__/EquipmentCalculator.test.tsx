@@ -282,11 +282,11 @@ describe("EquipmentCalculator", () => {
       within(dialog).getByRole("combobox", { name: "戒指：副属性 1" })
     ).toBeInTheDocument();
     expect(
-      within(dialog).getByRole("textbox", { name: "戒指：神装特效" })
+      within(dialog).getByRole("combobox", { name: "戒指：神装特效" })
     ).toBeInTheDocument();
     expect(
       within(dialog).getByRole("combobox", { name: "戒指：神装特效等级" })
-    ).toHaveValue("0");
+    ).toBeDisabled();
 
     await user.selectOptions(
       within(dialog).getByRole("combobox", { name: "戒指：职业对应属性" }),
@@ -299,15 +299,75 @@ describe("EquipmentCalculator", () => {
     expect(ringCard).not.toHaveTextContent("物攻 +42");
   });
 
+  it("应该按等级计算疾风神固并展示同名特效共鸣档位", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    const ringCard = screen.getByRole("heading", { name: "戒指" })
+      .closest("article");
+    expect(ringCard).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "编辑戒指" }));
+    const ringDialog = screen.getByRole("dialog", { name: "编辑戒指" });
+    const ringEffect = within(ringDialog).getByRole("combobox", {
+      name: "戒指：神装特效",
+    });
+    const ringEffectLevel = within(ringDialog).getByRole("combobox", {
+      name: "戒指：神装特效等级",
+    });
+
+    expect(
+      within(ringEffect).getAllByRole("option").map((option) => option.textContent)
+    ).toEqual(["未配置", "疾风神固"]);
+    expect(ringEffectLevel).toBeDisabled();
+    expect(
+      within(ringEffectLevel).getAllByRole("option").map((option) => option.textContent)
+    ).toEqual(["请选择特效", "1 级", "2 级", "3 级", "4 级", "5 级"]);
+
+    await user.selectOptions(ringEffect, "疾风神固");
+
+    expect(ringEffectLevel).toBeEnabled();
+    expect(ringEffectLevel).toHaveValue("1");
+    expect(ringDialog).toHaveTextContent("当前提供速度 +10");
+    expect(ringCard).toHaveTextContent("速度 +10");
+    expect(ringCard).toHaveTextContent("疾风神固 · 1级");
+
+    await user.selectOptions(ringEffectLevel, "5");
+
+    expect(ringDialog).toHaveTextContent("当前提供速度 +50");
+    expect(ringCard).toHaveTextContent("速度 +50");
+    await user.click(within(ringDialog).getByRole("button", { name: "完成" }));
+
+    await user.click(screen.getByRole("button", { name: "编辑项链" }));
+    const necklaceDialog = screen.getByRole("dialog", { name: "编辑项链" });
+    await user.selectOptions(
+      within(necklaceDialog).getByRole("combobox", {
+        name: "项链：神装特效",
+      }),
+      "疾风神固"
+    );
+    await user.selectOptions(
+      within(necklaceDialog).getByRole("combobox", {
+        name: "项链：神装特效等级",
+      }),
+      "3"
+    );
+
+    const resonance = screen.getByRole("heading", { name: "神装共鸣" })
+      .closest("section");
+    expect(resonance).not.toBeNull();
+    expect(resonance).toHaveTextContent(
+      "疾风神固等级和 8：已达成 8 级共鸣，下一档 9 级。"
+    );
+    expect(resonance).toHaveTextContent("共鸣套装属性待复核");
+  });
+
   it("应该允许赛年神装选择一至三条互不重复的副属性", async () => {
     const user = userEvent.setup();
     render(<EquipmentCalculatorHarness />);
 
     await user.click(screen.getByRole("button", { name: "编辑戒指" }));
     const dialog = screen.getByRole("dialog", { name: "编辑戒指" });
-    const affixCount = within(dialog).getByRole("combobox", {
-      name: "戒指：副属性条数",
-    });
     const firstAffix = within(dialog).getByRole("combobox", {
       name: "戒指：副属性 1",
     });
@@ -315,15 +375,59 @@ describe("EquipmentCalculator", () => {
       name: "戒指：副属性 2",
     });
 
-    expect(affixCount).toHaveValue("3");
+    expect(
+      within(dialog).queryByRole("combobox", { name: "戒指：副属性条数" })
+    ).not.toBeInTheDocument();
     expect(
       within(firstAffix).getByRole("option", { name: "法攻" })
     ).toBeDisabled();
     expect(
       within(secondAffix).getByRole("option", { name: "物攻" })
     ).toBeDisabled();
+    for (const label of [
+      "法伤减免",
+      "物伤减免",
+      "封印命中",
+      "抗封",
+      "闪避",
+    ]) {
+      expect(
+        within(firstAffix).getByRole("option", { name: label })
+      ).toBeInTheDocument();
+    }
 
-    await user.selectOptions(affixCount, "1");
+    const thirdAffix = within(dialog).getByRole("combobox", {
+      name: "戒指：副属性 3",
+    });
+    await user.selectOptions(firstAffix, "sealHit");
+    await user.selectOptions(secondAffix, "sealResistance");
+    await user.selectOptions(thirdAffix, "dodgeRate");
+
+    for (const [name, value] of [
+      ["副属性 1 数值", "12"],
+      ["副属性 2 数值", "8"],
+      ["副属性 3 数值", "3"],
+    ] as const) {
+      const input = within(dialog).getByRole("spinbutton", { name });
+      await user.clear(input);
+      await user.type(input, value);
+    }
+
+    const combatSummary = screen.getByRole("heading", {
+      name: "战斗词条",
+    }).parentElement;
+    expect(combatSummary).not.toBeNull();
+    expect(within(combatSummary!).getByText("封印命中")).toBeInTheDocument();
+    expect(within(combatSummary!).getByText("抗封")).toBeInTheDocument();
+    expect(within(combatSummary!).getByText("闪避")).toBeInTheDocument();
+    expect(within(combatSummary!).getByText("+3%")).toBeInTheDocument();
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "删除戒指副属性 3" })
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "删除戒指副属性 2" })
+    );
 
     expect(
       within(dialog).getAllByRole("combobox", {
@@ -334,7 +438,12 @@ describe("EquipmentCalculator", () => {
       within(dialog).getByRole("button", { name: "删除戒指副属性 1" })
     ).toBeDisabled();
 
-    await user.selectOptions(affixCount, "3");
+    await user.click(
+      within(dialog).getByRole("button", { name: "添加副属性" })
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "添加副属性" })
+    );
 
     const selectedAttributes = within(dialog)
       .getAllByRole("combobox", { name: /^戒指：副属性 \d+$/ })

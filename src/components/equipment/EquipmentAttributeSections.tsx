@@ -17,8 +17,6 @@ import {
   EquipmentAttributeSelect,
   EquipmentAttributeValueInput,
   EquipmentEditorSection,
-  EquipmentFieldLabel,
-  equipmentEditorInputClassName,
 } from "./EquipmentEditorFields";
 
 type EquipmentAttributesSectionProps = {
@@ -175,28 +173,9 @@ const EquipmentAffixesEditor = ({
 
   return (
     <div className="mt-4 border-t border-slate-100 pt-4">
-      <div className="mb-2 flex items-end justify-between gap-3">
-        <p className="text-xs font-semibold text-slate-500">
-          {isSeasonEquipment ? "副属性（1～3 条）" : "其它词条"}
-        </p>
-        {isSeasonEquipment ? (
-          <label className="w-32">
-            <EquipmentFieldLabel>副属性条数</EquipmentFieldLabel>
-            <select
-              aria-label={`${EQUIPMENT_SLOT_LABELS[item.slot]}：副属性条数`}
-              className={equipmentEditorInputClassName}
-              value={Math.min(3, Math.max(1, item.affixes.length))}
-              onChange={(event) =>
-                updateSeasonAffixCount(Number(event.target.value))
-              }
-            >
-              <option value={1}>1 条</option>
-              <option value={2}>2 条</option>
-              <option value={3}>3 条</option>
-            </select>
-          </label>
-        ) : null}
-      </div>
+      <p className="mb-2 text-xs font-semibold text-slate-500">
+        {isSeasonEquipment ? "副属性（1～3 条）" : "其它词条"}
+      </p>
 
       <div className="space-y-2">
         {item.affixes.map((line, index) => (
@@ -264,7 +243,7 @@ const EquipmentAttributesSection = ({
       title={isSeasonEquipment ? "百炼与副属性" : "附加五维与百炼"}
       description={
         isSeasonEquipment
-          ? "赛年神装随机出现一至三条互不重复的副属性，更多副属性类型后续补充。"
+          ? "赛年神装随机出现一至三条互不重复的副属性。"
           : "每件装备有一至两条可重铸的力、灵、体、耐、敏属性，百炼属性单独计算。"
       }
     >

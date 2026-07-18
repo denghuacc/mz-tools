@@ -168,6 +168,9 @@ export const EQUIPMENT_ATTRIBUTE_OPTIONS = [
   { attribute: "magicalDamageResult", label: "法伤结果" },
   { attribute: "physicalDamageReduction", label: "物伤减免" },
   { attribute: "magicalDamageReduction", label: "法伤减免" },
+  { attribute: "sealHit", label: "封印命中" },
+  { attribute: "sealResistance", label: "抗封" },
+  { attribute: "dodgeRate", label: "闪避" },
 ] as const satisfies readonly {
   attribute: EquipmentAttribute;
   label: string;
@@ -278,6 +281,30 @@ export type EquipmentPrimaryAttributeLine = {
 };
 
 export type SeasonEffectLevel = 0 | 1 | 2 | 3 | 4 | 5;
+
+export const SEASON_EQUIPMENT_EFFECT_OPTIONS = [
+  {
+    effect: "疾风神固",
+    attribute: "speed",
+    valuePerLevel: 10,
+  },
+] as const satisfies readonly {
+  effect: string;
+  attribute: EquipmentAttribute;
+  valuePerLevel: number;
+}[];
+
+export type SeasonEquipmentEffectName =
+  (typeof SEASON_EQUIPMENT_EFFECT_OPTIONS)[number]["effect"];
+
+export const SEASON_EQUIPMENT_RESONANCE_THRESHOLDS = [
+  4, 6, 8, 9, 10,
+] as const;
+export type SeasonEquipmentResonanceThreshold =
+  (typeof SEASON_EQUIPMENT_RESONANCE_THRESHOLDS)[number];
+
+export const getSeasonEquipmentEffectOption = (effect: string) =>
+  SEASON_EQUIPMENT_EFFECT_OPTIONS.find((option) => option.effect === effect);
 
 export type EquipmentItem = {
   slot: EquipmentSlot;
@@ -390,14 +417,12 @@ export const canEnableBaseEquipmentEffect = (
 /** 统一生成装备卡片展示的特效与特技标签。 */
 export const getEquipmentEffectLabels = (item: EquipmentItem): string[] => {
   if (isSeasonEquipmentSlot(item.slot)) {
+    const effect = getSeasonEquipmentEffectOption(item.specialEffect);
+
     return [
       "赛年神装",
-      item.specialEffect
-        ? `${item.specialEffect}${
-            item.seasonEffectLevel > 0
-              ? ` · ${item.seasonEffectLevel}级`
-              : ""
-          }`
+      effect && item.seasonEffectLevel > 0
+        ? `${effect.effect} · ${item.seasonEffectLevel}级`
         : null,
     ].filter((effect): effect is string => effect !== null);
   }
@@ -422,6 +447,54 @@ export const getEquipmentEffectLabels = (item: EquipmentItem): string[] => {
 };
 
 export type EquipmentSet = Record<EquipmentSlot, EquipmentItem>;
+
+export type SeasonEquipmentResonance = {
+  effect: SeasonEquipmentEffectName;
+  totalLevel: number;
+  reachedThreshold: SeasonEquipmentResonanceThreshold | null;
+  nextThreshold: SeasonEquipmentResonanceThreshold | null;
+};
+
+/** 同名神装特效按两件装备的等级和取已达到的最高共鸣档位。 */
+export const getSeasonEquipmentResonance = (
+  equipment: EquipmentSet
+): SeasonEquipmentResonance | null => {
+  const ring = equipment.ring;
+  const necklace = equipment.necklace;
+  const ringEffect = getSeasonEquipmentEffectOption(ring.specialEffect);
+  const necklaceEffect = getSeasonEquipmentEffectOption(
+    necklace.specialEffect
+  );
+
+  if (
+    !ring.enabled ||
+    !necklace.enabled ||
+    !ringEffect ||
+    !necklaceEffect ||
+    ringEffect.effect !== necklaceEffect.effect ||
+    ring.seasonEffectLevel === 0 ||
+    necklace.seasonEffectLevel === 0
+  ) {
+    return null;
+  }
+
+  const totalLevel = ring.seasonEffectLevel + necklace.seasonEffectLevel;
+  const reachedThreshold =
+    [...SEASON_EQUIPMENT_RESONANCE_THRESHOLDS]
+      .reverse()
+      .find((threshold) => totalLevel >= threshold) ?? null;
+  const nextThreshold =
+    SEASON_EQUIPMENT_RESONANCE_THRESHOLDS.find(
+      (threshold) => totalLevel < threshold
+    ) ?? null;
+
+  return {
+    effect: ringEffect.effect,
+    totalLevel,
+    reachedThreshold,
+    nextThreshold,
+  };
+};
 
 const createItem = (
   slot: EquipmentSlot,
@@ -951,9 +1024,22 @@ export const calculateEquipmentItemAttributes = (
     });
   }
 
+  const seasonEffect = getSeasonEquipmentEffectOption(item.specialEffect);
   if (
+    isSeasonEquipment &&
+    seasonEffect &&
+    item.seasonEffectLevel > 0
+  ) {
+    addValues(attributes, {
+      [seasonEffect.attribute]:
+        seasonEffect.valuePerLevel * item.seasonEffectLevel,
+    });
+  }
+
+  if (
+    !isSeasonEquipment &&
     item.specialEffectAttribute &&
-    (isSeasonEquipment || baseEquipmentEffects.has("custom"))
+    baseEquipmentEffects.has("custom")
   ) {
     addValues(attributes, {
       [item.specialEffectAttribute.attribute]: item.specialEffectAttribute.value,

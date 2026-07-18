@@ -13,6 +13,7 @@ import {
   clampEquipmentGemLevels,
   getGemLevelLimit,
   getEquipmentEffectLabels,
+  getSeasonEquipmentResonance,
   isSeasonEquipmentSlot,
 } from "../utils/equipmentAttributes";
 import type {
@@ -57,6 +58,9 @@ const SUMMARY_GROUPS: readonly {
       "magicalDamageResult",
       "physicalDamageReduction",
       "magicalDamageReduction",
+      "sealHit",
+      "sealResistance",
+      "dodgeRate",
     ],
   },
   {
@@ -73,7 +77,9 @@ const SUMMARY_GROUPS: readonly {
 ];
 
 const formatValue = (value: number, attribute: EquipmentAttribute) =>
-  `${value > 0 ? "+" : ""}${value}${attribute.endsWith("Percent") ? "%" : ""}`;
+  `${value > 0 ? "+" : ""}${value}${
+    attribute.endsWith("Percent") || attribute === "dodgeRate" ? "%" : ""
+  }`;
 
 const EquipmentCalculator = ({
   state,
@@ -88,6 +94,10 @@ const EquipmentCalculator = ({
   const summary = useMemo(
     () => calculateEquipmentSummary(equipment, characterLevel),
     [characterLevel, equipment]
+  );
+  const seasonResonance = useMemo(
+    () => getSeasonEquipmentResonance(equipment),
+    [equipment]
   );
   const activeItem = activeSlot ? equipment[activeSlot] : null;
   const updateItem = (item: EquipmentItem) => {
@@ -214,9 +224,28 @@ const EquipmentCalculator = ({
             </div>
           </section>
 
+          {seasonResonance ? (
+            <section className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-4 text-xs leading-6 text-amber-950">
+              <h2 className="font-semibold">神装共鸣</h2>
+              <p className="mt-1">
+                {seasonResonance.effect}等级和 {seasonResonance.totalLevel}：
+                {seasonResonance.reachedThreshold
+                  ? `已达成 ${seasonResonance.reachedThreshold} 级共鸣`
+                  : "尚未达成 4 级共鸣"}
+                {seasonResonance.nextThreshold
+                  ? `，下一档 ${seasonResonance.nextThreshold} 级`
+                  : "，已达最高档"}
+                。
+              </p>
+              <p className="mt-1 text-amber-800">
+                共鸣套装属性待复核，当前不计入总属性。
+              </p>
+            </section>
+          ) : null}
+
           <section className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 text-xs leading-6 text-blue-900">
             <strong className="font-semibold">当前口径：</strong>
-            六件基础装备按面板值与宝石汇总；戒指、项链为全等级赛年神装，只计算装备属性、百炼与副属性。
+            六件基础装备按面板值与宝石汇总；戒指、项链为全等级赛年神装，计算装备属性、百炼、副属性和已收录面板特效。
           </section>
         </aside>
 

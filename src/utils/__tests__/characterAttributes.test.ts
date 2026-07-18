@@ -111,7 +111,7 @@ describe("角色属性计算", () => {
     expect(effective.advanced.magicalCritical).toBe(3);
   });
 
-  it("应该在固定速度之后应用百分比速度并叠加封印抵抗和亲和", () => {
+  it("应该在固定速度之后应用百分比速度并叠加闪避、封印抵抗和亲和", () => {
     const calculated = calculateCharacterAttributes(
       EMPTY_CHARACTER_ALLOCATION
     );
@@ -119,12 +119,14 @@ describe("角色属性计算", () => {
       ...createEmptyCharacterAttributeBonuses(),
       speed: 10,
       speedPercent: 2,
+      dodgeRate: 3,
       sealResistance: 4,
       fireAffinity: 2,
     };
     const effective = applyCharacterAttributeBonuses(calculated, bonuses);
 
     expect(effective.derived.speed).toBe(147.49);
+    expect(effective.advanced.dodgeRate).toBe(8);
     expect(effective.advanced.sealResistance).toBe(6);
     expect(effective.affinity).toEqual({
       fireAffinity: 2,
