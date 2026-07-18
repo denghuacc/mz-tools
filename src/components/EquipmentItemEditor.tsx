@@ -1,4 +1,7 @@
-import type { EquipmentItem } from "../utils/equipmentAttributes";
+import type {
+  EquipmentItem,
+  EquipmentSet,
+} from "../utils/equipmentAttributes";
 import { isSeasonEquipmentSlot } from "../utils/equipmentAttributes";
 import EquipmentAttributesSection from "./equipment/EquipmentAttributeSections";
 import {
@@ -12,10 +15,17 @@ import {
 
 type EquipmentItemEditorProps = {
   item: EquipmentItem;
+  equipment: EquipmentSet;
+  characterLevel: number;
   onChange: (item: EquipmentItem) => void;
 };
 
-const EquipmentItemEditor = ({ item, onChange }: EquipmentItemEditorProps) => {
+const EquipmentItemEditor = ({
+  item,
+  equipment,
+  characterLevel,
+  onChange,
+}: EquipmentItemEditorProps) => {
   const sectionProps = { item, onChange };
 
   return (
@@ -26,7 +36,11 @@ const EquipmentItemEditor = ({ item, onChange }: EquipmentItemEditorProps) => {
       {isSeasonEquipmentSlot(item.slot) ? (
         <SeasonEquipmentEffectSection {...sectionProps} />
       ) : (
-        <StandardEquipmentSections {...sectionProps} />
+        <StandardEquipmentSections
+          {...sectionProps}
+          equipment={equipment}
+          characterLevel={characterLevel}
+        />
       )}
     </div>
   );

@@ -1,7 +1,9 @@
 export const CHARACTER_ATTRIBUTES_STORAGE_KEY =
   "mz-tools.character-attributes.v1";
-export const EQUIPMENT_ATTRIBUTES_STORAGE_KEY =
+export const LEGACY_EQUIPMENT_ATTRIBUTES_STORAGE_KEY =
   "mz-tools.equipment-attributes.v1";
+export const EQUIPMENT_ATTRIBUTES_STORAGE_KEY =
+  "mz-tools.equipment-attributes.v2";
 
 /** 读取并校验计算器状态；缓存损坏或存储不可用时回退默认值。 */
 export const loadCalculatorState = <T>(

@@ -4,23 +4,27 @@ import EquipmentItemEditor from "./EquipmentItemEditor";
 import EditIconButton from "./EditIconButton";
 import {
   EQUIPMENT_ATTRIBUTE_LABELS,
+  EQUIPMENT_GEM_CONFIG,
   EQUIPMENT_SLOTS,
   EQUIPMENT_SLOT_LABELS,
+  calculateEquipmentGemBonus,
   calculateEquipmentItemAttributes,
   calculateEquipmentSummary,
+  clampEquipmentGemLevels,
+  getGemLevelLimit,
   getEquipmentEffectLabels,
   isSeasonEquipmentSlot,
 } from "../utils/equipmentAttributes";
 import type {
   EquipmentAttribute,
+  EquipmentCalculatorState,
   EquipmentItem,
-  EquipmentSet,
   EquipmentSlot,
 } from "../utils/equipmentAttributes";
 
 type EquipmentCalculatorProps = {
-  equipment: EquipmentSet;
-  onChange: (equipment: EquipmentSet) => void;
+  state: EquipmentCalculatorState;
+  onChange: (state: EquipmentCalculatorState) => void;
 };
 
 const SUMMARY_GROUPS: readonly {
@@ -72,18 +76,46 @@ const formatValue = (value: number, attribute: EquipmentAttribute) =>
   `${value > 0 ? "+" : ""}${value}${attribute.endsWith("Percent") ? "%" : ""}`;
 
 const EquipmentCalculator = ({
-  equipment,
+  state,
   onChange,
 }: EquipmentCalculatorProps) => {
+  const { characterLevel, equipment } = state;
   const [activeSlot, setActiveSlot] = useState<EquipmentSlot | null>(null);
+  const [characterLevelInput, setCharacterLevelInput] = useState(
+    String(characterLevel)
+  );
   const closeEditor = useCallback(() => setActiveSlot(null), []);
   const summary = useMemo(
-    () => calculateEquipmentSummary(equipment),
-    [equipment]
+    () => calculateEquipmentSummary(equipment, characterLevel),
+    [characterLevel, equipment]
   );
   const activeItem = activeSlot ? equipment[activeSlot] : null;
   const updateItem = (item: EquipmentItem) => {
-    onChange({ ...equipment, [item.slot]: item });
+    onChange({
+      ...state,
+      equipment: { ...equipment, [item.slot]: item },
+    });
+  };
+  const updateCharacterLevel = (value: number) => {
+    const nextCharacterLevel = Math.max(1, Math.floor(value));
+    setCharacterLevelInput(String(nextCharacterLevel));
+    onChange({
+      characterLevel: nextCharacterLevel,
+      equipment: clampEquipmentGemLevels(equipment, nextCharacterLevel),
+    });
+  };
+  const handleCharacterLevelInput = (value: string) => {
+    setCharacterLevelInput(value);
+  };
+  const commitCharacterLevelInput = () => {
+    const nextValue = Number(characterLevelInput);
+
+    if (Number.isInteger(nextValue) && nextValue >= 1) {
+      updateCharacterLevel(nextValue);
+      return;
+    }
+
+    setCharacterLevelInput(String(characterLevel));
   };
 
   return (
@@ -103,6 +135,35 @@ const EquipmentCalculator = ({
               </span>
             </div>
 
+            <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/60 p-3">
+              <div className="flex items-end gap-3">
+                <label className="min-w-0 flex-1">
+                  <span className="text-xs font-medium text-slate-600">角色等级</span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    aria-label="角色等级"
+                    className="mt-1.5 w-full rounded-lg border border-blue-100 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    value={characterLevelInput}
+                    onChange={(event) =>
+                      handleCharacterLevelInput(event.target.value)
+                    }
+                    onBlur={commitCharacterLevelInput}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") event.currentTarget.blur();
+                    }}
+                  />
+                </label>
+                <span className="mb-2 shrink-0 text-xs font-medium text-blue-700">
+                  宝石上限 {getGemLevelLimit(characterLevel)} 级
+                </span>
+              </div>
+              <p className="mt-2 text-[11px] leading-4 text-slate-500">
+                105 级前为等级整除 10 后 +2，105 级起 +3。
+              </p>
+            </div>
+
             <div className="mt-4 space-y-4">
               {SUMMARY_GROUPS.map((group) => {
                 const attributes = group.attributes.filter(
@@ -116,22 +177,33 @@ const EquipmentCalculator = ({
                     </h3>
                     {attributes.length > 0 ? (
                       <div className="mt-2 grid grid-cols-2 gap-2">
-                        {attributes.map((attribute) => (
-                          <div
-                            key={attribute}
-                            className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2"
-                          >
-                            <span className="text-xs text-slate-600">
-                              {EQUIPMENT_ATTRIBUTE_LABELS[attribute] ?? "速度"}
-                            </span>
-                            <strong className="text-xs text-blue-700">
-                              {formatValue(
-                                summary.allAttributes[attribute] ?? 0,
-                                attribute
-                              )}
-                            </strong>
-                          </div>
-                        ))}
+                        {attributes.map((attribute) => {
+                          const gemValue = summary.gemAttributes[attribute] ?? 0;
+
+                          return (
+                            <div
+                              key={attribute}
+                              className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2"
+                            >
+                              <span className="shrink-0 text-xs text-slate-600">
+                                {EQUIPMENT_ATTRIBUTE_LABELS[attribute] ?? "速度"}
+                              </span>
+                              <span className="flex min-w-0 flex-1 items-baseline justify-end gap-2 text-right">
+                                {gemValue !== 0 ? (
+                                  <span className="whitespace-nowrap text-[10px] text-violet-600">
+                                    宝石 {formatValue(gemValue, attribute)}
+                                  </span>
+                                ) : null}
+                                <strong className="shrink-0 whitespace-nowrap text-xs font-semibold text-slate-900">
+                                  {formatValue(
+                                    summary.allAttributes[attribute] ?? 0,
+                                    attribute
+                                  )}
+                                </strong>
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     ) : (
                       <p className="mt-2 text-xs text-slate-400">暂无属性</p>
@@ -144,7 +216,7 @@ const EquipmentCalculator = ({
 
           <section className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 text-xs leading-6 text-blue-900">
             <strong className="font-semibold">当前口径：</strong>
-            六件基础装备按面板值汇总；戒指、项链为全等级赛年神装，只计算装备属性、百炼与副属性。
+            六件基础装备按面板值与宝石汇总；戒指、项链为全等级赛年神装，只计算装备属性、百炼与副属性。
           </section>
         </aside>
 
@@ -163,11 +235,15 @@ const EquipmentCalculator = ({
             {EQUIPMENT_SLOTS.map((slot, index) => {
               const item = equipment[slot];
               const isSeasonEquipment = isSeasonEquipmentSlot(slot);
-              const itemAttributes = calculateEquipmentItemAttributes(item);
+              const itemAttributes = calculateEquipmentItemAttributes(
+                item,
+                characterLevel
+              );
               const visibleAttributes = Object.entries(itemAttributes).filter(
                 ([, value]) => value !== 0
               ) as [EquipmentAttribute, number][];
               const effects = getEquipmentEffectLabels(item);
+              const gemBonus = calculateEquipmentGemBonus(item, characterLevel);
 
               return (
                 <article
@@ -218,15 +294,25 @@ const EquipmentCalculator = ({
                   </div>
 
                   <div className="mt-3 flex min-h-6 flex-wrap gap-1.5 border-t border-slate-100 pt-3">
-                    {effects.length > 0 ? (
-                      effects.map((effect) => (
-                        <span
-                          key={effect}
-                          className="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-700"
-                        >
-                          {effect}
-                        </span>
-                      ))
+                    {gemBonus || effects.length > 0 ? (
+                      <>
+                        {gemBonus ? (
+                          <span className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-medium text-blue-700">
+                            {EQUIPMENT_GEM_CONFIG[gemBonus.type].label} · {gemBonus.breakthrough
+                              ? `${gemBonus.levelLimit}+1`
+                              : gemBonus.level}
+                            级
+                          </span>
+                        ) : null}
+                        {effects.map((effect) => (
+                          <span
+                            key={effect}
+                            className="rounded-full bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-700"
+                          >
+                            {effect}
+                          </span>
+                        ))}
+                      </>
                     ) : (
                       <span className="text-[11px] text-slate-400">无特效 / 特技</span>
                     )}
@@ -243,7 +329,12 @@ const EquipmentCalculator = ({
           title={EQUIPMENT_SLOT_LABELS[activeItem.slot]}
           onClose={closeEditor}
         >
-          <EquipmentItemEditor item={activeItem} onChange={updateItem} />
+          <EquipmentItemEditor
+            item={activeItem}
+            equipment={equipment}
+            characterLevel={characterLevel}
+            onChange={updateItem}
+          />
         </EditorDialog>
       )}
     </div>

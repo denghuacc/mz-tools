@@ -1,10 +1,137 @@
 import {
+  EQUIPMENT_GEM_CONFIG,
+  EQUIPMENT_GEM_SLOT_CONFIG,
+  EQUIPMENT_SLOTS,
+  calculateEquipmentGemBonus,
   calculateEquipmentItemAttributes,
   calculateEquipmentSummary,
+  createInitialEquipmentCalculatorState,
   createInitialEquipmentSet,
+  getGemLevelLimit,
+  normalizeEquipmentCalculatorState,
 } from "../equipmentAttributes";
+import type { EquipmentGemType } from "../equipmentAttributes";
 
 describe("角色装备属性汇总", () => {
+  it("应该按角色等级计算宝石等级上限", () => {
+    expect(getGemLevelLimit(69)).toBe(8);
+    expect(getGemLevelLimit(104)).toBe(12);
+    expect(getGemLevelLimit(105)).toBe(13);
+    expect(getGemLevelLimit(109)).toBe(13);
+  });
+
+  it("应该配置八种宝石的初始属性且每种仅允许两个部位", () => {
+    expect(EQUIPMENT_GEM_CONFIG).toEqual({
+      diamond: { label: "金刚石", attribute: "physicalAttack", baseValue: 12 },
+      aquamarine: { label: "海蓝石", attribute: "magicAttack", baseValue: 9 },
+      jade: { label: "翡翠", attribute: "healingPower", baseValue: 6 },
+      malachite: {
+        label: "孔雀石",
+        attribute: "physicalDefense",
+        baseValue: 18,
+      },
+      catsEye: { label: "猫眼石", attribute: "magicDefense", baseValue: 12 },
+      agate: { label: "玛瑙", attribute: "health", baseValue: 75 },
+      pearl: { label: "珍珠", attribute: "speed", baseValue: 8 },
+      amethyst: { label: "紫水晶", attribute: "mana", baseValue: 90 },
+    });
+    expect(EQUIPMENT_GEM_SLOT_CONFIG).toEqual({
+      weapon: ["diamond", "aquamarine", "jade", "amethyst"],
+      armor: ["jade", "malachite", "catsEye", "agate"],
+      headgear: ["diamond", "malachite"],
+      lowerGarment: ["agate", "pearl"],
+      accessory: ["aquamarine", "catsEye"],
+      shoes: ["pearl", "amethyst"],
+      ring: [],
+      necklace: [],
+    });
+
+    for (const gemType of Object.keys(
+      EQUIPMENT_GEM_CONFIG
+    ) as EquipmentGemType[]) {
+      const allowedSlots = EQUIPMENT_SLOTS.filter((slot) =>
+        EQUIPMENT_GEM_SLOT_CONFIG[slot].includes(gemType)
+      );
+      expect(allowedSlots).toHaveLength(2);
+    }
+  });
+
+  it("应该按突破后的额外一级累加属性并计入成长的 20% 加成", () => {
+    const equipment = createInitialEquipmentSet();
+    equipment.weapon = {
+      ...equipment.weapon,
+      gem: { type: "diamond", level: 8, breakthrough: true },
+      growth: true,
+    };
+
+    expect(calculateEquipmentGemBonus(equipment.weapon, 69)).toEqual({
+      type: "diamond",
+      level: 9,
+      levelLimit: 8,
+      breakthrough: true,
+      attribute: "physicalAttack",
+      value: 129.6,
+    });
+    const summary = calculateEquipmentSummary(equipment, 69);
+    expect(summary.allAttributes.physicalAttack).toBe(885.6);
+    expect(summary.gemAttributes).toEqual({ physicalAttack: 129.6 });
+  });
+
+  it("应该在计算和恢复时把宝石等级限制到当前角色上限", () => {
+    const state = createInitialEquipmentCalculatorState();
+    state.characterLevel = 104;
+    state.equipment.weapon = {
+      ...state.equipment.weapon,
+      gem: { type: "diamond", level: 13, breakthrough: false },
+    };
+
+    expect(calculateEquipmentGemBonus(state.equipment.weapon, 104)?.level).toBe(12);
+    expect(normalizeEquipmentCalculatorState(state)?.equipment.weapon.gem).toEqual({
+      type: "diamond",
+      level: 12,
+      breakthrough: false,
+    });
+
+    state.equipment.weapon = {
+      ...state.equipment.weapon,
+      gem: { type: "pearl", level: 8, breakthrough: false },
+    };
+    expect(normalizeEquipmentCalculatorState(state)?.equipment.weapon.gem).toBeNull();
+  });
+
+  it("角色等级提高后应该把已覆盖的突破等级转为普通等级", () => {
+    const state = createInitialEquipmentCalculatorState();
+    state.characterLevel = 70;
+    state.equipment.weapon = {
+      ...state.equipment.weapon,
+      gem: { type: "diamond", level: 8, breakthrough: true },
+    };
+
+    expect(normalizeEquipmentCalculatorState(state)?.equipment.weapon.gem).toEqual({
+      type: "diamond",
+      level: 9,
+      breakthrough: false,
+    });
+  });
+
+  it("应该兼容尚未保存突破字段的宝石缓存", () => {
+    const state = createInitialEquipmentCalculatorState();
+    const storedState = {
+      ...state,
+      equipment: {
+        ...state.equipment,
+        weapon: {
+          ...state.equipment.weapon,
+          gem: { type: "diamond", level: 8 },
+        },
+      },
+    };
+
+    expect(
+      normalizeEquipmentCalculatorState(storedState)?.equipment.weapon.gem
+    ).toEqual({ type: "diamond", level: 8, breakthrough: false });
+  });
+
   it("应该正确区分上衣和下装的装备属性", () => {
     const equipment = createInitialEquipmentSet();
 

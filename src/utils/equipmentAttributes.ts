@@ -52,6 +52,87 @@ export type EquipmentAttribute =
   | CharacterBonusAttribute
   | EquipmentOnlyAttribute;
 
+export const EQUIPMENT_GEM_CONFIG = {
+  diamond: {
+    label: "金刚石",
+    attribute: "physicalAttack",
+    baseValue: 12,
+  },
+  aquamarine: {
+    label: "海蓝石",
+    attribute: "magicAttack",
+    baseValue: 9,
+  },
+  jade: {
+    label: "翡翠",
+    attribute: "healingPower",
+    baseValue: 6,
+  },
+  malachite: {
+    label: "孔雀石",
+    attribute: "physicalDefense",
+    baseValue: 18,
+  },
+  catsEye: {
+    label: "猫眼石",
+    attribute: "magicDefense",
+    baseValue: 12,
+  },
+  agate: {
+    label: "玛瑙",
+    attribute: "health",
+    baseValue: 75,
+  },
+  pearl: {
+    label: "珍珠",
+    attribute: "speed",
+    baseValue: 8,
+  },
+  amethyst: {
+    label: "紫水晶",
+    attribute: "mana",
+    baseValue: 90,
+  },
+} as const satisfies Record<
+  string,
+  { label: string; attribute: EquipmentAttribute; baseValue: number }
+>;
+
+export type EquipmentGemType = keyof typeof EQUIPMENT_GEM_CONFIG;
+
+export type EquipmentGem = {
+  type: EquipmentGemType;
+  level: number;
+  breakthrough: boolean;
+};
+
+export const EQUIPMENT_GEM_SLOT_CONFIG: Record<
+  EquipmentSlot,
+  readonly EquipmentGemType[]
+> = {
+  weapon: ["diamond", "aquamarine", "jade", "amethyst"],
+  armor: ["jade", "malachite", "catsEye", "agate"],
+  headgear: ["diamond", "malachite"],
+  lowerGarment: ["agate", "pearl"],
+  accessory: ["aquamarine", "catsEye"],
+  shoes: ["pearl", "amethyst"],
+  ring: [],
+  necklace: [],
+};
+
+export const DEFAULT_EQUIPMENT_CHARACTER_LEVEL = 69;
+export const MAX_GEM_EQUIPMENT_COUNT = 2;
+
+/** 宝石等级上限在 105 级时从角色等级整除结果 +2 切换为 +3。 */
+export const getGemLevelLimit = (characterLevel: number): number => {
+  const normalizedLevel = Number.isFinite(characterLevel)
+    ? Math.max(1, Math.floor(characterLevel))
+    : DEFAULT_EQUIPMENT_CHARACTER_LEVEL;
+  return (
+    Math.floor(normalizedLevel / 10) + (normalizedLevel >= 105 ? 3 : 2)
+  );
+};
+
 export const EQUIPMENT_PRIMARY_ATTRIBUTES = [
   "constitution",
   "spirit",
@@ -82,7 +163,7 @@ export const EQUIPMENT_ATTRIBUTE_OPTIONS = [
   { attribute: "physicalDefense", label: "物防" },
   { attribute: "magicDefense", label: "法防" },
   { attribute: "speed", label: "速度" },
-  { attribute: "healingPower", label: "治疗" },
+  { attribute: "healingPower", label: "治疗强度" },
   { attribute: "physicalDamageResult", label: "物伤结果" },
   { attribute: "magicalDamageResult", label: "法伤结果" },
   { attribute: "physicalDamageReduction", label: "物伤减免" },
@@ -202,6 +283,7 @@ export type EquipmentItem = {
   slot: EquipmentSlot;
   enabled: boolean;
   level: number;
+  gem: EquipmentGem | null;
   baseAttributes: EquipmentAttributeValues;
   castingAttributes: EquipmentAttributeValues;
   additionalPrimaryAttributes: readonly EquipmentPrimaryAttributeLine[];
@@ -252,6 +334,47 @@ export const getEffectiveBaseEquipmentEffectIds = (
   item: EquipmentItem
 ): BaseEquipmentEffectId[] =>
   getBaseEquipmentEffectIds(item).slice(0, BASE_EQUIPMENT_EFFECT_LIMIT);
+
+export type EquipmentGemBonus = {
+  type: EquipmentGemType;
+  level: number;
+  levelLimit: number;
+  breakthrough: boolean;
+  attribute: EquipmentAttribute;
+  value: number;
+};
+
+/** 计算单件装备的有效宝石属性；成长特效生效时额外增加 20%。 */
+export const calculateEquipmentGemBonus = (
+  item: EquipmentItem,
+  characterLevel = DEFAULT_EQUIPMENT_CHARACTER_LEVEL
+): EquipmentGemBonus | null => {
+  if (!item.gem || isSeasonEquipmentSlot(item.slot)) return null;
+  if (!EQUIPMENT_GEM_SLOT_CONFIG[item.slot].includes(item.gem.type)) return null;
+
+  const config = EQUIPMENT_GEM_CONFIG[item.gem.type];
+  const levelLimit = getGemLevelLimit(characterLevel);
+  const storedLevel = Math.max(1, Math.floor(item.gem.level));
+  const level = Math.min(
+    storedLevel + (item.gem.breakthrough ? 1 : 0),
+    levelLimit + (item.gem.breakthrough ? 1 : 0)
+  );
+  const breakthrough = item.gem.breakthrough && level > levelLimit;
+  const growthMultiplier = getEffectiveBaseEquipmentEffectIds(item).includes(
+    "growth"
+  )
+    ? 1.2
+    : 1;
+
+  return {
+    type: item.gem.type,
+    level,
+    levelLimit,
+    breakthrough,
+    attribute: config.attribute,
+    value: Number((config.baseValue * level * growthMultiplier).toFixed(10)),
+  };
+};
 
 export const canEnableBaseEquipmentEffect = (
   item: EquipmentItem,
@@ -307,6 +430,7 @@ const createItem = (
   slot,
   enabled: true,
   level: 60,
+  gem: null,
   baseAttributes: {},
   castingAttributes: {},
   additionalPrimaryAttributes: [{ attribute: "constitution", value: 0 }],
@@ -410,6 +534,9 @@ const STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET = new Set<string>(
 const EQUIPMENT_AFFINITY_ATTRIBUTE_SET = new Set<string>(
   EQUIPMENT_AFFINITY_EFFECT_OPTIONS.map(({ attribute }) => attribute)
 );
+const EQUIPMENT_GEM_TYPE_SET = new Set<string>(
+  Object.keys(EQUIPMENT_GEM_CONFIG)
+);
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
@@ -428,6 +555,31 @@ const normalizeEquipmentAttributeValues = (
         Number.isFinite(storedValue)
     )
   ) as EquipmentAttributeValues;
+};
+
+const normalizeEquipmentGem = (
+  value: unknown,
+  slot: EquipmentSlot,
+  fallback: EquipmentGem | null
+): EquipmentGem | null => {
+  if (value === null) return null;
+  if (
+    !isRecord(value) ||
+    typeof value.type !== "string" ||
+    !EQUIPMENT_GEM_TYPE_SET.has(value.type) ||
+    !EQUIPMENT_GEM_SLOT_CONFIG[slot].includes(value.type as EquipmentGemType) ||
+    typeof value.level !== "number" ||
+    !Number.isInteger(value.level) ||
+    value.level < 1
+  ) {
+    return fallback;
+  }
+
+  return {
+    type: value.type as EquipmentGemType,
+    level: value.level,
+    breakthrough: value.breakthrough === true,
+  };
 };
 
 const normalizeEquipmentAttributeLine = <Attribute extends EquipmentAttribute>(
@@ -536,6 +688,7 @@ const normalizeEquipmentItem = (
       value.level >= 0
         ? value.level
         : fallback.level,
+    gem: normalizeEquipmentGem(value.gem, slot, fallback.gem),
     baseAttributes: normalizeEquipmentAttributeValues(
       value.baseAttributes,
       fallback.baseAttributes
@@ -590,17 +743,96 @@ export const normalizeEquipmentSet = (value: unknown): EquipmentSet | null => {
   if (!isRecord(value)) return null;
 
   const fallback = createInitialEquipmentSet();
-  return Object.fromEntries(
+  const equipment = Object.fromEntries(
     EQUIPMENT_SLOTS.map((slot) => [
       slot,
       normalizeEquipmentItem(value[slot], slot, fallback[slot]),
     ])
   ) as EquipmentSet;
+
+  const gemUseCounts = new Map<EquipmentGemType, number>();
+  for (const slot of EQUIPMENT_SLOTS) {
+    const gem = equipment[slot].gem;
+    if (!gem) continue;
+
+    const useCount = gemUseCounts.get(gem.type) ?? 0;
+    if (useCount >= MAX_GEM_EQUIPMENT_COUNT) {
+      equipment[slot] = { ...equipment[slot], gem: null };
+      continue;
+    }
+    gemUseCounts.set(gem.type, useCount + 1);
+  }
+
+  return equipment;
+};
+
+export type EquipmentCalculatorState = {
+  characterLevel: number;
+  equipment: EquipmentSet;
+};
+
+export const createInitialEquipmentCalculatorState =
+  (): EquipmentCalculatorState => ({
+    characterLevel: DEFAULT_EQUIPMENT_CHARACTER_LEVEL,
+    equipment: createInitialEquipmentSet(),
+  });
+
+/** 同步宝石与角色等级；已突破的额外一级会在新上限覆盖后转为普通等级。 */
+export const clampEquipmentGemLevels = (
+  equipment: EquipmentSet,
+  characterLevel: number
+): EquipmentSet => {
+  const levelLimit = getGemLevelLimit(characterLevel);
+
+  return Object.fromEntries(
+    EQUIPMENT_SLOTS.map((slot) => {
+      const item = equipment[slot];
+      if (!item.gem) return [slot, item];
+
+      const storedLevel = Math.max(1, Math.floor(item.gem.level));
+      const effectiveLevel = Math.min(
+        storedLevel + (item.gem.breakthrough ? 1 : 0),
+        levelLimit + (item.gem.breakthrough ? 1 : 0)
+      );
+      const breakthrough =
+        item.gem.breakthrough && effectiveLevel > levelLimit;
+      const level = breakthrough ? levelLimit : effectiveLevel;
+
+      return [
+        slot,
+        level !== item.gem.level || breakthrough !== item.gem.breakthrough
+          ? { ...item, gem: { ...item.gem, level, breakthrough } }
+          : item,
+      ];
+    })
+  ) as EquipmentSet;
+};
+
+export const normalizeEquipmentCalculatorState = (
+  value: unknown
+): EquipmentCalculatorState | null => {
+  if (!isRecord(value)) return null;
+
+  const equipment = normalizeEquipmentSet(value.equipment);
+  if (!equipment) return null;
+
+  const characterLevel =
+    typeof value.characterLevel === "number" &&
+    Number.isInteger(value.characterLevel) &&
+    value.characterLevel >= 1
+      ? value.characterLevel
+      : DEFAULT_EQUIPMENT_CHARACTER_LEVEL;
+
+  return {
+    characterLevel,
+    equipment: clampEquipmentGemLevels(equipment, characterLevel),
+  };
 };
 
 export type EquipmentSummary = {
   activeItemCount: number;
   allAttributes: EquipmentAttributeValues;
+  gemAttributes: EquipmentAttributeValues;
   characterBonuses: CharacterAttributeBonuses;
 };
 
@@ -618,7 +850,8 @@ const addValues = (
 
 /** 汇总单件装备，并执行当前已知的固定值与百分比特效。 */
 export const calculateEquipmentItemAttributes = (
-  item: EquipmentItem
+  item: EquipmentItem,
+  characterLevel = DEFAULT_EQUIPMENT_CHARACTER_LEVEL
 ): EquipmentAttributeValues => {
   if (!item.enabled) return {};
 
@@ -645,6 +878,11 @@ export const calculateEquipmentItemAttributes = (
 
   if (!isSeasonEquipment) {
     addValues(attributes, item.castingAttributes);
+  }
+
+  const gemBonus = calculateEquipmentGemBonus(item, characterLevel);
+  if (gemBonus) {
+    addValues(attributes, { [gemBonus.attribute]: gemBonus.value });
   }
 
   const selectedPrimaryAttributes = new Set<PrimaryAttribute>();
@@ -727,16 +965,27 @@ export const calculateEquipmentItemAttributes = (
 
 /** 将八件装备汇总为装备总览，并提取角色属性计算器能够识别的字段。 */
 export const calculateEquipmentSummary = (
-  equipment: EquipmentSet
+  equipment: EquipmentSet,
+  characterLevel = DEFAULT_EQUIPMENT_CHARACTER_LEVEL
 ): EquipmentSummary => {
   const allAttributes: EquipmentAttributeValues = {};
+  const gemAttributes: EquipmentAttributeValues = {};
   let activeItemCount = 0;
 
   for (const slot of EQUIPMENT_SLOTS) {
     const item = equipment[slot];
 
-    if (item.enabled) activeItemCount += 1;
-    addValues(allAttributes, calculateEquipmentItemAttributes(item));
+    if (item.enabled) {
+      activeItemCount += 1;
+      const gemBonus = calculateEquipmentGemBonus(item, characterLevel);
+      if (gemBonus) {
+        addValues(gemAttributes, { [gemBonus.attribute]: gemBonus.value });
+      }
+    }
+    addValues(
+      allAttributes,
+      calculateEquipmentItemAttributes(item, characterLevel)
+    );
   }
 
   const characterBonuses = createEmptyCharacterAttributeBonuses();
@@ -753,5 +1002,5 @@ export const calculateEquipmentSummary = (
     }
   }
 
-  return { activeItemCount, allAttributes, characterBonuses };
+  return { activeItemCount, allAttributes, gemAttributes, characterBonuses };
 };

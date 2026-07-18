@@ -5,7 +5,14 @@ import {
   loadPreferences,
   updatePreferences,
 } from "../utils/preferences";
-import { EQUIPMENT_ATTRIBUTES_STORAGE_KEY } from "../utils/calculatorStorage";
+import {
+  EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
+  LEGACY_EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
+} from "../utils/calculatorStorage";
+import {
+  EQUIPMENT_SLOTS,
+  createInitialEquipmentSet,
+} from "../utils/equipmentAttributes";
 
 describe("App 组件", () => {
   it("应该渲染主应用", () => {
@@ -352,13 +359,33 @@ describe("App 组件", () => {
     expect(screen.getByRole("button", { name: "清空收藏" })).toBeDisabled();
   });
 
-  it("应该保存八件装备并在重新加载应用后恢复", async () => {
+  it("应该保存装备、角色等级和宝石并在重新加载应用后恢复", async () => {
     const user = userEvent.setup();
     const { unmount } = render(<App />);
 
     await user.click(screen.getByRole("tab", { name: "角色装备" }));
+    const characterLevelInput = screen.getByRole("spinbutton", {
+      name: "角色等级",
+    });
+    await user.clear(characterLevelInput);
+    await user.type(characterLevelInput, "105");
+    await user.tab();
+
     await user.click(screen.getByRole("button", { name: "编辑武器" }));
     const weaponDialog = screen.getByRole("dialog", { name: "编辑武器" });
+    await user.selectOptions(
+      within(weaponDialog).getByRole("combobox", { name: "武器：宝石类型" }),
+      "diamond"
+    );
+    await user.selectOptions(
+      within(weaponDialog).getByRole("combobox", { name: "武器：宝石等级" }),
+      "13"
+    );
+    await user.click(
+      within(weaponDialog).getByRole("checkbox", {
+        name: /突破 · 额外提升 1 级/,
+      })
+    );
     const physicalAttackInput = within(weaponDialog).getByRole("spinbutton", {
       name: "武器：物攻",
     });
@@ -366,11 +393,17 @@ describe("App 组件", () => {
     await user.type(physicalAttackInput, "700");
 
     await waitFor(() => {
-      const stored = JSON.parse(
+      const storedState = JSON.parse(
         window.localStorage.getItem(EQUIPMENT_ATTRIBUTES_STORAGE_KEY) ?? "{}"
       );
-      expect(stored.weapon.baseAttributes.physicalAttack).toBe(700);
-      expect(Object.keys(stored).sort()).toEqual(
+      expect(storedState.characterLevel).toBe(105);
+      expect(storedState.equipment.weapon.baseAttributes.physicalAttack).toBe(700);
+      expect(storedState.equipment.weapon.gem).toEqual({
+        type: "diamond",
+        level: 13,
+        breakthrough: true,
+      });
+      expect(Object.keys(storedState.equipment).sort()).toEqual(
         [
           "weapon",
           "armor",
@@ -391,12 +424,65 @@ describe("App 组件", () => {
       "aria-selected",
       "true"
     );
+    expect(screen.getByRole("spinbutton", { name: "角色等级" })).toHaveValue(105);
     await user.click(screen.getByRole("button", { name: "编辑武器" }));
+    const restoredDialog = screen.getByRole("dialog", { name: "编辑武器" });
+    expect(
+      within(restoredDialog).getByRole("spinbutton", { name: "武器：物攻" })
+    ).toHaveValue(700);
+    expect(
+      within(restoredDialog).getByRole("combobox", { name: "武器：宝石类型" })
+    ).toHaveValue("diamond");
+    expect(
+      within(restoredDialog).getByRole("combobox", { name: "武器：宝石等级" })
+    ).toHaveValue("13");
+    expect(
+      within(restoredDialog).getByRole("checkbox", {
+        name: /突破 · 额外提升 1 级/,
+      })
+    ).toBeChecked();
+  });
+
+  it("应该把 v1 装备缓存迁移到包含角色等级的 v2 状态", async () => {
+    const legacyEquipment = createInitialEquipmentSet();
+    legacyEquipment.weapon = {
+      ...legacyEquipment.weapon,
+      baseAttributes: {
+        ...legacyEquipment.weapon.baseAttributes,
+        physicalAttack: 701,
+      },
+    };
+    const legacyStoredEquipment = Object.fromEntries(
+      EQUIPMENT_SLOTS.map((slot) => [
+        slot,
+        { ...legacyEquipment[slot], gem: undefined },
+      ])
+    );
+    window.localStorage.setItem(
+      LEGACY_EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
+      JSON.stringify(legacyStoredEquipment)
+    );
+    updatePreferences({ activeTool: "equipment" });
+
+    render(<App />);
+
+    expect(screen.getByRole("spinbutton", { name: "角色等级" })).toHaveValue(69);
+    await userEvent.setup().click(
+      screen.getByRole("button", { name: "编辑武器" })
+    );
     expect(
       within(screen.getByRole("dialog", { name: "编辑武器" })).getByRole(
         "spinbutton",
         { name: "武器：物攻" }
       )
-    ).toHaveValue(700);
+    ).toHaveValue(701);
+
+    await waitFor(() => {
+      const migratedState = JSON.parse(
+        window.localStorage.getItem(EQUIPMENT_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+      );
+      expect(migratedState.characterLevel).toBe(69);
+      expect(migratedState.equipment.weapon.baseAttributes.physicalAttack).toBe(701);
+    });
   });
 });

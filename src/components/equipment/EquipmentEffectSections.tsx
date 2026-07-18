@@ -5,16 +5,24 @@ import {
   EQUIPMENT_AFFINITY_EFFECT_VALUE,
   EQUIPMENT_ATTRIBUTE_LABELS,
   EQUIPMENT_BASE_ATTRIBUTE_CONFIG,
+  EQUIPMENT_GEM_CONFIG,
+  EQUIPMENT_GEM_SLOT_CONFIG,
   EQUIPMENT_PRIMARY_ATTRIBUTES,
+  EQUIPMENT_SLOTS,
   EQUIPMENT_SLOT_LABELS,
+  MAX_GEM_EQUIPMENT_COUNT,
+  calculateEquipmentGemBonus,
   canEnableBaseEquipmentEffect,
   getBaseEquipmentEffectIds,
+  getGemLevelLimit,
 } from "../../utils/equipmentAttributes";
 import type {
   BaseEquipmentEffectId,
   EquipmentAffinityEffectAttribute,
+  EquipmentGemType,
   EquipmentItem,
   EquipmentPrimaryAttributeLine,
+  EquipmentSet,
   SeasonEffectLevel,
 } from "../../utils/equipmentAttributes";
 import {
@@ -31,16 +39,136 @@ type EquipmentSectionProps = {
   onChange: (item: EquipmentItem) => void;
 };
 
-const EquipmentGemSection = () => (
-  <EquipmentEditorSection
-    title="宝石"
-    description="宝石类型、等级和成长的 20% 加成将在后续规则明确后接入。"
-  >
-    <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-xs text-slate-400">
-      暂未开放录入
-    </div>
-  </EquipmentEditorSection>
-);
+type EquipmentGemSectionProps = EquipmentSectionProps & {
+  equipment: EquipmentSet;
+  characterLevel: number;
+};
+
+const EquipmentGemSection = ({
+  item,
+  equipment,
+  characterLevel,
+  onChange,
+}: EquipmentGemSectionProps) => {
+  const levelLimit = getGemLevelLimit(characterLevel);
+  const gemBonus = calculateEquipmentGemBonus(item, characterLevel);
+  const allowedGemTypes = EQUIPMENT_GEM_SLOT_CONFIG[item.slot];
+  const getOtherEquipmentUseCount = (gemType: EquipmentGemType) =>
+    EQUIPMENT_SLOTS.filter(
+      (slot) => slot !== item.slot && equipment[slot].gem?.type === gemType
+    ).length;
+
+  return (
+    <EquipmentEditorSection
+      title="宝石"
+      description={`每件装备只能选择一种部位允许的宝石；同种宝石最多用于 ${MAX_GEM_EQUIPMENT_COUNT} 个部位。`}
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label>
+          <EquipmentFieldLabel>宝石类型</EquipmentFieldLabel>
+          <select
+            aria-label={`${EQUIPMENT_SLOT_LABELS[item.slot]}：宝石类型`}
+            className={equipmentEditorInputClassName}
+            value={item.gem?.type ?? ""}
+            onChange={(event) => {
+              const gemType = event.target.value as EquipmentGemType | "";
+              onChange({
+                ...item,
+                gem: gemType
+                  ? {
+                      type: gemType,
+                      level: Math.min(item.gem?.level ?? 1, levelLimit),
+                      breakthrough: false,
+                    }
+                  : null,
+              });
+            }}
+          >
+            <option value="">未镶嵌</option>
+            {allowedGemTypes.map((gemType) => {
+              const config = EQUIPMENT_GEM_CONFIG[gemType];
+              const disabled =
+                item.gem?.type !== gemType &&
+                getOtherEquipmentUseCount(gemType) >=
+                  MAX_GEM_EQUIPMENT_COUNT;
+
+              return (
+                <option key={gemType} value={gemType} disabled={disabled}>
+                  {config.label} · {EQUIPMENT_ATTRIBUTE_LABELS[config.attribute]} +
+                  {config.baseValue}/级
+                </option>
+              );
+            })}
+          </select>
+        </label>
+
+        <label>
+          <EquipmentFieldLabel>宝石等级</EquipmentFieldLabel>
+          <select
+            aria-label={`${EQUIPMENT_SLOT_LABELS[item.slot]}：宝石等级`}
+            className={equipmentEditorInputClassName}
+            value={item.gem?.level ?? 1}
+            disabled={!item.gem}
+            onChange={(event) =>
+              onChange({
+                ...item,
+                gem: item.gem
+                  ? {
+                      ...item.gem,
+                      level: Number(event.target.value),
+                      breakthrough: false,
+                    }
+                  : null,
+              })
+            }
+          >
+            {Array.from({ length: levelLimit }, (_, index) => index + 1).map(
+              (level) => (
+                <option key={level} value={level}>
+                  {level} 级
+                </option>
+              )
+            )}
+          </select>
+        </label>
+      </div>
+
+      <div className="mt-3">
+        <EquipmentEffectToggle
+          checked={item.gem?.breakthrough ?? false}
+          disabled={!item.gem || item.gem.level !== levelLimit}
+          onChange={(breakthrough) =>
+            onChange({
+              ...item,
+              gem: item.gem ? { ...item.gem, breakthrough } : null,
+            })
+          }
+        >
+          <span>
+            <span className="block">突破 · 额外提升 1 级</span>
+            <span className="mt-0.5 block text-[11px] text-slate-400">
+              达到当前宝石等级上限后可用，突破消耗不计入属性计算。
+            </span>
+          </span>
+        </EquipmentEffectToggle>
+      </div>
+
+      <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs leading-5 text-blue-800">
+        角色 {characterLevel} 级，当前宝石上限 {levelLimit} 级
+        {gemBonus
+          ? `；${EQUIPMENT_GEM_CONFIG[gemBonus.type].label}（${
+              gemBonus.breakthrough
+                ? `${gemBonus.levelLimit}+1`
+                : gemBonus.level
+            } 级）提供${EQUIPMENT_ATTRIBUTE_LABELS[gemBonus.attribute]} +${
+              gemBonus.value
+            }`
+          : "；尚未镶嵌宝石"}
+        。
+      </p>
+    </EquipmentEditorSection>
+  );
+};
 
 const EquipmentCastingSection = ({
   item,
@@ -152,7 +280,7 @@ const EquipmentEffectsSection = ({
   return (
     <EquipmentEditorSection
       title="特效与特技"
-      description="基础装备最多配置两个特效和一个特技；祝福按面板最终值记录，成长待宝石接入。"
+      description="基础装备最多配置两个特效和一个特技；祝福按面板最终值记录，成长增加 20% 宝石属性。"
     >
       <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-blue-50/60 px-3 py-2 text-xs text-blue-800">
         <span>已配置特效</span>
@@ -319,9 +447,17 @@ const EquipmentEffectsSection = ({
   );
 };
 
-export const StandardEquipmentSections = (props: EquipmentSectionProps) => (
+export const StandardEquipmentSections = ({
+  equipment,
+  characterLevel,
+  ...props
+}: EquipmentGemSectionProps) => (
   <>
-    <EquipmentGemSection />
+    <EquipmentGemSection
+      {...props}
+      equipment={equipment}
+      characterLevel={characterLevel}
+    />
     <EquipmentCastingSection {...props} />
     <EquipmentSupportSection {...props} />
     <EquipmentEffectsSection {...props} />

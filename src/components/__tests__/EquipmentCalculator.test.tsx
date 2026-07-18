@@ -2,12 +2,12 @@ import { useState } from "react";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import EquipmentCalculator from "../EquipmentCalculator";
-import { createInitialEquipmentSet } from "../../utils/equipmentAttributes";
+import { createInitialEquipmentCalculatorState } from "../../utils/equipmentAttributes";
 
 const EquipmentCalculatorHarness = () => {
-  const [equipment, setEquipment] = useState(createInitialEquipmentSet);
+  const [state, setState] = useState(createInitialEquipmentCalculatorState);
 
-  return <EquipmentCalculator equipment={equipment} onChange={setEquipment} />;
+  return <EquipmentCalculator state={state} onChange={setState} />;
 };
 
 describe("EquipmentCalculator", () => {
@@ -32,6 +32,104 @@ describe("EquipmentCalculator", () => {
     expect(weaponCard).not.toBeNull();
     expect(weaponCard).toHaveTextContent("力 +33");
     expect(weaponCard).toHaveTextContent("敏 +32");
+  });
+
+  it("应该按装备部位选择一种宝石并把等级属性计入汇总", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    expect(screen.getByRole("spinbutton", { name: "角色等级" })).toHaveValue(69);
+    expect(screen.getByText("宝石上限 8 级")).toBeInTheDocument();
+
+    const weaponCard = screen.getByRole("heading", { name: "武器" })
+      .closest("article");
+    expect(weaponCard).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "编辑武器" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑武器" });
+    const gemType = within(dialog).getByRole("combobox", {
+      name: "武器：宝石类型",
+    });
+    const gemLevel = within(dialog).getByRole("combobox", {
+      name: "武器：宝石等级",
+    });
+    const breakthrough = within(dialog).getByRole("checkbox", {
+      name: /突破 · 额外提升 1 级/,
+    });
+
+    expect(
+      within(gemType).getAllByRole("option").map((option) => option.getAttribute("value"))
+    ).toEqual(["", "diamond", "aquamarine", "jade", "amethyst"]);
+    expect(gemLevel).toBeDisabled();
+    expect(breakthrough).toBeDisabled();
+
+    await user.selectOptions(gemType, "diamond");
+    await user.selectOptions(gemLevel, "8");
+
+    expect(gemLevel).toBeEnabled();
+    expect(breakthrough).toBeEnabled();
+    expect(within(gemLevel).getAllByRole("option")).toHaveLength(8);
+    expect(dialog).toHaveTextContent("金刚石（8 级）提供物攻 +96");
+    expect(weaponCard).toHaveTextContent("物攻 +810");
+    expect(weaponCard).toHaveTextContent("金刚石 · 8级");
+    const equipmentSummary = screen.getByRole("heading", {
+      name: "装备总属性",
+    }).closest("section");
+    expect(equipmentSummary).not.toBeNull();
+    const gemSummary = within(equipmentSummary!).getByText("宝石 +96");
+    const physicalAttackTotal = within(equipmentSummary!).getByText("+852");
+    expect(gemSummary).toBeInTheDocument();
+    expect(gemSummary.nextElementSibling).toBe(physicalAttackTotal);
+    expect(physicalAttackTotal).toHaveClass("text-slate-900", "font-semibold");
+
+    await user.click(breakthrough);
+
+    expect(dialog).toHaveTextContent("金刚石（8+1 级）提供物攻 +108");
+    expect(weaponCard).toHaveTextContent("物攻 +822");
+    expect(weaponCard).toHaveTextContent("金刚石 · 8+1级");
+    expect(within(equipmentSummary!).getByText("宝石 +108")).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole("checkbox", { name: /成长/ }));
+
+    expect(dialog).toHaveTextContent("金刚石（8+1 级）提供物攻 +129.6");
+    expect(weaponCard).toHaveTextContent("物攻 +843.6");
+    expect(
+      within(equipmentSummary!).getByText("宝石 +129.6")
+    ).toBeInTheDocument();
+  });
+
+  it("应该在 105 级切换宝石上限并在降低角色等级时收紧已选等级", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    const characterLevel = screen.getByRole("spinbutton", { name: "角色等级" });
+    await user.clear(characterLevel);
+    await user.type(characterLevel, "105");
+    await user.tab();
+
+    expect(characterLevel).toHaveValue(105);
+    expect(screen.getByText("宝石上限 13 级")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "编辑鞋子" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑鞋子" });
+    const gemType = within(dialog).getByRole("combobox", {
+      name: "鞋子：宝石类型",
+    });
+    const gemLevel = within(dialog).getByRole("combobox", {
+      name: "鞋子：宝石等级",
+    });
+    await user.selectOptions(gemType, "amethyst");
+    await user.selectOptions(gemLevel, "13");
+
+    expect(gemLevel).toHaveValue("13");
+
+    await user.clear(characterLevel);
+    await user.type(characterLevel, "104");
+    await user.tab();
+
+    expect(characterLevel).toHaveValue(104);
+    expect(screen.getByText("宝石上限 12 级")).toBeInTheDocument();
+    expect(gemLevel).toHaveValue("12");
   });
 
   it("应该将一至两条附加五维与百炼分开编辑和汇总", async () => {

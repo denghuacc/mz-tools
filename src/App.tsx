@@ -21,15 +21,18 @@ import {
 import type { FavoriteKind } from "./utils/favorites";
 import {
   calculateEquipmentSummary,
+  createInitialEquipmentCalculatorState,
   createInitialEquipmentSet,
+  normalizeEquipmentCalculatorState,
   normalizeEquipmentSet,
 } from "./utils/equipmentAttributes";
 import {
   EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
+  LEGACY_EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
   loadCalculatorState,
   saveCalculatorState,
 } from "./utils/calculatorStorage";
-import type { EquipmentSet } from "./utils/equipmentAttributes";
+import type { EquipmentCalculatorState } from "./utils/equipmentAttributes";
 
 type PageId =
   | "home"
@@ -125,28 +128,46 @@ const HomePage = ({
   </div>
 );
 
+const loadEquipmentCalculatorState = (): EquipmentCalculatorState => {
+  const currentState = loadCalculatorState<EquipmentCalculatorState | null>(
+    EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
+    null,
+    normalizeEquipmentCalculatorState
+  );
+  if (currentState) return currentState;
+
+  const initialState = createInitialEquipmentCalculatorState();
+  return {
+    ...initialState,
+    equipment: loadCalculatorState(
+      LEGACY_EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
+      createInitialEquipmentSet(),
+      normalizeEquipmentSet
+    ),
+  };
+};
+
 const CalculatorPage = () => {
   const [activeTool, setActiveTool] = useState<CalculatorTool>(
     () => loadPreferences().activeTool
   );
-  const [equipment, setEquipment] = useState<EquipmentSet>(() =>
-    loadCalculatorState(
-      EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
-      createInitialEquipmentSet(),
-      normalizeEquipmentSet
-    )
-  );
+  const [equipmentState, setEquipmentState] =
+    useState<EquipmentCalculatorState>(loadEquipmentCalculatorState);
   const isWeapon = activeTool === "weapon";
   const isCharacter = activeTool === "character";
   const isEquipment = activeTool === "equipment";
   const equipmentSummary = useMemo(
-    () => calculateEquipmentSummary(equipment),
-    [equipment]
+    () =>
+      calculateEquipmentSummary(
+        equipmentState.equipment,
+        equipmentState.characterLevel
+      ),
+    [equipmentState]
   );
 
   useEffect(() => {
-    saveCalculatorState(EQUIPMENT_ATTRIBUTES_STORAGE_KEY, equipment);
-  }, [equipment]);
+    saveCalculatorState(EQUIPMENT_ATTRIBUTES_STORAGE_KEY, equipmentState);
+  }, [equipmentState]);
 
   const toolMeta = isEquipment
     ? {
@@ -228,7 +249,10 @@ const CalculatorPage = () => {
             equipmentItemCount={equipmentSummary.activeItemCount}
           />
         ) : isEquipment ? (
-          <EquipmentCalculator equipment={equipment} onChange={setEquipment} />
+          <EquipmentCalculator
+            state={equipmentState}
+            onChange={setEquipmentState}
+          />
         ) : isWeapon ? (
           <WeaponConverter />
         ) : (
