@@ -1,8 +1,10 @@
 import {
   EQUIPMENT_GEM_CONFIG,
   EQUIPMENT_GEM_SLOT_CONFIG,
+  EQUIPMENT_INDEPENDENT_AFFIX_CONFIG,
   EQUIPMENT_SLOTS,
   calculateEquipmentGemBonus,
+  calculateEquipmentIndependentAffixBonus,
   calculateEquipmentItemAttributes,
   calculateEquipmentSummary,
   createInitialEquipmentCalculatorState,
@@ -77,6 +79,65 @@ describe("角色装备属性汇总", () => {
     const summary = calculateEquipmentSummary(equipment, 69);
     expect(summary.allAttributes.physicalAttack).toBe(885.6);
     expect(summary.gemAttributes).toEqual({ physicalAttack: 129.6 });
+  });
+
+  it("应该配置指定部位的独立词条每级面板属性", () => {
+    expect(EQUIPMENT_INDEPENDENT_AFFIX_CONFIG).toEqual({
+      岐黄: { slots: ["weapon"], attribute: "healingPower", baseValue: 6 },
+      龙吟: { slots: ["weapon"], attribute: "magicAttack", baseValue: 6 },
+      罗刹: { slots: ["weapon"], attribute: "physicalAttack", baseValue: 6 },
+      囚牢: { slots: ["weapon"], attribute: "sealHit", baseValue: 1 },
+      扶摇: { slots: ["shoes"], attribute: "sealResistance", baseValue: 1 },
+    });
+  });
+
+  it.each([
+    ["weapon", "岐黄", 6, "healingPower", 36],
+    ["weapon", "龙吟", 6, "magicAttack", 36],
+    ["weapon", "罗刹", 6, "physicalAttack", 36],
+    ["weapon", "囚牢", 6, "sealHit", 6],
+    ["shoes", "扶摇", 3, "sealResistance", 3],
+  ] as const)(
+    "%s 的 %s %i 级应增加 %s %i 点",
+    (slot, name, level, attribute, value) => {
+      const item = {
+        ...createInitialEquipmentSet()[slot],
+        independentAffix: { name, level },
+      };
+
+      expect(calculateEquipmentIndependentAffixBonus(item)).toEqual({
+        name,
+        level,
+        attribute,
+        value,
+      });
+    }
+  );
+
+  it("应该只让已收录且部位匹配的独立词条计入汇总", () => {
+    const equipment = createInitialEquipmentSet();
+    equipment.weapon = {
+      ...equipment.weapon,
+      independentAffix: { name: "岐黄", level: 6 },
+    };
+    equipment.shoes = {
+      ...equipment.shoes,
+      independentAffix: { name: "扶摇", level: 3 },
+    };
+    equipment.armor = {
+      ...equipment.armor,
+      independentAffix: { name: "岐黄", level: 6 },
+    };
+
+    const summary = calculateEquipmentSummary(equipment);
+
+    expect(summary.allAttributes.healingPower).toBe(225);
+    expect(summary.allAttributes.sealResistance).toBe(3);
+    expect(summary.independentAffixAttributes).toEqual({
+      healingPower: 36,
+      sealResistance: 3,
+    });
+    expect(calculateEquipmentIndependentAffixBonus(equipment.armor)).toBeNull();
   });
 
   it("应该在计算和恢复时把宝石等级限制到当前角色上限", () => {
@@ -155,6 +216,42 @@ describe("角色装备属性汇总", () => {
     expect(restoredRing?.seasonEffectLevel).toBe(5);
   });
 
+  it("应该只恢复部位匹配的已收录独立词条", () => {
+    const state = createInitialEquipmentCalculatorState();
+    const storedState = structuredClone(state) as unknown as {
+      equipment: {
+        weapon: {
+          independentAffix: { name: string; level: number } | null;
+          affixes: unknown[];
+        };
+      };
+    };
+    storedState.equipment.weapon.independentAffix = { name: " 龙吟 ", level: 6 };
+    storedState.equipment.weapon.affixes = [
+      { attribute: "physicalAttack", value: 999 },
+    ];
+
+    expect(
+      normalizeEquipmentCalculatorState(storedState)?.equipment.weapon
+        .independentAffix
+    ).toEqual({ name: "龙吟", level: 6 });
+    expect(
+      normalizeEquipmentCalculatorState(storedState)?.equipment.weapon.affixes
+    ).toEqual([]);
+
+    for (const independentAffix of [
+      { name: "龙吟", level: 7 },
+      { name: "扶摇", level: 3 },
+      { name: "待收录词条", level: 3 },
+    ]) {
+      storedState.equipment.weapon.independentAffix = independentAffix;
+      expect(
+        normalizeEquipmentCalculatorState(storedState)?.equipment.weapon
+          .independentAffix
+      ).toBeNull();
+    }
+  });
+
   it("应该正确区分上衣和下装的装备属性", () => {
     const equipment = createInitialEquipmentSet();
 
@@ -216,7 +313,7 @@ describe("角色装备属性汇总", () => {
     expect(summary.characterBonuses.speedPercent).toBe(3);
   });
 
-  it("应该在计算层忽略重复五维和重复加持，但允许百炼重复", () => {
+  it("应该忽略普通装备的旧词条、重复五维和重复加持", () => {
     const item = createInitialEquipmentSet().weapon;
     const attributes = calculateEquipmentItemAttributes({
       ...item,
@@ -228,13 +325,17 @@ describe("角色装备属性汇总", () => {
         { attribute: "agility", value: 30 },
       ],
       tempering: { attribute: "strength", value: 7 },
-      affixes: [{ attribute: "endurance", value: 99 }],
+      affixes: [
+        { attribute: "endurance", value: 99 },
+        { attribute: "physicalAttack", value: 99 },
+      ],
       supportAttribute: { attribute: "strength", value: 40 },
     });
 
     expect(attributes.strength).toBe(17);
     expect(attributes.agility).toBe(30);
     expect(attributes.endurance).toBeUndefined();
+    expect(attributes.physicalAttack).toBeUndefined();
   });
 
   it("赛年神装应该只汇总装备属性、百炼和前三条副属性", () => {

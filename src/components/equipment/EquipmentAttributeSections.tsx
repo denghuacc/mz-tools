@@ -1,13 +1,17 @@
 import {
   EQUIPMENT_ATTRIBUTE_LABELS,
   EQUIPMENT_ATTRIBUTE_OPTIONS,
-  EQUIPMENT_NON_PRIMARY_ATTRIBUTE_OPTIONS,
+  EQUIPMENT_INDEPENDENT_AFFIX_CONFIG,
+  EQUIPMENT_INDEPENDENT_AFFIX_LEVELS,
   EQUIPMENT_PRIMARY_ATTRIBUTES,
   EQUIPMENT_SLOT_LABELS,
+  calculateEquipmentIndependentAffixBonus,
   isSeasonEquipmentSlot,
 } from "../../utils/equipmentAttributes";
 import type {
   EquipmentAttributeLine,
+  EquipmentIndependentAffixLevel,
+  EquipmentIndependentAffixName,
   EquipmentItem,
   EquipmentPrimaryAttributeLine,
 } from "../../utils/equipmentAttributes";
@@ -17,6 +21,8 @@ import {
   EquipmentAttributeSelect,
   EquipmentAttributeValueInput,
   EquipmentEditorSection,
+  EquipmentFieldLabel,
+  equipmentEditorInputClassName,
 } from "./EquipmentEditorFields";
 
 type EquipmentAttributesSectionProps = {
@@ -158,8 +164,6 @@ const EquipmentAffixesEditor = ({
   item,
   onChange,
 }: EquipmentAttributesSectionProps) => {
-  const isSeasonEquipment = isSeasonEquipmentSlot(item.slot);
-  const affixLabel = isSeasonEquipment ? "副属性" : "词条";
   const updateAffix = (index: number, line: EquipmentAttributeLine) => {
     const affixes = [...item.affixes];
     affixes[index] = line;
@@ -173,31 +177,25 @@ const EquipmentAffixesEditor = ({
 
   return (
     <div className="mt-4 border-t border-slate-100 pt-4">
-      <p className="mb-2 text-xs font-semibold text-slate-500">
-        {isSeasonEquipment ? "副属性（1～3 条）" : "其它词条"}
-      </p>
+      <p className="mb-2 text-xs font-semibold text-slate-500">副属性（1～3 条）</p>
 
       <div className="space-y-2">
         {item.affixes.map((line, index) => (
           <EquipmentAttributeLineEditor
             key={index}
             line={line}
-            selectLabel={`${EQUIPMENT_SLOT_LABELS[item.slot]}：${affixLabel} ${index + 1}`}
-            valueLabel={`${affixLabel} ${index + 1} 数值`}
-            options={
-              isSeasonEquipment
-                ? EQUIPMENT_ATTRIBUTE_OPTIONS.map((option) => ({
-                    ...option,
-                    disabled: item.affixes.some(
-                      (candidate, candidateIndex) =>
-                        candidateIndex !== index &&
-                        candidate.attribute === option.attribute
-                    ),
-                  }))
-                : EQUIPMENT_NON_PRIMARY_ATTRIBUTE_OPTIONS
-            }
-            removeLabel={`删除${EQUIPMENT_SLOT_LABELS[item.slot]}${affixLabel} ${index + 1}`}
-            removeDisabled={isSeasonEquipment && item.affixes.length === 1}
+            selectLabel={`${EQUIPMENT_SLOT_LABELS[item.slot]}：副属性 ${index + 1}`}
+            valueLabel={`副属性 ${index + 1} 数值`}
+            options={EQUIPMENT_ATTRIBUTE_OPTIONS.map((option) => ({
+              ...option,
+              disabled: item.affixes.some(
+                (candidate, candidateIndex) =>
+                  candidateIndex !== index &&
+                  candidate.attribute === option.attribute
+              ),
+            }))}
+            removeLabel={`删除${EQUIPMENT_SLOT_LABELS[item.slot]}副属性 ${index + 1}`}
+            removeDisabled={item.affixes.length === 1}
             onChange={(nextLine) => updateAffix(index, nextLine)}
             onRemove={() =>
               onChange({
@@ -212,23 +210,102 @@ const EquipmentAffixesEditor = ({
 
         {item.affixes.length < 3 ? (
           <AddAttributeLineButton
-            onClick={() =>
-              isSeasonEquipment
-                ? updateSeasonAffixCount(item.affixes.length + 1)
-                : onChange({
-                    ...item,
-                    affixes: [
-                      ...item.affixes,
-                      { attribute: "physicalAttack", value: 0 },
-                    ],
-                  })
-            }
+            onClick={() => updateSeasonAffixCount(item.affixes.length + 1)}
           >
-            添加{affixLabel}
+            添加副属性
           </AddAttributeLineButton>
         ) : null}
       </div>
     </div>
+  );
+};
+
+export const EquipmentIndependentAffixSection = ({
+  item,
+  onChange,
+}: EquipmentAttributesSectionProps) => {
+  const independentAffixBonus = calculateEquipmentIndependentAffixBonus(item);
+  const availableAffixes = Object.entries(
+    EQUIPMENT_INDEPENDENT_AFFIX_CONFIG
+  ).filter(([, config]) =>
+    (config.slots as readonly EquipmentItem["slot"][]).includes(item.slot)
+  );
+  if (availableAffixes.length === 0) return null;
+
+  return (
+    <EquipmentEditorSection
+      title="独立词条"
+      description="独立词条随机出现，并非每件装备都有；当前只列出该部位会增加面板属性的词条。"
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label>
+          <EquipmentFieldLabel>词条名称</EquipmentFieldLabel>
+          <select
+            aria-label={`${EQUIPMENT_SLOT_LABELS[item.slot]}：独立词条`}
+            className={equipmentEditorInputClassName}
+            value={item.independentAffix?.name ?? ""}
+            onChange={(event) => {
+              const name = event.target.value as
+                | EquipmentIndependentAffixName
+                | "";
+              onChange({
+                ...item,
+                independentAffix: name
+                  ? {
+                      name,
+                      level: item.independentAffix?.level ?? 1,
+                    }
+                  : null,
+              });
+            }}
+          >
+            <option value="">未出现独立词条</option>
+            {availableAffixes.map(([name, config]) => (
+              <option key={name} value={name}>
+                {name} · {EQUIPMENT_ATTRIBUTE_LABELS[config.attribute]} +
+                {config.baseValue}/级
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label>
+          <EquipmentFieldLabel>词条等级</EquipmentFieldLabel>
+          <select
+            aria-label={`${EQUIPMENT_SLOT_LABELS[item.slot]}：独立词条等级`}
+            className={equipmentEditorInputClassName}
+            value={item.independentAffix?.level ?? 1}
+            disabled={!item.independentAffix}
+            onChange={(event) =>
+              onChange({
+                ...item,
+                independentAffix: item.independentAffix
+                  ? {
+                      ...item.independentAffix,
+                      level: Number(
+                        event.target.value
+                      ) as EquipmentIndependentAffixLevel,
+                    }
+                  : null,
+              })
+            }
+          >
+            {EQUIPMENT_INDEPENDENT_AFFIX_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {level} 级
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {independentAffixBonus ? (
+        <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs leading-5 text-blue-800">
+          当前提供{EQUIPMENT_ATTRIBUTE_LABELS[independentAffixBonus.attribute]} +
+          {independentAffixBonus.value}。
+        </p>
+      ) : null}
+    </EquipmentEditorSection>
   );
 };
 
@@ -255,7 +332,9 @@ const EquipmentAttributesSection = ({
         onChange={onChange}
         bordered={!isSeasonEquipment}
       />
-      <EquipmentAffixesEditor item={item} onChange={onChange} />
+      {isSeasonEquipment ? (
+        <EquipmentAffixesEditor item={item} onChange={onChange} />
+      ) : null}
     </EquipmentEditorSection>
   );
 };

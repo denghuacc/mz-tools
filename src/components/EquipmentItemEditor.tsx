@@ -3,7 +3,9 @@ import type {
   EquipmentSet,
 } from "../utils/equipmentAttributes";
 import { isSeasonEquipmentSlot } from "../utils/equipmentAttributes";
-import EquipmentAttributesSection from "./equipment/EquipmentAttributeSections";
+import EquipmentAttributesSection, {
+  EquipmentIndependentAffixSection,
+} from "./equipment/EquipmentAttributeSections";
 import {
   EquipmentBaseAttributesSection,
   EquipmentStatusSection,
@@ -33,6 +35,7 @@ const EquipmentItemEditor = ({
       <EquipmentStatusSection {...sectionProps} />
       <EquipmentBaseAttributesSection {...sectionProps} />
       <EquipmentAttributesSection {...sectionProps} />
+      <EquipmentIndependentAffixSection {...sectionProps} />
       {isSeasonEquipmentSlot(item.slot) ? (
         <SeasonEquipmentEffectSection {...sectionProps} />
       ) : (

@@ -52,6 +52,53 @@ export type EquipmentAttribute =
   | CharacterBonusAttribute
   | EquipmentOnlyAttribute;
 
+export const EQUIPMENT_INDEPENDENT_AFFIX_LEVELS = [1, 2, 3, 4, 5, 6] as const;
+export type EquipmentIndependentAffixLevel =
+  (typeof EQUIPMENT_INDEPENDENT_AFFIX_LEVELS)[number];
+
+export const EQUIPMENT_INDEPENDENT_AFFIX_CONFIG = {
+  岐黄: {
+    slots: ["weapon"],
+    attribute: "healingPower",
+    baseValue: 6,
+  },
+  龙吟: {
+    slots: ["weapon"],
+    attribute: "magicAttack",
+    baseValue: 6,
+  },
+  罗刹: {
+    slots: ["weapon"],
+    attribute: "physicalAttack",
+    baseValue: 6,
+  },
+  囚牢: {
+    slots: ["weapon"],
+    attribute: "sealHit",
+    baseValue: 1,
+  },
+  扶摇: {
+    slots: ["shoes"],
+    attribute: "sealResistance",
+    baseValue: 1,
+  },
+} as const satisfies Record<
+  string,
+  {
+    slots: readonly EquipmentSlot[];
+    attribute: EquipmentAttribute;
+    baseValue: number;
+  }
+>;
+
+export type EquipmentIndependentAffixName =
+  keyof typeof EQUIPMENT_INDEPENDENT_AFFIX_CONFIG;
+
+export type EquipmentIndependentAffix = {
+  name: EquipmentIndependentAffixName;
+  level: EquipmentIndependentAffixLevel;
+};
+
 export const EQUIPMENT_GEM_CONFIG = {
   diamond: {
     label: "金刚石",
@@ -141,15 +188,6 @@ export const EQUIPMENT_PRIMARY_ATTRIBUTES = [
   "agility",
 ] as const satisfies readonly PrimaryAttribute[];
 
-const EQUIPMENT_PRIMARY_ATTRIBUTE_SET = new Set<EquipmentAttribute>(
-  EQUIPMENT_PRIMARY_ATTRIBUTES
-);
-
-const isEquipmentPrimaryAttribute = (
-  attribute: EquipmentAttribute
-): attribute is PrimaryAttribute =>
-  EQUIPMENT_PRIMARY_ATTRIBUTE_SET.has(attribute);
-
 export const EQUIPMENT_ATTRIBUTE_OPTIONS = [
   { attribute: "constitution", label: "体" },
   { attribute: "spirit", label: "灵" },
@@ -175,11 +213,6 @@ export const EQUIPMENT_ATTRIBUTE_OPTIONS = [
   attribute: EquipmentAttribute;
   label: string;
 }[];
-
-export const EQUIPMENT_NON_PRIMARY_ATTRIBUTE_OPTIONS =
-  EQUIPMENT_ATTRIBUTE_OPTIONS.filter(
-    ({ attribute }) => !isEquipmentPrimaryAttribute(attribute)
-  );
 
 export const EQUIPMENT_AFFINITY_EFFECT_OPTIONS = AFFINITY_BONUS_FIELDS;
 export const EQUIPMENT_AFFINITY_EFFECT_VALUE = 3;
@@ -311,6 +344,7 @@ export type EquipmentItem = {
   enabled: boolean;
   level: number;
   gem: EquipmentGem | null;
+  independentAffix: EquipmentIndependentAffix | null;
   baseAttributes: EquipmentAttributeValues;
   castingAttributes: EquipmentAttributeValues;
   additionalPrimaryAttributes: readonly EquipmentPrimaryAttributeLine[];
@@ -371,6 +405,36 @@ export type EquipmentGemBonus = {
   value: number;
 };
 
+export type EquipmentIndependentAffixBonus = {
+  name: EquipmentIndependentAffixName;
+  level: EquipmentIndependentAffixLevel;
+  attribute: EquipmentAttribute;
+  value: number;
+};
+
+/** 只计算已收录且装备部位匹配的独立词条面板属性。 */
+export const calculateEquipmentIndependentAffixBonus = (
+  item: EquipmentItem
+): EquipmentIndependentAffixBonus | null => {
+  const affix = item.independentAffix;
+  if (!affix || !EQUIPMENT_INDEPENDENT_AFFIX_LEVELS.includes(affix.level)) {
+    return null;
+  }
+
+  const name = affix.name.trim() as EquipmentIndependentAffixName;
+  const config = EQUIPMENT_INDEPENDENT_AFFIX_CONFIG[name];
+  if (!config || !(config.slots as readonly EquipmentSlot[]).includes(item.slot)) {
+    return null;
+  }
+
+  return {
+    name,
+    level: affix.level,
+    attribute: config.attribute,
+    value: config.baseValue * affix.level,
+  };
+};
+
 /** 计算单件装备的有效宝石属性；成长特效生效时额外增加 20%。 */
 export const calculateEquipmentGemBonus = (
   item: EquipmentItem,
@@ -428,7 +492,11 @@ export const getEquipmentEffectLabels = (item: EquipmentItem): string[] => {
   }
 
   const effects = new Set(getEffectiveBaseEquipmentEffectIds(item));
+  const independentAffixBonus = calculateEquipmentIndependentAffixBonus(item);
   return [
+    independentAffixBonus
+      ? `${independentAffixBonus.name} · ${independentAffixBonus.level}级`
+      : null,
     effects.has("blessing") ? "祝福" : null,
     effects.has("support") ? "加持" : null,
     effects.has("growth") ? "成长" : null,
@@ -504,6 +572,7 @@ const createItem = (
   enabled: true,
   level: 60,
   gem: null,
+  independentAffix: null,
   baseAttributes: {},
   castingAttributes: {},
   additionalPrimaryAttributes: [{ attribute: "constitution", value: 0 }],
@@ -655,6 +724,37 @@ const normalizeEquipmentGem = (
   };
 };
 
+const normalizeEquipmentIndependentAffix = (
+  value: unknown,
+  slot: EquipmentSlot,
+  fallback: EquipmentIndependentAffix | null
+): EquipmentIndependentAffix | null => {
+  if (value === null) return null;
+  const name =
+    isRecord(value) && typeof value.name === "string"
+      ? (value.name.trim() as EquipmentIndependentAffixName)
+      : null;
+  const config = name ? EQUIPMENT_INDEPENDENT_AFFIX_CONFIG[name] : null;
+  if (
+    !isRecord(value) ||
+    !name ||
+    !config ||
+    !(config.slots as readonly EquipmentSlot[]).includes(slot) ||
+    typeof value.level !== "number" ||
+    !Number.isInteger(value.level) ||
+    !EQUIPMENT_INDEPENDENT_AFFIX_LEVELS.some(
+      (level) => level === value.level
+    )
+  ) {
+    return fallback;
+  }
+
+  return {
+    name,
+    level: value.level as EquipmentIndependentAffixLevel,
+  };
+};
+
 const normalizeEquipmentAttributeLine = <Attribute extends EquipmentAttribute>(
   value: unknown,
   allowedAttributes: ReadonlySet<string>,
@@ -762,6 +862,11 @@ const normalizeEquipmentItem = (
         ? value.level
         : fallback.level,
     gem: normalizeEquipmentGem(value.gem, slot, fallback.gem),
+    independentAffix: normalizeEquipmentIndependentAffix(
+      value.independentAffix,
+      slot,
+      fallback.independentAffix
+    ),
     baseAttributes: normalizeEquipmentAttributeValues(
       value.baseAttributes,
       fallback.baseAttributes
@@ -781,12 +886,14 @@ const normalizeEquipmentItem = (
       STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET,
       fallback.tempering
     ),
-    affixes: normalizeEquipmentAttributeLines(
-      value.affixes,
-      EQUIPMENT_ATTRIBUTE_SET,
-      3,
-      fallback.affixes
-    ),
+    affixes: isSeasonEquipmentSlot(slot)
+      ? normalizeEquipmentAttributeLines(
+          value.affixes,
+          EQUIPMENT_ATTRIBUTE_SET,
+          3,
+          fallback.affixes
+        )
+      : [],
     supportAttribute,
     blessing:
       typeof value.blessing === "boolean" ? value.blessing : fallback.blessing,
@@ -906,6 +1013,7 @@ export type EquipmentSummary = {
   activeItemCount: number;
   allAttributes: EquipmentAttributeValues;
   gemAttributes: EquipmentAttributeValues;
+  independentAffixAttributes: EquipmentAttributeValues;
   characterBonuses: CharacterAttributeBonuses;
 };
 
@@ -958,6 +1066,13 @@ export const calculateEquipmentItemAttributes = (
     addValues(attributes, { [gemBonus.attribute]: gemBonus.value });
   }
 
+  const independentAffixBonus = calculateEquipmentIndependentAffixBonus(item);
+  if (independentAffixBonus) {
+    addValues(attributes, {
+      [independentAffixBonus.attribute]: independentAffixBonus.value,
+    });
+  }
+
   const selectedPrimaryAttributes = new Set<PrimaryAttribute>();
 
   if (!isSeasonEquipment) {
@@ -974,24 +1089,14 @@ export const calculateEquipmentItemAttributes = (
 
   addValues(attributes, { [item.tempering.attribute]: item.tempering.value });
 
-  const selectedAffixAttributes = new Set<EquipmentAttribute>();
+  if (isSeasonEquipment) {
+    const selectedAffixAttributes = new Set<EquipmentAttribute>();
 
-  for (const affix of item.affixes.slice(0, 3)) {
-    // 五维只能来自上面的 1～2 条附加属性、百炼、加持或明确的特效。
-    if (
-      !isSeasonEquipment &&
-      isEquipmentPrimaryAttribute(affix.attribute)
-    ) {
-      continue;
+    for (const affix of item.affixes.slice(0, 3)) {
+      if (selectedAffixAttributes.has(affix.attribute)) continue;
+      selectedAffixAttributes.add(affix.attribute);
+      addValues(attributes, { [affix.attribute]: affix.value });
     }
-    if (
-      isSeasonEquipment &&
-      selectedAffixAttributes.has(affix.attribute)
-    ) {
-      continue;
-    }
-    selectedAffixAttributes.add(affix.attribute);
-    addValues(attributes, { [affix.attribute]: affix.value });
   }
 
   if (
@@ -1056,6 +1161,7 @@ export const calculateEquipmentSummary = (
 ): EquipmentSummary => {
   const allAttributes: EquipmentAttributeValues = {};
   const gemAttributes: EquipmentAttributeValues = {};
+  const independentAffixAttributes: EquipmentAttributeValues = {};
   let activeItemCount = 0;
 
   for (const slot of EQUIPMENT_SLOTS) {
@@ -1066,6 +1172,12 @@ export const calculateEquipmentSummary = (
       const gemBonus = calculateEquipmentGemBonus(item, characterLevel);
       if (gemBonus) {
         addValues(gemAttributes, { [gemBonus.attribute]: gemBonus.value });
+      }
+      const independentAffixBonus = calculateEquipmentIndependentAffixBonus(item);
+      if (independentAffixBonus) {
+        addValues(independentAffixAttributes, {
+          [independentAffixBonus.attribute]: independentAffixBonus.value,
+        });
       }
     }
     addValues(
@@ -1088,5 +1200,11 @@ export const calculateEquipmentSummary = (
     }
   }
 
-  return { activeItemCount, allAttributes, gemAttributes, characterBonuses };
+  return {
+    activeItemCount,
+    allAttributes,
+    gemAttributes,
+    independentAffixAttributes,
+    characterBonuses,
+  };
 };

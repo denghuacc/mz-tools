@@ -189,6 +189,8 @@ const EquipmentCalculator = ({
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         {attributes.map((attribute) => {
                           const gemValue = summary.gemAttributes[attribute] ?? 0;
+                          const independentAffixValue =
+                            summary.independentAffixAttributes[attribute] ?? 0;
 
                           return (
                             <div
@@ -198,10 +200,15 @@ const EquipmentCalculator = ({
                               <span className="shrink-0 text-xs text-slate-600">
                                 {EQUIPMENT_ATTRIBUTE_LABELS[attribute] ?? "速度"}
                               </span>
-                              <span className="flex min-w-0 flex-1 items-baseline justify-end gap-2 text-right">
+                              <span className="flex min-w-0 flex-1 flex-wrap items-baseline justify-end gap-x-2 gap-y-0.5 text-right">
                                 {gemValue !== 0 ? (
                                   <span className="whitespace-nowrap text-[10px] text-violet-600">
                                     宝石 {formatValue(gemValue, attribute)}
+                                  </span>
+                                ) : null}
+                                {independentAffixValue !== 0 ? (
+                                  <span className="whitespace-nowrap text-[10px] text-amber-600">
+                                    词条 {formatValue(independentAffixValue, attribute)}
                                   </span>
                                 ) : null}
                                 <strong className="shrink-0 whitespace-nowrap text-xs font-semibold text-slate-900">
@@ -245,7 +252,7 @@ const EquipmentCalculator = ({
 
           <section className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 text-xs leading-6 text-blue-900">
             <strong className="font-semibold">当前口径：</strong>
-            六件基础装备按面板值与宝石汇总；戒指、项链为全等级赛年神装，计算装备属性、百炼、副属性和已收录面板特效。
+            六件基础装备按面板值、宝石与已收录独立词条汇总；戒指、项链为全等级赛年神装，计算装备属性、百炼、副属性和已收录面板特效。
           </section>
         </aside>
 
@@ -343,7 +350,9 @@ const EquipmentCalculator = ({
                         ))}
                       </>
                     ) : (
-                      <span className="text-[11px] text-slate-400">无特效 / 特技</span>
+                      <span className="text-[11px] text-slate-400">
+                        无独立词条 / 特效 / 特技
+                      </span>
                     )}
                   </div>
                 </article>

@@ -147,10 +147,28 @@ describe("EquipmentCalculator", () => {
       "武器状态",
       "装备属性",
       "附加五维与百炼",
+      "独立词条",
       "宝石",
       "铸灵属性",
       "加持",
       "特效与特技",
+    ]);
+    expect(within(dialog).queryByText("其它词条")).not.toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("button", { name: "添加词条" })
+    ).not.toBeInTheDocument();
+    expect(
+      within(
+        within(dialog).getByRole("combobox", { name: "武器：独立词条" })
+      )
+        .getAllByRole("option")
+        .map((option) => option.textContent)
+    ).toEqual([
+      "未出现独立词条",
+      "岐黄 · 治疗强度 +6/级",
+      "龙吟 · 法攻 +6/级",
+      "罗刹 · 物攻 +6/级",
+      "囚牢 · 封印命中 +1/级",
     ]);
 
     expect(
@@ -190,12 +208,53 @@ describe("EquipmentCalculator", () => {
     ).toBeEnabled();
   });
 
+  it("应该编辑 1～6 级独立词条并把已收录属性计入面板", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness />);
+
+    const shoesCard = screen.getByRole("heading", { name: "鞋子" })
+      .closest("article");
+    expect(shoesCard).not.toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "编辑鞋子" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑鞋子" });
+    const affixName = within(dialog).getByRole("combobox", {
+      name: "鞋子：独立词条",
+    });
+    const affixLevel = within(dialog).getByRole("combobox", {
+      name: "鞋子：独立词条等级",
+    });
+
+    expect(affixLevel).toBeDisabled();
+    expect(
+      within(affixName)
+        .getAllByRole("option")
+        .map((option) => option.textContent)
+    ).toEqual(["未出现独立词条", "扶摇 · 抗封 +1/级"]);
+    expect(
+      within(affixLevel)
+        .getAllByRole("option")
+        .map((option) => option.textContent)
+    ).toEqual(["1 级", "2 级", "3 级", "4 级", "5 级", "6 级"]);
+
+    await user.selectOptions(affixName, "扶摇");
+    await user.selectOptions(affixLevel, "3");
+
+    expect(dialog).toHaveTextContent("当前提供抗封 +3");
+    expect(shoesCard).toHaveTextContent("扶摇 · 3级");
+    expect(shoesCard).toHaveTextContent("抗封 +3");
+    expect(screen.getByText("词条 +3")).toBeInTheDocument();
+  });
+
   it("应该限制加持五维不能与普通附加五维重复", async () => {
     const user = userEvent.setup();
     render(<EquipmentCalculatorHarness />);
 
     await user.click(screen.getByRole("button", { name: "编辑上衣" }));
     const dialog = screen.getByRole("dialog", { name: "编辑上衣" });
+    expect(
+      within(dialog).queryByRole("heading", { name: "独立词条" })
+    ).not.toBeInTheDocument();
     const supportAttribute = within(dialog).getByRole("combobox", {
       name: "上衣：加持属性",
     });

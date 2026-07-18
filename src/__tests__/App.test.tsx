@@ -359,7 +359,7 @@ describe("App 组件", () => {
     expect(screen.getByRole("button", { name: "清空收藏" })).toBeDisabled();
   });
 
-  it("应该保存装备、角色等级和宝石并在重新加载应用后恢复", async () => {
+  it("应该保存装备、角色等级、宝石和独立词条并在重新加载后恢复", async () => {
     const user = userEvent.setup();
     const { unmount } = render(<App />);
 
@@ -386,6 +386,18 @@ describe("App 组件", () => {
         name: /突破 · 额外提升 1 级/,
       })
     );
+    await user.selectOptions(
+      within(weaponDialog).getByRole("combobox", {
+        name: "武器：独立词条",
+      }),
+      "龙吟"
+    );
+    await user.selectOptions(
+      within(weaponDialog).getByRole("combobox", {
+        name: "武器：独立词条等级",
+      }),
+      "6"
+    );
     const physicalAttackInput = within(weaponDialog).getByRole("spinbutton", {
       name: "武器：物攻",
     });
@@ -402,6 +414,10 @@ describe("App 组件", () => {
         type: "diamond",
         level: 13,
         breakthrough: true,
+      });
+      expect(storedState.equipment.weapon.independentAffix).toEqual({
+        name: "龙吟",
+        level: 6,
       });
       expect(Object.keys(storedState.equipment).sort()).toEqual(
         [
@@ -441,6 +457,16 @@ describe("App 组件", () => {
         name: /突破 · 额外提升 1 级/,
       })
     ).toBeChecked();
+    expect(
+      within(restoredDialog).getByRole("combobox", {
+        name: "武器：独立词条",
+      })
+    ).toHaveValue("龙吟");
+    expect(
+      within(restoredDialog).getByRole("combobox", {
+        name: "武器：独立词条等级",
+      })
+    ).toHaveValue("6");
   });
 
   it("应该把 v1 装备缓存迁移到包含角色等级的 v2 状态", async () => {
