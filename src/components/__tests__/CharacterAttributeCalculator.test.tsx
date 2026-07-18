@@ -32,7 +32,7 @@ describe("CharacterAttributeCalculator", () => {
     const editButtons = within(screen.getByTestId("attribute-bonus-rail"))
       .getAllByRole("button", { name: /^编辑/ });
 
-    expect(editButtons).toHaveLength(12);
+    expect(editButtons).toHaveLength(14);
     editButtons.forEach((button) => {
       expect(button.textContent).toBe("");
       expect(button.querySelector("svg")).not.toBeNull();
@@ -108,7 +108,7 @@ describe("CharacterAttributeCalculator", () => {
 
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
     expect(screen.queryByText("等级 +136")).not.toBeInTheDocument();
-    expect(screen.getByText("148")).toBeInTheDocument();
+    expect(screen.getByText("150")).toBeInTheDocument();
 
     const showButton = screen.getByRole("button", {
       name: "显示全部属性加成",
@@ -248,7 +248,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(
       within(sealResistanceRow!).getByText("技能 +3")
     ).toBeInTheDocument();
-    expect(within(sealResistanceRow!).getByText("5")).toBeInTheDocument();
+    expect(within(sealResistanceRow!).getByText("7")).toBeInTheDocument();
   });
 
   it("应该叠加总和为零的魂器五维和直接属性", async () => {
@@ -397,7 +397,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(sealResistanceRow).not.toBeNull();
     expect(fireAffinityCard).not.toBeNull();
     expect(within(sealResistanceRow!).getByText("天书 +5")).toBeInTheDocument();
-    expect(within(sealResistanceRow!).getByText("7")).toBeInTheDocument();
+    expect(within(sealResistanceRow!).getByText("9")).toBeInTheDocument();
     expect(within(fireAffinityCard!).getByText("天书 +4")).toBeInTheDocument();
     expect(within(fireAffinityCard!).getByText("4")).toBeInTheDocument();
   });
@@ -625,6 +625,144 @@ describe("CharacterAttributeCalculator", () => {
     expect(physicalAttackValue).toHaveClass("shrink-0");
   });
 
+  it("应该独立选择每项帮派天赋且组合属性同时生效", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const talentDialog = await openBonusEditor(user, "帮派天赋");
+
+    const optionLabels = [
+      "物攻 +8 / 法攻 +6",
+      "物理暴击 +3% / 法术暴击 +3%",
+      "物防 +8 / 法防 +6",
+      "速度 +4",
+      "速度 +2%",
+      "封印命中 +1%",
+    ];
+    expect(within(talentDialog).getAllByRole("checkbox")).toHaveLength(6);
+
+    const attackOption = within(talentDialog).getByRole("checkbox", {
+      name: optionLabels[0],
+    });
+    await user.click(attackOption);
+    expect(attackOption).toBeChecked();
+
+    let summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
+      .getByRole("heading", { name: "帮派天赋" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    expect(within(summaryCard!).getByText("物攻 +8")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("法攻 +6")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("已选 1 / 6")).toBeInTheDocument();
+    expect(within(summaryCard!).queryByText("速度 +4")).not.toBeInTheDocument();
+
+    await user.click(attackOption);
+    expect(attackOption).not.toBeChecked();
+    expect(within(summaryCard!).queryByText("物攻 +8")).not.toBeInTheDocument();
+
+    for (const label of optionLabels) {
+      await user.click(
+        within(talentDialog).getByRole("checkbox", { name: label })
+      );
+    }
+    expect(talentDialog).toHaveTextContent("已选 6 / 6 项");
+
+    summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
+      .getByRole("heading", { name: "帮派天赋" })
+      .closest("article");
+    expect(within(summaryCard!).getByText("速度 +4")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("速度 +2%")).toBeInTheDocument();
+    expect(
+      within(summaryCard!).getByText("物理暴击 +3%")
+    ).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("封印命中 +1%")).toBeInTheDocument();
+
+    const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
+    const speedRow = within(derivedColumn).getByText("速度").closest("div");
+    expect(speedRow).not.toBeNull();
+    expect(within(speedRow!).getByText("天赋 +4")).toBeInTheDocument();
+    expect(within(speedRow!).getByText("天赋 +2%")).toBeInTheDocument();
+    expect(within(speedRow!).getByText("210.73")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "进阶属性" }));
+    const resultPanel = within(screen.getByTestId("attribute-result-panel"));
+    expect(resultPanel.getAllByText("天赋 +3%")).toHaveLength(2);
+    const physicalCriticalRow = resultPanel
+      .getByText("物理暴击")
+      .closest("div");
+    const magicalCriticalRow = resultPanel.getByText("法术暴击").closest("div");
+    expect(physicalCriticalRow).not.toBeNull();
+    expect(magicalCriticalRow).not.toBeNull();
+    expect(within(physicalCriticalRow!).getByText("5%")).toBeInTheDocument();
+    expect(within(magicalCriticalRow!).getByText("4%")).toBeInTheDocument();
+    expect(resultPanel.getByText("天赋 +1%")).toBeInTheDocument();
+    expect(resultPanel.getByText("151")).toBeInTheDocument();
+  });
+
+  it("应该按人物修炼等级和突破状态计算固定属性", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const trainingDialog = await openBonusEditor(user, "人物修炼");
+
+    for (const label of ["攻击修炼", "物防修炼", "法防修炼"]) {
+      const levelSelect = within(trainingDialog).getByRole("combobox", {
+        name: `${label}等级`,
+      });
+      const breakthrough = within(trainingDialog).getByRole("checkbox", {
+        name: `${label}突破`,
+      });
+      expect(levelSelect).toHaveValue("1");
+      expect(breakthrough).toBeDisabled();
+
+      await user.selectOptions(levelSelect, "12");
+      expect(breakthrough).toBeEnabled();
+      await user.click(breakthrough);
+      expect(
+        within(trainingDialog).getByLabelText(`${label}当前等级`)
+      ).toHaveTextContent("12+1 / 12");
+    }
+
+    const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
+      .getByRole("heading", { name: "人物修炼" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    const trainingHeading = within(summaryCard!).getByRole("heading", {
+      name: "人物修炼",
+    });
+    expect(trainingHeading).not.toHaveClass("truncate");
+    expect(trainingHeading).toHaveClass("whitespace-nowrap");
+    const trainingDetails =
+      "攻击修炼 12+1 · 物防修炼 12+1 · 法防修炼 12+1";
+    const detailsButton = within(summaryCard!).getByRole("button", {
+      name: "查看人物修炼详情",
+    });
+    expect(detailsButton).toHaveAttribute("title", trainingDetails);
+    expect(
+      within(summaryCard!).getByRole("tooltip", { hidden: true })
+    ).toHaveTextContent(trainingDetails);
+    expect(within(summaryCard!).getByText("治疗强度 +65")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("封印命中 +26%")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("封印抵抗 +26%")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "进阶属性" }));
+    const resultPanel = within(screen.getByTestId("attribute-result-panel"));
+    const healingRow = resultPanel.getByText("治疗强度").closest("div");
+    const sealHitRow = resultPanel.getByText("封印命中").closest("div");
+    const sealResistanceRow = resultPanel
+      .getByText("封印抵抗")
+      .closest("div");
+    expect(healingRow).not.toBeNull();
+    expect(sealHitRow).not.toBeNull();
+    expect(sealResistanceRow).not.toBeNull();
+    expect(within(healingRow!).getByText("修炼 +65")).toBeInTheDocument();
+    expect(within(healingRow!).getByText("65")).toBeInTheDocument();
+    expect(within(sealHitRow!).getByText("修炼 +26%")).toBeInTheDocument();
+    expect(within(sealHitRow!).getByText("174")).toBeInTheDocument();
+    expect(
+      within(sealResistanceRow!).getByText("修炼 +26%")
+    ).toBeInTheDocument();
+    expect(within(sealResistanceRow!).getByText("28")).toBeInTheDocument();
+  });
+
   it("应该为星运祈福选择三项五维并切换 18 或 25 档", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
@@ -701,7 +839,7 @@ describe("CharacterAttributeCalculator", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("物理暴击")).toBeInTheDocument();
     expect(screen.getByText("100%")).toBeInTheDocument();
-    expect(screen.getByText("148")).toBeInTheDocument();
+    expect(screen.getByText("150")).toBeInTheDocument();
     expect(screen.getByText("等级 +136")).toBeInTheDocument();
     expect(
       screen.getAllByText(/系亲和$/).map((element) => element.textContent)
@@ -777,7 +915,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(healingRow).not.toBeNull();
     expect(battleEntryAngerRow).not.toBeNull();
     expect(within(healingRow!).getByText("灵符 +31")).toBeInTheDocument();
-    expect(within(healingRow!).getByText("31")).toBeInTheDocument();
+    expect(within(healingRow!).getByText("36")).toBeInTheDocument();
     expect(
       within(battleEntryAngerRow!).getByText("灵符 +17")
     ).toBeInTheDocument();
@@ -856,7 +994,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).getByText("物攻 +122")).toBeInTheDocument();
     expect(within(summaryCard!).queryByText("3 项变更")).not.toBeInTheDocument();
     expect(within(summaryCard!).queryByText("另 1 项")).not.toBeInTheDocument();
-    expect(screen.getByText("已配置 1 / 12")).toBeInTheDocument();
+    expect(screen.getByText("已配置 2 / 14")).toBeInTheDocument();
   });
 
   it("应该保存全部角色属性配置并在重新挂载后恢复", async () => {
@@ -881,6 +1019,33 @@ describe("CharacterAttributeCalculator", () => {
       within(talismanDialog).getByRole("button", { name: "完成" })
     );
 
+    const guildTalentDialog = await openBonusEditor(user, "帮派天赋");
+    await user.click(
+      within(guildTalentDialog).getByRole("checkbox", {
+        name: "物攻 +8 / 法攻 +6",
+      })
+    );
+    await user.click(
+      within(guildTalentDialog).getByRole("checkbox", {
+        name: "物理暴击 +3% / 法术暴击 +3%",
+      })
+    );
+    await user.click(
+      within(guildTalentDialog).getByRole("button", { name: "完成" })
+    );
+
+    const trainingDialog = await openBonusEditor(user, "人物修炼");
+    await user.selectOptions(
+      within(trainingDialog).getByRole("combobox", { name: "攻击修炼等级" }),
+      "12"
+    );
+    await user.click(
+      within(trainingDialog).getByRole("checkbox", { name: "攻击修炼突破" })
+    );
+    await user.click(
+      within(trainingDialog).getByRole("button", { name: "完成" })
+    );
+
     await waitFor(() => {
       const stored = JSON.parse(
         window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
@@ -888,11 +1053,19 @@ describe("CharacterAttributeCalculator", () => {
       expect(stored.skillBonuses.health).toBe(100);
       expect(stored.temporaryTalismanStar).toBe(6);
       expect(stored.temporaryTalismanAttributes).toEqual(["health"]);
+      expect(stored.guildTalentOptionIds).toEqual(["attack", "critical"]);
+      expect(stored.characterTrainingLevels).toEqual({
+        attack: { level: 12, breakthrough: true },
+        physicalDefense: { level: 1, breakthrough: false },
+        magicDefense: { level: 1, breakthrough: false },
+      });
       expect(Object.keys(stored).sort()).toEqual(
         [
+          "characterTrainingLevels",
           "charmAttribute",
           "charmValue",
           "divineSoulValue",
+          "guildTalentOptionIds",
           "isGuildBlessingEnabled",
           "satinSelections",
           "seasonArtifactAttribute",
@@ -916,10 +1089,51 @@ describe("CharacterAttributeCalculator", () => {
 
     expect(screen.getByText("+技能 100")).toBeInTheDocument();
     expect(screen.getByText("+灵符 309")).toBeInTheDocument();
+    const restoredTalentCard = screen
+      .getByRole("heading", { name: "帮派天赋" })
+      .closest("article");
+    expect(restoredTalentCard).not.toBeNull();
+    expect(within(restoredTalentCard!).getByText("物攻 +8")).toBeInTheDocument();
+    const restoredTrainingCard = screen
+      .getByRole("heading", { name: "人物修炼" })
+      .closest("article");
+    expect(restoredTrainingCard).not.toBeNull();
+    expect(
+      within(restoredTrainingCard!).getByText("治疗强度 +65")
+    ).toBeInTheDocument();
     const restoredDialog = await openBonusEditor(user, "技能");
     expect(
       within(restoredDialog).getByRole("spinbutton", { name: "技能：气血" })
     ).toHaveValue(100);
+  });
+
+  it("应该把旧版整组帮派天赋状态迁移为六项全选", async () => {
+    window.localStorage.setItem(
+      CHARACTER_ATTRIBUTES_STORAGE_KEY,
+      JSON.stringify({ isGuildTalentEnabled: true })
+    );
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    const guildTalentDialog = await openBonusEditor(user, "帮派天赋");
+    const migratedOptions = within(guildTalentDialog).getAllByRole("checkbox");
+    expect(migratedOptions).toHaveLength(6);
+    migratedOptions.forEach((option) => expect(option).toBeChecked());
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+      );
+      expect(stored.guildTalentOptionIds).toEqual([
+        "attack",
+        "critical",
+        "defense",
+        "speed",
+        "speed-percent",
+        "seal-hit",
+      ]);
+      expect(stored.isGuildTalentEnabled).toBeUndefined();
+    });
   });
 
   it("应该迁移旧版角色配置并安全清空自由灵符数值", async () => {

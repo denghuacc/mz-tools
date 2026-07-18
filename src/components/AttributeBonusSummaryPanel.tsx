@@ -5,6 +5,7 @@ export type AttributeBonusSummarySource<SourceId extends string = string> = {
   id: SourceId;
   title: string;
   badge?: string;
+  details?: string;
   items: readonly AttributeBonusSummaryItem[];
   validationError?: string | null;
 };
@@ -43,6 +44,7 @@ const AttributeBonusSummaryPanel = <SourceId extends string>({
             key={source.id}
             title={source.title}
             badge={source.badge}
+            details={source.details}
             items={source.items}
             validationError={source.validationError}
             onEdit={() => onEdit(source.id)}

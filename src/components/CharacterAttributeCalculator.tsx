@@ -10,8 +10,17 @@ import type { CSSProperties, ReactNode } from "react";
 import AttributeBonusCard from "./AttributeBonusCard";
 import AttributeBonusSummaryPanel from "./AttributeBonusSummaryPanel";
 import type { AttributeBonusSummarySource } from "./AttributeBonusSummaryPanel";
+import CharacterTrainingBonusControl from "./CharacterTrainingBonusControl";
+import {
+  calculateCharacterTrainingBonuses,
+  createDefaultCharacterTrainingLevels,
+  formatCharacterTrainingLevel,
+  normalizeCharacterTrainingLevels,
+} from "../utils/characterTraining";
+import type { CharacterTrainingLevels } from "../utils/characterTraining";
 import EditorDialog from "./EditorDialog";
 import GuildBlessingBonusControl from "./GuildBlessingBonusControl";
+import GuildTalentBonusControl from "./GuildTalentBonusControl";
 import PotentialAllocationControl from "./PotentialAllocationControl";
 import SatinAttributeBonusControl from "./SatinAttributeBonusControl";
 import SelectableAttributeBonusControl from "./SelectableAttributeBonusControl";
@@ -143,6 +152,59 @@ const GUILD_BLESSING_FIELDS = [
   { attribute: "physicalDefense", label: "物防", value: 20 },
   { attribute: "magicAttack", label: "法攻", value: 16 },
   { attribute: "magicDefense", label: "法防", value: 16 },
+] as const;
+
+const GUILD_TALENT_SUMMARY_FIELDS = [
+  { attribute: "physicalAttack", label: "物攻" },
+  { attribute: "magicAttack", label: "法攻" },
+  { attribute: "physicalCritical", label: "物理暴击", unit: "%" },
+  { attribute: "magicalCritical", label: "法术暴击", unit: "%" },
+  { attribute: "physicalDefense", label: "物防" },
+  { attribute: "magicDefense", label: "法防" },
+  { attribute: "speed", label: "速度" },
+  { attribute: "speedPercent", label: "速度", unit: "%" },
+  { attribute: "sealHit", label: "封印命中", unit: "%" },
+] as const;
+
+const GUILD_TALENT_OPTIONS = [
+  {
+    id: "attack",
+    label: "物攻 +8 / 法攻 +6",
+    bonuses: { physicalAttack: 8, magicAttack: 6 },
+  },
+  {
+    id: "critical",
+    label: "物理暴击 +3% / 法术暴击 +3%",
+    bonuses: { physicalCritical: 3, magicalCritical: 3 },
+  },
+  {
+    id: "defense",
+    label: "物防 +8 / 法防 +6",
+    bonuses: { physicalDefense: 8, magicDefense: 6 },
+  },
+  {
+    id: "speed",
+    label: "速度 +4",
+    bonuses: { speed: 4 },
+  },
+  {
+    id: "speed-percent",
+    label: "速度 +2%",
+    bonuses: { speedPercent: 2 },
+  },
+  {
+    id: "seal-hit",
+    label: "封印命中 +1%",
+    bonuses: { sealHit: 1 },
+  },
+] as const;
+
+type GuildTalentOptionId = (typeof GUILD_TALENT_OPTIONS)[number]["id"];
+
+const CHARACTER_TRAINING_SUMMARY_FIELDS = [
+  { attribute: "healingPower", label: "治疗强度" },
+  { attribute: "sealHit", label: "封印命中", unit: "%" },
+  { attribute: "sealResistance", label: "封印抵抗", unit: "%" },
 ] as const;
 
 const TALISMAN_BONUS_OPTIONS = [
@@ -347,6 +409,8 @@ type EditorId =
   | "satin"
   | "transformationTalisman"
   | "guildBlessing"
+  | "guildTalent"
+  | "characterTraining"
   | "starBlessing"
   | "temporaryTalisman"
   | "skill";
@@ -465,16 +529,31 @@ const createTemporaryTalismanBonuses = (
   return bonuses;
 };
 
-const createGuildBlessingBonuses = (enabled: boolean) => {
+const createFixedAttributeBonuses = (
+  fields: readonly { attribute: CharacterBonusAttribute; value: number }[],
+  enabled: boolean
+) => {
   const bonuses = createEmptyCharacterAttributeBonuses();
 
   if (enabled) {
-    for (const { attribute, value } of GUILD_BLESSING_FIELDS) {
+    for (const { attribute, value } of fields) {
       bonuses[attribute] = value;
     }
   }
 
   return bonuses;
+};
+
+const createGuildTalentBonuses = (
+  optionIds: readonly GuildTalentOptionId[]
+) => {
+  const selectedOptionIds = new Set(optionIds);
+
+  return combineCharacterAttributeBonuses(
+    ...GUILD_TALENT_OPTIONS.filter(({ id }) =>
+      selectedOptionIds.has(id)
+    ).map(({ bonuses }) => bonuses)
+  );
 };
 
 const createDivineSoulBonuses = (value: number) => {
@@ -540,6 +619,8 @@ type CharacterCalculatorState = {
   satinSelections: readonly SatinBonusSelection[];
   transformationTalismanSelections: readonly TransformationTalismanBonusSelection[];
   isGuildBlessingEnabled: boolean;
+  guildTalentOptionIds: readonly GuildTalentOptionId[];
+  characterTrainingLevels: CharacterTrainingLevels;
   starBlessingAttributes: readonly PrimaryAttribute[];
   starBlessingValue: StarBlessingBonusValue;
 };
@@ -560,6 +641,8 @@ const createDefaultCharacterCalculatorState = (): CharacterCalculatorState => ({
   satinSelections: [],
   transformationTalismanSelections: [],
   isGuildBlessingEnabled: false,
+  guildTalentOptionIds: [],
+  characterTrainingLevels: createDefaultCharacterTrainingLevels(),
   starBlessingAttributes: [],
   starBlessingValue: 18,
 });
@@ -601,6 +684,9 @@ const TRANSFORMATION_TALISMAN_ATTRIBUTE_SET = new Set<string>(
 );
 const TEMPORARY_TALISMAN_ATTRIBUTE_SET = new Set<string>(
   TEMPORARY_TALISMAN_BONUS_FIELDS.map(({ attribute }) => attribute)
+);
+const GUILD_TALENT_OPTION_ID_SET = new Set<string>(
+  GUILD_TALENT_OPTIONS.map(({ id }) => id)
 );
 
 const isPrimaryAttribute = (value: unknown): value is PrimaryAttribute =>
@@ -698,6 +784,29 @@ const normalizeTemporaryTalismanAttributes = (
   );
 };
 
+const normalizeGuildTalentOptionIds = (
+  value: unknown,
+  legacyEnabled: unknown
+): GuildTalentOptionId[] => {
+  if (!Array.isArray(value)) {
+    return legacyEnabled === true
+      ? GUILD_TALENT_OPTIONS.map(({ id }) => id)
+      : [];
+  }
+
+  const storedOptionIds = new Set(
+    value.filter(
+      (optionId): optionId is string =>
+        typeof optionId === "string" &&
+        GUILD_TALENT_OPTION_ID_SET.has(optionId)
+    )
+  );
+
+  return GUILD_TALENT_OPTIONS.map(({ id }) => id).filter((optionId) =>
+    storedOptionIds.has(optionId)
+  );
+};
+
 const normalizeCharacterCalculatorState = (
   value: unknown
 ): CharacterCalculatorState | null => {
@@ -754,6 +863,13 @@ const normalizeCharacterCalculatorState = (
         2
       ),
     isGuildBlessingEnabled: value.isGuildBlessingEnabled === true,
+    guildTalentOptionIds: normalizeGuildTalentOptionIds(
+      value.guildTalentOptionIds,
+      value.isGuildTalentEnabled
+    ),
+    characterTrainingLevels: normalizeCharacterTrainingLevels(
+      value.characterTrainingLevels
+    ),
     starBlessingAttributes: normalizePrimaryAttributes(
       value.starBlessingAttributes
     ),
@@ -831,6 +947,14 @@ const CharacterAttributeCalculator = ({
   const [isGuildBlessingEnabled, setIsGuildBlessingEnabled] = useState(
     initialState.isGuildBlessingEnabled
   );
+  const [guildTalentOptionIds, setGuildTalentOptionIds] = useState<
+    readonly GuildTalentOptionId[]
+  >(
+    initialState.guildTalentOptionIds
+  );
+  const [characterTrainingLevels, setCharacterTrainingLevels] = useState(
+    initialState.characterTrainingLevels
+  );
   const [starBlessingAttributes, setStarBlessingAttributes] = useState<
     readonly PrimaryAttribute[]
   >(initialState.starBlessingAttributes);
@@ -860,6 +984,8 @@ const CharacterAttributeCalculator = ({
         satinSelections,
         transformationTalismanSelections,
         isGuildBlessingEnabled,
+        guildTalentOptionIds,
+        characterTrainingLevels,
         starBlessingAttributes,
         starBlessingValue,
       }
@@ -880,6 +1006,8 @@ const CharacterAttributeCalculator = ({
     satinSelections,
     transformationTalismanSelections,
     isGuildBlessingEnabled,
+    guildTalentOptionIds,
+    characterTrainingLevels,
     starBlessingAttributes,
     starBlessingValue,
   ]);
@@ -952,8 +1080,20 @@ const CharacterAttributeCalculator = ({
     [transformationTalismanSelections]
   );
   const guildBlessingBonuses = useMemo(
-    () => createGuildBlessingBonuses(isGuildBlessingEnabled),
+    () =>
+      createFixedAttributeBonuses(
+        GUILD_BLESSING_FIELDS,
+        isGuildBlessingEnabled
+      ),
     [isGuildBlessingEnabled]
+  );
+  const guildTalentBonuses = useMemo(
+    () => createGuildTalentBonuses(guildTalentOptionIds),
+    [guildTalentOptionIds]
+  );
+  const characterTrainingBonuses = useMemo(
+    () => calculateCharacterTrainingBonuses(characterTrainingLevels),
+    [characterTrainingLevels]
   );
   const starBlessingBonuses = useMemo(
     () =>
@@ -996,6 +1136,8 @@ const CharacterAttributeCalculator = ({
         satinBonuses,
         transformationTalismanBonuses,
         guildBlessingBonuses,
+        guildTalentBonuses,
+        characterTrainingBonuses,
         starBlessingBonuses,
         temporaryTalismanBonuses
       ),
@@ -1011,6 +1153,8 @@ const CharacterAttributeCalculator = ({
       satinBonuses,
       transformationTalismanBonuses,
       guildBlessingBonuses,
+      guildTalentBonuses,
+      characterTrainingBonuses,
       starBlessingBonuses,
       temporaryTalismanBonuses,
       areSoulArtifactBonusesValid,
@@ -1103,6 +1247,25 @@ const CharacterAttributeCalculator = ({
     GUILD_BLESSING_FIELDS,
     guildBlessingBonuses
   );
+  const guildTalentSummaryItems = createBonusSummaryItems(
+    GUILD_TALENT_SUMMARY_FIELDS,
+    guildTalentBonuses
+  );
+  const characterTrainingSummaryItems = createBonusSummaryItems(
+    CHARACTER_TRAINING_SUMMARY_FIELDS,
+    characterTrainingBonuses
+  );
+  const characterTrainingDetails = [
+    `攻击修炼 ${formatCharacterTrainingLevel(
+      characterTrainingLevels.attack
+    )}`,
+    `物防修炼 ${formatCharacterTrainingLevel(
+      characterTrainingLevels.physicalDefense
+    )}`,
+    `法防修炼 ${formatCharacterTrainingLevel(
+      characterTrainingLevels.magicDefense
+    )}`,
+  ].join(" · ");
   const starBlessingSummaryItems = starBlessingAttributes.map((attribute) => ({
     label: PRIMARY_ATTRIBUTE_SHORT_LABELS[attribute],
     value: starBlessingValue,
@@ -1294,6 +1457,39 @@ const CharacterAttributeCalculator = ({
           enabled={isGuildBlessingEnabled}
           items={GUILD_BLESSING_FIELDS}
           onEnabledChange={setIsGuildBlessingEnabled}
+        />
+      ),
+    },
+    {
+      id: "guildTalent",
+      title: "帮派天赋",
+      badge:
+        guildTalentOptionIds.length > 0
+          ? `已选 ${guildTalentOptionIds.length} / ${GUILD_TALENT_OPTIONS.length}`
+          : undefined,
+      items: guildTalentSummaryItems,
+      renderContent: (title) => (
+        <GuildTalentBonusControl
+          title={title}
+          options={GUILD_TALENT_OPTIONS}
+          selectedOptionIds={guildTalentOptionIds}
+          onChange={setGuildTalentOptionIds}
+        />
+      ),
+    },
+    {
+      id: "characterTraining",
+      title: "人物修炼",
+      details: characterTrainingDetails,
+      items: characterTrainingSummaryItems,
+      renderContent: (title) => (
+        <CharacterTrainingBonusControl
+          title={title}
+          levels={characterTrainingLevels}
+          onChange={setCharacterTrainingLevels}
+          onReset={() =>
+            setCharacterTrainingLevels(createDefaultCharacterTrainingLevels())
+          }
         />
       ),
     },
@@ -1712,6 +1908,17 @@ const CharacterAttributeCalculator = ({
                                     帮派 {formatBonus(guildBlessingBonuses[attribute])}
                                   </span>
                                 )}
+                                {guildTalentBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-sky-600">
+                                    天赋 {formatBonus(guildTalentBonuses[attribute])}
+                                  </span>
+                                )}
+                                {attribute === "speed" &&
+                                  guildTalentBonuses.speedPercent > 0 && (
+                                    <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-sky-600">
+                                      天赋 +{formatAttribute(guildTalentBonuses.speedPercent)}%
+                                    </span>
+                                  )}
                                 {temporaryTalismanBonuses[attribute] > 0 && (
                                   <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-violet-600">
                                     灵符 {formatBonus(temporaryTalismanBonuses[attribute])}
@@ -1858,6 +2065,23 @@ const CharacterAttributeCalculator = ({
                                         LEVEL_ONE_ADVANCED_ATTRIBUTES.sealHit}
                                     </span>
                                   )}
+                                  {(attribute.attribute === "healingPower" ||
+                                    attribute.attribute === "sealHit" ||
+                                    attribute.attribute === "sealResistance") &&
+                                    characterTrainingBonuses[
+                                      attribute.attribute
+                                    ] > 0 && (
+                                      <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-cyan-700">
+                                        修炼 {formatBonus(
+                                          characterTrainingBonuses[
+                                            attribute.attribute
+                                          ]
+                                        )}
+                                        {(attribute.attribute === "sealHit" ||
+                                          attribute.attribute ===
+                                            "sealResistance") && "%"}
+                                      </span>
+                                    )}
                                   {attribute.attribute === "sealResistance" &&
                                     skillBonuses.sealResistance !== 0 && (
                                       <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-600">
@@ -1919,6 +2143,22 @@ const CharacterAttributeCalculator = ({
                                           "physicalCritical" ||
                                           attribute.attribute ===
                                             "magicalCritical") && "%"}
+                                      </span>
+                                    )}
+                                  {(attribute.attribute === "physicalCritical" ||
+                                    attribute.attribute === "magicalCritical" ||
+                                    attribute.attribute === "sealHit") &&
+                                    guildTalentBonuses[attribute.attribute] > 0 && (
+                                      <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-sky-600">
+                                        天赋 {formatBonus(
+                                          guildTalentBonuses[attribute.attribute]
+                                        )}
+                                        {(attribute.attribute ===
+                                          "physicalCritical" ||
+                                          attribute.attribute ===
+                                            "magicalCritical" ||
+                                          attribute.attribute === "sealHit") &&
+                                          "%"}
                                       </span>
                                     )}
                                 </>
