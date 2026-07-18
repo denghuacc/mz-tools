@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CharacterAttributeCalculator from "../CharacterAttributeCalculator";
+import { calculateSanshengPillMaximumCount } from "../../utils/characterAttributes";
 import {
   CHARACTER_ATTRIBUTES_STORAGE_KEY,
   LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY,
@@ -39,7 +40,7 @@ describe("CharacterAttributeCalculator", () => {
     const editButtons = within(screen.getByTestId("attribute-bonus-rail"))
       .getAllByRole("button", { name: /^编辑/ });
 
-    expect(editButtons).toHaveLength(14);
+    expect(editButtons).toHaveLength(15);
     editButtons.forEach((button) => {
       expect(button.textContent).toBe("");
       expect(button.querySelector("svg")).not.toBeNull();
@@ -84,6 +85,56 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("鹤云幡 · 物攻 +27.6")).toBeInTheDocument();
     expect(screen.getByText("法宝（鹤云幡） +27.6")).toBeInTheDocument();
     expect(screen.getAllByText("法宝（鹤云幡） +5%")).toHaveLength(2);
+  });
+
+  it("应该按当前年份限制三生造化丹颗数并换算五维属性", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const dialog = await openBonusEditor(user, "三生造化丹");
+    const currentYear = new Date().getFullYear();
+    const maximumCount = calculateSanshengPillMaximumCount(currentYear);
+
+    expect(
+      within(dialog).getByLabelText(
+        `三生造化丹已服用 0 / ${maximumCount} 颗`
+      )
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "增加三生造化丹：力量" })
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "增加三生造化丹：力量" })
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "增加三生造化丹：体力" })
+    );
+
+    expect(
+      within(dialog).getByLabelText(
+        `三生造化丹已服用 3 / ${maximumCount} 颗`
+      )
+    ).toBeInTheDocument();
+    const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
+      .getByRole("heading", { name: "三生造化丹" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    expect(within(summaryCard!).getByText("力 +4")).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("体 +2")).toBeInTheDocument();
+    expect(
+      within(summaryCard!).getByText(`已服 3 / ${maximumCount} 颗`)
+    ).toBeInTheDocument();
+    expect(screen.getByText("三生造化丹 +4")).toBeInTheDocument();
+
+    const increaseStrengthButton = within(dialog).getByRole("button", {
+      name: "增加三生造化丹：力量",
+    });
+    for (let count = 3; count < maximumCount; count += 1) {
+      fireEvent.click(increaseStrengthButton);
+    }
+    within(dialog)
+      .getAllByRole("button", { name: /^增加三生造化丹：/ })
+      .forEach((button) => expect(button).toBeDisabled());
   });
 
   it("应该一键隐藏并恢复全部属性加成明细", async () => {
@@ -1002,7 +1053,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).getByText("物攻 +122")).toBeInTheDocument();
     expect(within(summaryCard!).queryByText("3 项变更")).not.toBeInTheDocument();
     expect(within(summaryCard!).queryByText("另 1 项")).not.toBeInTheDocument();
-    expect(screen.getByText("已配置 2 / 14")).toBeInTheDocument();
+    expect(screen.getByText("已配置 2 / 15")).toBeInTheDocument();
   });
 
   it("应该保存全部角色属性配置并在重新挂载后恢复", async () => {
@@ -1054,6 +1105,21 @@ describe("CharacterAttributeCalculator", () => {
       within(trainingDialog).getByRole("button", { name: "完成" })
     );
 
+    const sanshengPillDialog = await openBonusEditor(user, "三生造化丹");
+    await user.click(
+      within(sanshengPillDialog).getByRole("button", {
+        name: "增加三生造化丹：力量",
+      })
+    );
+    await user.click(
+      within(sanshengPillDialog).getByRole("button", {
+        name: "增加三生造化丹：力量",
+      })
+    );
+    await user.click(
+      within(sanshengPillDialog).getByRole("button", { name: "完成" })
+    );
+
     await waitFor(() => {
       const stored = JSON.parse(
         window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
@@ -1067,6 +1133,13 @@ describe("CharacterAttributeCalculator", () => {
         physicalDefense: { level: 1, breakthrough: false },
         magicDefense: { level: 1, breakthrough: false },
       });
+      expect(stored.sanshengPillCounts).toEqual({
+        constitution: 0,
+        spirit: 0,
+        strength: 2,
+        endurance: 0,
+        agility: 0,
+      });
       expect(Object.keys(stored).sort()).toEqual(
         [
           "characterTrainingLevels",
@@ -1075,6 +1148,7 @@ describe("CharacterAttributeCalculator", () => {
           "divineSoulValue",
           "guildTalentOptionIds",
           "isGuildBlessingEnabled",
+          "sanshengPillCounts",
           "satinSelections",
           "seasonArtifactAttribute",
           "seasonArtifactValue",
@@ -1097,6 +1171,7 @@ describe("CharacterAttributeCalculator", () => {
 
     expect(screen.getByText("+技能 100")).toBeInTheDocument();
     expect(screen.getByText("+灵符 309")).toBeInTheDocument();
+    expect(screen.getByText("三生造化丹 +4")).toBeInTheDocument();
     const restoredTalentCard = screen
       .getByRole("heading", { name: "帮派天赋" })
       .closest("article");

@@ -4,6 +4,23 @@ export const FIXED_ATTRIBUTE_POINTS_PER_LEVEL = 2;
 export const POTENTIAL_POINTS_PER_LEVEL = 10;
 export const CHARACTER_UPGRADE_COUNT =
   CHARACTER_LEVEL - INITIAL_CHARACTER_LEVEL;
+export const GAME_LAUNCH_YEAR = 2021;
+export const SANSHENG_PILL_COUNT_PER_YEAR = 3;
+export const SANSHENG_PILL_ATTRIBUTE_POINTS = 2;
+
+/** 按开服后的自然年数计算三生造化丹累计上限；2026 年为第 5 年。 */
+export const calculateSanshengPillMaximumCount = (
+  currentYear = new Date().getFullYear()
+): number => {
+  const normalizedYear = Number.isFinite(currentYear)
+    ? Math.trunc(currentYear)
+    : GAME_LAUNCH_YEAR;
+
+  return (
+    Math.max(0, normalizedYear - GAME_LAUNCH_YEAR) *
+    SANSHENG_PILL_COUNT_PER_YEAR
+  );
+};
 
 export const PRIMARY_ATTRIBUTE_KEYS = [
   "constitution",
@@ -15,6 +32,17 @@ export const PRIMARY_ATTRIBUTE_KEYS = [
 
 export type PrimaryAttribute = (typeof PRIMARY_ATTRIBUTE_KEYS)[number];
 export type CharacterAllocation = Record<PrimaryAttribute, number>;
+
+/** 将各五维服用颗数换算为实际属性点。 */
+export const calculateSanshengPillBonuses = (
+  pillCounts: CharacterAllocation
+): CharacterAllocation => ({
+  constitution: pillCounts.constitution * SANSHENG_PILL_ATTRIBUTE_POINTS,
+  spirit: pillCounts.spirit * SANSHENG_PILL_ATTRIBUTE_POINTS,
+  strength: pillCounts.strength * SANSHENG_PILL_ATTRIBUTE_POINTS,
+  endurance: pillCounts.endurance * SANSHENG_PILL_ATTRIBUTE_POINTS,
+  agility: pillCounts.agility * SANSHENG_PILL_ATTRIBUTE_POINTS,
+});
 
 export type CharacterAllocationPreset = {
   id: string;

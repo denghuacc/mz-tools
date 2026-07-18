@@ -22,6 +22,7 @@ import EditorDialog from "./EditorDialog";
 import GuildBlessingBonusControl from "./GuildBlessingBonusControl";
 import GuildTalentBonusControl from "./GuildTalentBonusControl";
 import PotentialAllocationControl from "./PotentialAllocationControl";
+import SanshengPillBonusControl from "./SanshengPillBonusControl";
 import SatinAttributeBonusControl from "./SatinAttributeBonusControl";
 import SelectableAttributeBonusControl from "./SelectableAttributeBonusControl";
 import SinglePrimaryAttributeBonusControl from "./SinglePrimaryAttributeBonusControl";
@@ -47,6 +48,8 @@ import {
   AFFINITY_BONUS_FIELDS,
   applyCharacterAttributeBonuses,
   arePrimaryAttributeBonusesBalanced,
+  calculateSanshengPillBonuses,
+  calculateSanshengPillMaximumCount,
   calculatePresetAllocation,
   calculateCharacterAttributes,
   CHARACTER_ALLOCATION_PRESETS,
@@ -55,6 +58,7 @@ import {
   CHARACTER_UPGRADE_COUNT,
   combineCharacterAttributeBonuses,
   createEmptyCharacterAttributeBonuses,
+  EMPTY_CHARACTER_ALLOCATION,
   getPrimaryAttributeBonusTotal,
   LEVEL_ONE_ADVANCED_ATTRIBUTES,
   LEVEL_69_FIXED_STATUS_ATTRIBUTES,
@@ -64,6 +68,7 @@ import {
   TOTAL_POTENTIAL_POINTS,
 } from "../utils/characterAttributes";
 import type {
+  CharacterAllocation,
   CharacterAllocationPresetId,
   CharacterAttributeBonuses,
   CharacterBonusAttribute,
@@ -407,6 +412,7 @@ type EditorId =
   | "talisman"
   | "seasonArtifact"
   | "charm"
+  | "sanshengPill"
   | "satin"
   | "transformationTalisman"
   | "guildBlessing"
@@ -500,6 +506,13 @@ const createSinglePrimaryAttributeBonuses = (
 
   return bonuses;
 };
+
+const createSanshengPillAttributeBonuses = (
+  counts: CharacterAllocation
+): CharacterAttributeBonuses => ({
+  ...createEmptyCharacterAttributeBonuses(),
+  ...calculateSanshengPillBonuses(counts),
+});
 
 const createSelectedAttributeBonuses = (
   selections: readonly SelectableBonusSelection[]
@@ -617,6 +630,7 @@ type CharacterCalculatorState = {
   seasonArtifactValue: number;
   charmAttribute: PrimaryAttribute | null;
   charmValue: number;
+  sanshengPillCounts: CharacterAllocation;
   satinSelections: readonly SatinBonusSelection[];
   transformationTalismanSelections: readonly TransformationTalismanBonusSelection[];
   isGuildBlessingEnabled: boolean;
@@ -639,6 +653,7 @@ const createDefaultCharacterCalculatorState = (): CharacterCalculatorState => ({
   seasonArtifactValue: 0,
   charmAttribute: null,
   charmValue: 0,
+  sanshengPillCounts: { ...EMPTY_CHARACTER_ALLOCATION },
   satinSelections: [],
   transformationTalismanSelections: [],
   isGuildBlessingEnabled: false,
@@ -767,6 +782,29 @@ const normalizePrimaryAttributes = (value: unknown): PrimaryAttribute[] => {
     .slice(0, STAR_BLESSING_ATTRIBUTE_COUNT);
 };
 
+const normalizeSanshengPillCounts = (value: unknown): CharacterAllocation => {
+  const counts = { ...EMPTY_CHARACTER_ALLOCATION };
+  if (!isRecord(value)) return counts;
+
+  let remainingCount = calculateSanshengPillMaximumCount();
+
+  for (const attribute of PRIMARY_ATTRIBUTE_KEYS) {
+    const storedCount = value[attribute];
+    if (
+      typeof storedCount !== "number" ||
+      !Number.isInteger(storedCount) ||
+      storedCount < 0
+    ) {
+      continue;
+    }
+
+    counts[attribute] = Math.min(storedCount, remainingCount);
+    remainingCount -= counts[attribute];
+  }
+
+  return counts;
+};
+
 const normalizeTemporaryTalismanAttributes = (
   value: unknown
 ): TemporaryTalismanBonusAttribute[] => {
@@ -852,6 +890,7 @@ const normalizeCharacterCalculatorState = (
       0,
       CHARM_BONUS_MAX_VALUE
     ),
+    sanshengPillCounts: normalizeSanshengPillCounts(value.sanshengPillCounts),
     satinSelections: normalizeBonusSelections<SatinBonusAttribute>(
       value.satinSelections,
       SATIN_ATTRIBUTE_SET,
@@ -938,6 +977,9 @@ const CharacterAttributeCalculator = ({
   const [charmAttribute, setCharmAttribute] =
     useState<PrimaryAttribute | null>(initialState.charmAttribute);
   const [charmValue, setCharmValue] = useState(initialState.charmValue);
+  const [sanshengPillCounts, setSanshengPillCounts] = useState(
+    initialState.sanshengPillCounts
+  );
   const [satinSelections, setSatinSelections] = useState<
     readonly SatinBonusSelection[]
   >(initialState.satinSelections);
@@ -982,6 +1024,7 @@ const CharacterAttributeCalculator = ({
         seasonArtifactValue,
         charmAttribute,
         charmValue,
+        sanshengPillCounts,
         satinSelections,
         transformationTalismanSelections,
         isGuildBlessingEnabled,
@@ -1004,6 +1047,7 @@ const CharacterAttributeCalculator = ({
     seasonArtifactValue,
     charmAttribute,
     charmValue,
+    sanshengPillCounts,
     satinSelections,
     transformationTalismanSelections,
     isGuildBlessingEnabled,
@@ -1072,6 +1116,10 @@ const CharacterAttributeCalculator = ({
     () => createSinglePrimaryAttributeBonuses(charmAttribute, charmValue),
     [charmAttribute, charmValue]
   );
+  const sanshengPillBonuses = useMemo(
+    () => createSanshengPillAttributeBonuses(sanshengPillCounts),
+    [sanshengPillCounts]
+  );
   const satinBonuses = useMemo(
     () => createSelectedAttributeBonuses(satinSelections),
     [satinSelections]
@@ -1134,6 +1182,7 @@ const CharacterAttributeCalculator = ({
         talismanBonuses,
         seasonArtifactBonuses,
         charmBonuses,
+        sanshengPillBonuses,
         satinBonuses,
         transformationTalismanBonuses,
         guildBlessingBonuses,
@@ -1151,6 +1200,7 @@ const CharacterAttributeCalculator = ({
       talismanBonuses,
       seasonArtifactBonuses,
       charmBonuses,
+      sanshengPillBonuses,
       satinBonuses,
       transformationTalismanBonuses,
       guildBlessingBonuses,
@@ -1217,6 +1267,19 @@ const CharacterAttributeCalculator = ({
           },
         ]
       : [];
+  const currentYear = new Date().getFullYear();
+  const sanshengPillMaximumCount =
+    calculateSanshengPillMaximumCount(currentYear);
+  const sanshengPillUsedCount = PRIMARY_ATTRIBUTE_KEYS.reduce(
+    (total, attribute) => total + sanshengPillCounts[attribute],
+    0
+  );
+  const sanshengPillSummaryItems = PRIMARY_ATTRIBUTE_KEYS.filter(
+    (attribute) => sanshengPillBonuses[attribute] > 0
+  ).map((attribute) => ({
+    label: PRIMARY_ATTRIBUTE_SHORT_LABELS[attribute],
+    value: sanshengPillBonuses[attribute],
+  }));
   const satinSummaryItems = satinSelections
     .filter(({ value }) => value !== 0)
     .map(({ attribute, value }) => ({
@@ -1418,6 +1481,25 @@ const CharacterAttributeCalculator = ({
             setCharmAttribute(null);
             setCharmValue(0);
           }}
+        />
+      ),
+    },
+    {
+      id: "sanshengPill",
+      title: "三生造化丹",
+      badge:
+        sanshengPillUsedCount > 0
+          ? `已服 ${sanshengPillUsedCount} / ${sanshengPillMaximumCount} 颗`
+          : undefined,
+      details: `${currentYear} 年上限 ${sanshengPillMaximumCount} 颗`,
+      items: sanshengPillSummaryItems,
+      renderContent: (title) => (
+        <SanshengPillBonusControl
+          title={title}
+          counts={sanshengPillCounts}
+          currentYear={currentYear}
+          maximumCount={sanshengPillMaximumCount}
+          onChange={setSanshengPillCounts}
         />
       ),
     },
@@ -1996,6 +2078,11 @@ const CharacterAttributeCalculator = ({
                                 {charmBonuses[attribute] > 0 && (
                                   <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-fuchsia-600">
                                     魅灵 {formatBonus(charmBonuses[attribute])}
+                                  </span>
+                                )}
+                                {sanshengPillBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-lime-700">
+                                    三生造化丹 {formatBonus(sanshengPillBonuses[attribute])}
                                   </span>
                                 )}
                                 {starBlessingBonuses[attribute] > 0 && (

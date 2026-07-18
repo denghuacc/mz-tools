@@ -1,6 +1,8 @@
 import {
   applyCharacterAttributeBonuses,
   arePrimaryAttributeBonusesBalanced,
+  calculateSanshengPillBonuses,
+  calculateSanshengPillMaximumCount,
   calculatePresetAllocation,
   calculateCharacterAttributes,
   CHARACTER_ALLOCATION_PRESETS,
@@ -302,5 +304,27 @@ describe("角色属性计算", () => {
       trueEnergy: 100,
     });
     expect(FIXED_TRUE_ENERGY).toBe(100);
+  });
+
+  it("应该按开服后的自然年数计算三生造化丹上限并换算属性", () => {
+    expect(calculateSanshengPillMaximumCount(2020)).toBe(0);
+    expect(calculateSanshengPillMaximumCount(2021)).toBe(0);
+    expect(calculateSanshengPillMaximumCount(2026)).toBe(15);
+    expect(calculateSanshengPillMaximumCount(2027)).toBe(18);
+    expect(
+      calculateSanshengPillBonuses({
+        constitution: 2,
+        spirit: 1,
+        strength: 3,
+        endurance: 4,
+        agility: 5,
+      })
+    ).toEqual({
+      constitution: 4,
+      spirit: 2,
+      strength: 6,
+      endurance: 8,
+      agility: 10,
+    });
   });
 });
