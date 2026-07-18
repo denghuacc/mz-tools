@@ -122,35 +122,32 @@ Use the following structure, based on Conventional Commits:
 ```text
 <type>(<optional-scope>): <subject>
 
-Changes:
-- <what changed and why>
-- <another material change, if applicable>
-
-Verification:
-- <command and result, or "Not run (reason: ...)">
+<body describing what changed and why>
 
 <optional-footer>
 ```
 
 - The first line is mandatory.
 - The scope is optional and should be used only when it adds useful context.
-- A `Changes:` body section with at least one `- ` list item is mandatory for every regular commit.
-- A `Verification:` section with at least one `- ` list item is mandatory and must report only commands that were actually run.
+- A meaningful body that describes the code changes is mandatory for every regular commit.
+- The body may use direct `- ` list items, short paragraphs, or another clear format appropriate to the change.
+- Headings such as `Changes:` are optional, but usually unnecessary when direct list items are sufficient.
+- Do not include routine test, lint, or build results in the commit message. Verification remains mandatory in the development workflow and final task handoff.
 - Separate the subject from the body with one blank line.
 - Separate the body from footer entries with one blank line.
-- Do not add extra blank lines at the beginning or end of the message.
-- Use short list items for material changes, verification results, compatibility notes, and remaining limitations.
+- Prefer short list items for commits with multiple material changes, compatibility notes, or remaining limitations.
 - Do not use Markdown headings, code fences, or pasted release notes inside a normal commit message.
 
 ### Automated Enforcement
 
 - `commitlint.config.cjs` is the executable source of truth for machine-checkable commit message rules.
 - The Husky `commit-msg` hook runs commitlint for every local commit after `pnpm install` or `pnpm prepare`.
-- The `prepare` script also configures `.gitmessage` as the local commit template to prompt authors for the required sections.
+- The `prepare` script also configures `.gitmessage` as the local commit template to prompt authors for the required body.
 - GitHub Actions validates every commit introduced by a pull request and every new commit pushed directly to a protected workflow branch.
-- The automated checks enforce the allowed types, lowercase scope, English subject, 72-character header limit, minimum subject detail, body presence, and the required `Changes:` and `Verification:` lists.
+- The automated checks enforce a Conventional Commit type, a non-empty English subject, and a meaningful body of at least 20 characters.
+- Header length, subject capitalization, terminal punctuation, body layout, and section headings are not hard failures.
 - Automated language validation rejects CJK characters in the subject. Exact Chinese UI text and game terminology may still be quoted in the body when necessary.
-- Some semantic rules cannot be verified reliably by tooling. Authors and reviewers must still confirm that the type is accurate, the subject matches the diff, the body explains why, issue references are real, and verification claims are truthful.
+- Some semantic rules cannot be verified reliably by tooling. Authors and reviewers must still confirm that the type is accurate, the subject matches the diff, the body explains why, and issue references are real.
 - Do not bypass the hook with `--no-verify`. If an emergency exception is explicitly approved by the user, document the reason and ensure the message still passes the CI check before merge.
 - Run `pnpm commitlint --edit <path-to-message-file>` to validate a prepared message manually.
 
@@ -177,7 +174,7 @@ Choose the type according to the primary intent:
 - Use `build` for dependency and build-system changes; use `ci` for pipeline and workflow changes.
 - Use `style` only for non-functional formatting. Use `feat` or `fix` for CSS or layout changes that affect the interface.
 
-### Scope Rules
+### Scope Guidelines
 
 - Use a short, lowercase noun that identifies the affected feature or technical area.
 - Prefer stable domain names already present in the project, such as `equipment`, `character`, `storage`, `rules`, `tests`, `build`, or `deps`.
@@ -196,11 +193,11 @@ test(storage): cover corrupted cache recovery
 build(deps): update Vitest to 4.1.10
 ```
 
-### Subject Rules
+### Subject Guidelines
 
 - Write the subject in imperative mood, as a command that completes the sentence: “This commit will ...”.
 - Start with a lowercase letter unless the first word is a proper noun, acronym, or exact identifier.
-- Keep the entire first line at 72 characters or fewer whenever practical.
+- Keep the first line concise enough to scan comfortably in `git log`.
 - Be specific about the behavior or outcome. Prefer `restore equipment form values after reload` over `fix local storage`.
 - Do not end the subject with a period or other terminal punctuation.
 - Do not include issue IDs in the subject unless repository tooling explicitly requires them.
@@ -212,17 +209,17 @@ build(deps): update Vitest to 4.1.10
 
 Every regular commit must include a body so `git log` provides durable context without requiring maintainers to reconstruct intent from the diff.
 
-- Start with an exact `Changes:` heading and list each material change using `- `.
-- Explain why the change was needed and what behavior changed in the list items.
+- Describe the actual code, configuration, test, or documentation changes in meaningful detail.
+- Use direct `- ` list items when several changes should be scanned separately; a concise paragraph is also valid.
+- A `Changes:` heading is allowed but not required.
+- Do not use the body only for a `Verification:` section or routine check results; report verification in the task handoff and let hooks and CI enforce required checks.
+- Explain why the change was needed and what behavior changed.
 - Describe important before-and-after behavior, business rules, compatibility decisions, or implementation constraints.
 - Mention significant alternatives or trade-offs only when they help explain the chosen solution.
 - Document migration, rollout, fallback, or recovery steps when applicable.
 - Call out tests that were intentionally omitted or limitations that remain.
-- Add a `Verification:` section with list items for actual commands and results.
-- Write `- Not run (reason: ...)` when verification was not run; never omit the section.
 - Use complete English sentences and wrap long lines at approximately 100 characters when practical.
 - Keep the body concise enough to remain readable; do not paste raw diffs, full test output, stack traces, generated content, or conversation history.
-- Do not claim that tests, lint, type checking, or builds passed unless they were actually run for that change.
 - Do not include secrets, access tokens, cookies, private URLs, personal data, or environment-variable values.
 
 Example:
@@ -230,12 +227,8 @@ Example:
 ```text
 fix(storage): recover from malformed equipment cache
 
-Changes:
 - Validate persisted equipment items before restoring the calculator state.
 - Fall back to the default form when cached JSON is malformed.
-
-Verification:
-- pnpm test --run src/utils/__tests__/storage.test.ts (passed)
 ```
 
 ### Footer Rules
@@ -269,12 +262,8 @@ Example:
 ```text
 feat(storage)!: replace equipment cache schema
 
-Changes:
 - Store normalized equipment entries under a versioned key.
 - Stop reading the legacy unversioned payload.
-
-Verification:
-- pnpm test --run src/utils/__tests__/storage.test.ts (passed)
 
 BREAKING CHANGE: Existing unversioned equipment drafts are not migrated and
 will reset to the default form after deployment.
@@ -308,12 +297,8 @@ will reset to the default form after deployment.
 ```text
 feat(character): add equipment attribute bonuses
 
-Changes:
 - Apply normalized equipment bonuses to the character summary.
 - Expose source values in the editor while keeping derived totals out of storage.
-
-Verification:
-- pnpm test --run src/utils/__tests__/characterAttributes.test.ts (passed)
 
 Refs: #128
 ```
@@ -321,45 +306,29 @@ Refs: #128
 ```text
 fix(equipment): reject negative gem levels
 
-Changes:
 - Clamp restored legacy values to the supported level range.
 - Prevent malformed cached data from producing invalid equipment totals.
-
-Verification:
-- pnpm test --run src/utils/__tests__/equipmentAttributes.test.ts (passed)
 ```
 
 ```text
 docs: add Git commit message guidelines
 
-Changes:
 - Document the required Conventional Commit structure and English subject rules.
 - Add examples, edge cases, automated checks, and a pre-commit checklist.
-
-Verification:
-- pnpm exec commitlint --edit /tmp/commit-message.txt (passed)
 ```
 
 ```text
 refactor(equipment): extract attribute section rendering
 
-Changes:
 - Move equipment attribute section rendering into focused child components.
 - Preserve the existing state ownership, DOM semantics, and user interactions.
-
-Verification:
-- pnpm test --run src/components/__tests__/EquipmentCalculator.test.tsx (passed)
 ```
 
 ```text
 revert: feat(character): add equipment attribute bonuses
 
-Changes:
 - Revert commit 0123456789abcdef because legacy records are not normalized.
 - Preserve the unrelated equipment editor validation added afterward.
-
-Verification:
-- pnpm test --run src/utils/__tests__/characterAttributes.test.ts (passed)
 ```
 
 ### Invalid Examples
@@ -372,9 +341,9 @@ Verification:
 - `feat(equipment,character): update`: uses multiple scopes and a vague subject.
 - `fix(equipment): Fixed the broken calculation.`: not imperative, starts unnecessarily with uppercase, and ends with punctuation.
 - `WIP feat: add calculator`: uses a non-standard prefix and describes incomplete work.
-- `docs: add commit guidelines`: omits the required `Changes:` body section.
-- A body containing only `Changes:`: omits the required `- ` list item.
-- A body without `Verification:`: omits mandatory verification status from the log.
+- `docs: add commit guidelines`: omits the required body.
+- A body containing only `Verification: pnpm test (passed)`: reports checks but does not describe the code changes.
+- A body containing only `update files`: is too vague to preserve useful maintenance context.
 - `feat: add calculator and update CI and format all files`: combines unrelated changes.
 - `fix: bypass failing tests`: describes an unacceptable workaround rather than a valid fix.
 
@@ -387,14 +356,13 @@ Before creating or proposing a commit message, verify all of the following:
 3. The selected type matches the primary intent and observed behavior.
 4. The optional scope is stable, lowercase, and useful.
 5. The subject is English, imperative, specific, concise, and has no trailing punctuation.
-6. The body contains a `Changes:` section with specific list items explaining the reason and behavior.
-7. The body contains a `Verification:` section listing actual results or a clear reason checks were not run.
+6. The body meaningfully describes the code changes and their reason or behavior.
+7. The body is not merely verification output, metadata, a file list, or a vague restatement of the subject.
 8. Breaking changes, migrations, compatibility risks, and remaining limitations are stated explicitly.
 9. Issue references and metadata are accurate and were not invented.
-10. Verification claims match commands that were actually run.
-11. The message and staged content contain no secrets, sensitive data, generated artifacts, or AI attribution.
-12. The final message accurately describes every material part of the staged diff.
-13. Existing hooks and checks are allowed to run; do not bypass them with `--no-verify` unless the user explicitly requests it and the risk is explained.
+10. The message and staged content contain no secrets, sensitive data, generated artifacts, or AI attribution.
+11. The final message accurately describes every material part of the staged diff.
+12. Existing hooks and checks are allowed to run; do not bypass them with `--no-verify` unless the user explicitly requests it and the risk is explained.
 
 ## 禁止事项
 
