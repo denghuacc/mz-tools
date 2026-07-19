@@ -50,28 +50,30 @@ import {
   arePrimaryAttributeBonusesBalanced,
   calculateSanshengPillBonuses,
   calculateSanshengPillMaximumCount,
+  calculateFixedStatusAttributes,
   calculatePresetAllocation,
   calculateCharacterAttributes,
   CHARACTER_ALLOCATION_PRESETS,
   CHARACTER_BONUS_ATTRIBUTE_KEYS,
   CHARACTER_LEVEL,
-  CHARACTER_UPGRADE_COUNT,
+  CHARACTER_LEVEL_OPTIONS,
   combineCharacterAttributeBonuses,
   createEmptyCharacterAttributeBonuses,
   EMPTY_CHARACTER_ALLOCATION,
+  getCharacterUpgradeCount,
   getPrimaryAttributeBonusTotal,
+  getTotalPotentialPoints,
   LEVEL_ONE_ADVANCED_ATTRIBUTES,
-  LEVEL_69_FIXED_STATUS_ATTRIBUTES,
   LEVEL_ONE_STATUS_ATTRIBUTES,
   PRIMARY_ATTRIBUTE_KEYS,
   SEAL_HIT_POINTS_PER_UPGRADE,
-  TOTAL_POTENTIAL_POINTS,
 } from "../utils/characterAttributes";
 import type {
   CharacterAllocation,
   CharacterAllocationPresetId,
   CharacterAttributeBonuses,
   CharacterBonusAttribute,
+  CharacterLevel,
   PrimaryAttribute,
 } from "../utils/characterAttributes";
 import {
@@ -213,20 +215,20 @@ const CHARACTER_TRAINING_SUMMARY_FIELDS = [
   { attribute: "sealResistance", label: "封印抵抗", unit: "%" },
 ] as const;
 
-const TALISMAN_BONUS_OPTIONS = [
+const createTalismanBonusOptions = (characterLevel: CharacterLevel) => [
   {
     id: "physical-attack",
     name: "天魔幡",
     title: "物攻法宝：天魔幡",
     effectLabel: "等级 × 0.6 物攻",
-    bonuses: { physicalAttack: CHARACTER_LEVEL * 0.6 },
+    bonuses: { physicalAttack: characterLevel * 0.6 },
   },
   {
     id: "magic-attack",
     name: "四灵幡",
     title: "法攻法宝：四灵幡",
     effectLabel: "等级 × 0.6 法攻",
-    bonuses: { magicAttack: CHARACTER_LEVEL * 0.6 },
+    bonuses: { magicAttack: characterLevel * 0.6 },
   },
   {
     id: "speed-defense",
@@ -234,14 +236,17 @@ const TALISMAN_BONUS_OPTIONS = [
     title: "辅助 / 封印法宝：鹤云幡",
     effectLabel: "等级 × 0.4 物攻 · 血炼 +5% 物防 · +5% 法防",
     bonuses: {
-      physicalAttack: CHARACTER_LEVEL * 0.4,
+      physicalAttack: characterLevel * 0.4,
       physicalDefensePercent: 5,
       magicDefensePercent: 5,
     },
   },
 ] as const;
 
+const TALISMAN_BONUS_OPTIONS = createTalismanBonusOptions(CHARACTER_LEVEL);
+
 type TalismanBonusOptionId = (typeof TALISMAN_BONUS_OPTIONS)[number]["id"];
+type TalismanBonusOption = (typeof TALISMAN_BONUS_OPTIONS)[number];
 
 const TALISMAN_BONUS_SUMMARY_FIELDS = [
   { attribute: "physicalAttack", label: "物攻" },
@@ -255,7 +260,7 @@ type TianshuBonusOption = TianshuBonusControlOption & {
   value: number;
 };
 
-const TIANSHU_BONUS_OPTIONS = [
+const createTianshuBonusOptions = (characterLevel: CharacterLevel) => [
   {
     id: "constitution-20",
     title: "20体",
@@ -294,37 +299,37 @@ const TIANSHU_BONUS_OPTIONS = [
   {
     id: "health-level-1",
     title: "等级 × 1 气血",
-    effectLabel: `+${CHARACTER_LEVEL} 气血`,
+    effectLabel: `+${characterLevel} 气血`,
     attribute: "health",
-    value: CHARACTER_LEVEL,
+    value: characterLevel,
   },
   {
     id: "magic-attack-level-02",
     title: "等级 × 0.2 法攻",
-    effectLabel: `+${CHARACTER_LEVEL * 0.2} 法攻`,
+    effectLabel: `+${characterLevel * 0.2} 法攻`,
     attribute: "magicAttack",
-    value: CHARACTER_LEVEL * 0.2,
+    value: characterLevel * 0.2,
   },
   {
     id: "magic-attack-level-03",
     title: "等级 × 0.3 法攻",
-    effectLabel: `+${CHARACTER_LEVEL * 0.3} 法攻`,
+    effectLabel: `+${characterLevel * 0.3} 法攻`,
     attribute: "magicAttack",
-    value: CHARACTER_LEVEL * 0.3,
+    value: characterLevel * 0.3,
   },
   {
     id: "physical-attack-level-02",
     title: "等级 × 0.2 物攻",
-    effectLabel: `+${CHARACTER_LEVEL * 0.2} 物攻`,
+    effectLabel: `+${characterLevel * 0.2} 物攻`,
     attribute: "physicalAttack",
-    value: CHARACTER_LEVEL * 0.2,
+    value: characterLevel * 0.2,
   },
   {
     id: "physical-attack-level-03",
     title: "等级 × 0.3 物攻",
-    effectLabel: `+${CHARACTER_LEVEL * 0.3} 物攻`,
+    effectLabel: `+${characterLevel * 0.3} 物攻`,
     attribute: "physicalAttack",
-    value: CHARACTER_LEVEL * 0.3,
+    value: characterLevel * 0.3,
   },
   {
     id: "seal-hit-2",
@@ -362,6 +367,8 @@ const TIANSHU_BONUS_OPTIONS = [
     value: 2,
   })),
 ] satisfies readonly TianshuBonusOption[];
+
+const TIANSHU_BONUS_OPTIONS = createTianshuBonusOptions(CHARACTER_LEVEL);
 
 const TIANSHU_BONUS_SUMMARY_FIELDS = [
   { attribute: "constitution", label: "体" },
@@ -579,19 +586,25 @@ const createDivineSoulBonuses = (value: number) => {
   return bonuses;
 };
 
-const createTianshuBonuses = (counts: Readonly<Record<string, number>>) => {
+const createTianshuBonuses = (
+  counts: Readonly<Record<string, number>>,
+  options: readonly TianshuBonusOption[] = TIANSHU_BONUS_OPTIONS
+) => {
   const bonuses = createEmptyCharacterAttributeBonuses();
 
-  for (const option of TIANSHU_BONUS_OPTIONS) {
+  for (const option of options) {
     bonuses[option.attribute] += option.value * (counts[option.id] ?? 0);
   }
 
   return bonuses;
 };
 
-const createTalismanBonuses = (optionId: TalismanBonusOptionId | null) => {
+const createTalismanBonuses = (
+  optionId: TalismanBonusOptionId | null,
+  options: readonly TalismanBonusOption[] = TALISMAN_BONUS_OPTIONS
+) => {
   const bonuses = createEmptyCharacterAttributeBonuses();
-  const option = TALISMAN_BONUS_OPTIONS.find(({ id }) => id === optionId);
+  const option = options.find(({ id }) => id === optionId);
 
   if (option) {
     Object.assign(bonuses, option.bonuses);
@@ -933,11 +946,15 @@ const loadCharacterCalculatorState = (): CharacterCalculatorState => {
 };
 
 type CharacterAttributeCalculatorProps = {
+  characterLevel?: CharacterLevel;
+  onCharacterLevelChange?: (characterLevel: CharacterLevel) => void;
   equipmentBonuses?: CharacterAttributeBonuses;
   equipmentItemCount?: number;
 };
 
 const CharacterAttributeCalculator = ({
+  characterLevel = CHARACTER_LEVEL,
+  onCharacterLevelChange = () => undefined,
   equipmentBonuses = createEmptyCharacterAttributeBonuses(),
   equipmentItemCount = 0,
 }: CharacterAttributeCalculatorProps) => {
@@ -1006,6 +1023,20 @@ const CharacterAttributeCalculator = ({
   const [leftAttributePanelHeight, setLeftAttributePanelHeight] = useState(0);
   const leftAttributePanelRef = useRef<HTMLElement>(null);
   const closeEditor = useCallback(() => setActiveEditorId(null), []);
+  const characterUpgradeCount = getCharacterUpgradeCount(characterLevel);
+  const totalPotentialPoints = getTotalPotentialPoints(characterLevel);
+  const fixedStatusAttributes = useMemo(
+    () => calculateFixedStatusAttributes(characterLevel),
+    [characterLevel]
+  );
+  const tianshuBonusOptions = useMemo(
+    () => createTianshuBonusOptions(characterLevel),
+    [characterLevel]
+  );
+  const talismanBonusOptions = useMemo(
+    () => createTalismanBonusOptions(characterLevel),
+    [characterLevel]
+  );
 
   useEffect(() => {
     saveCalculatorState<CharacterCalculatorState>(
@@ -1096,12 +1127,12 @@ const CharacterAttributeCalculator = ({
     [divineSoulValue]
   );
   const tianshuBonuses = useMemo(
-    () => createTianshuBonuses(tianshuBonusCounts),
-    [tianshuBonusCounts]
+    () => createTianshuBonuses(tianshuBonusCounts, tianshuBonusOptions),
+    [tianshuBonusCounts, tianshuBonusOptions]
   );
   const talismanBonuses = useMemo(
-    () => createTalismanBonuses(talismanOptionId),
-    [talismanOptionId]
+    () => createTalismanBonuses(talismanOptionId, talismanBonusOptions),
+    [talismanOptionId, talismanBonusOptions]
   );
   const temporaryTalismanBonuses = useMemo(
     () =>
@@ -1152,12 +1183,12 @@ const CharacterAttributeCalculator = ({
     CHARACTER_ALLOCATION_PRESETS.find(({ id }) => id === selectedPresetId) ??
     CHARACTER_ALLOCATION_PRESETS[0];
   const allocation = useMemo(
-    () => calculatePresetAllocation(selectedPreset.ratio),
-    [selectedPreset]
+    () => calculatePresetAllocation(selectedPreset.ratio, characterLevel),
+    [characterLevel, selectedPreset]
   );
   const calculated = useMemo(
-    () => calculateCharacterAttributes(allocation),
-    [allocation]
+    () => calculateCharacterAttributes(allocation, characterLevel),
+    [allocation, characterLevel]
   );
   const soulArtifactPrimaryTotal = getPrimaryAttributeBonusTotal(
     soulArtifactBonuses
@@ -1211,8 +1242,13 @@ const CharacterAttributeCalculator = ({
     ]
   );
   const effectiveAttributes = useMemo(
-    () => applyCharacterAttributeBonuses(calculated, totalBonuses),
-    [calculated, totalBonuses]
+    () =>
+      applyCharacterAttributeBonuses(
+        calculated,
+        totalBonuses,
+        characterLevel
+      ),
+    [calculated, characterLevel, totalBonuses]
   );
   const allocationSummary = PRIMARY_ATTRIBUTE_KEYS.filter(
     (attribute) => allocation[attribute] > 0
@@ -1234,7 +1270,7 @@ const CharacterAttributeCalculator = ({
     TIANSHU_BONUS_SUMMARY_FIELDS,
     tianshuBonuses
   );
-  const selectedTalismanOption = TALISMAN_BONUS_OPTIONS.find(
+  const selectedTalismanOption = talismanBonusOptions.find(
     ({ id }) => id === talismanOptionId
   );
   const talismanSummaryItems = createBonusSummaryItems(
@@ -1429,7 +1465,7 @@ const CharacterAttributeCalculator = ({
       renderContent: (title) => (
         <TianshuBonusControl
           title={title}
-          options={TIANSHU_BONUS_OPTIONS}
+          options={tianshuBonusOptions}
           counts={tianshuBonusCounts}
           onCountChange={updateTianshuBonusCount}
           onReset={() => setTianshuBonusCounts({})}
@@ -1443,10 +1479,10 @@ const CharacterAttributeCalculator = ({
       renderContent: (title) => (
         <TalismanBonusControl
           title={title}
-          options={TALISMAN_BONUS_OPTIONS}
+          options={talismanBonusOptions}
           selectedOptionId={talismanOptionId}
           onSelect={(optionId) => {
-            const option = TALISMAN_BONUS_OPTIONS.find(
+            const option = talismanBonusOptions.find(
               ({ id }) => id === optionId
             );
 
@@ -1680,14 +1716,41 @@ const CharacterAttributeCalculator = ({
           data-testid="attribute-result-panel"
         >
           <div>
-            <div className="mb-4 flex items-start justify-between gap-4">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h2 className="text-base font-semibold text-slate-900">数值条</h2>
                 <p className="mt-1.5 text-xs leading-5 text-slate-500">
                   气血和法力均按等级成长；气血还会随体力增加，真气固定为 100。
                 </p>
               </div>
-              <span className="shrink-0 text-xs text-slate-400">暂算值</span>
+              <div className="flex shrink-0 items-end gap-3">
+                <label>
+                  <span className="block text-[11px] font-medium text-slate-500">
+                    角色等级
+                  </span>
+                  <select
+                    aria-label="角色等级"
+                    className="mt-1 min-w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    value={characterLevel}
+                    onChange={(event) => {
+                      const nextLevel = CHARACTER_LEVEL_OPTIONS.find(
+                        (level) => level === Number(event.target.value)
+                      );
+
+                      if (nextLevel) onCharacterLevelChange(nextLevel);
+                    }}
+                  >
+                    {CHARACTER_LEVEL_OPTIONS.map((level) => (
+                      <option key={level} value={level}>
+                        {level} 级
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <span className="mb-2 shrink-0 text-xs text-slate-400">
+                  暂算值
+                </span>
+              </div>
             </div>
 
             <div className="space-y-3">
@@ -1703,7 +1766,7 @@ const CharacterAttributeCalculator = ({
                           <span className="ml-2 inline-block whitespace-nowrap text-xs text-slate-500">
                             等级 +
                             {formatAttribute(
-                              LEVEL_69_FIXED_STATUS_ATTRIBUTES.health -
+                              fixedStatusAttributes.health -
                                 LEVEL_ONE_STATUS_ATTRIBUTES.health
                             )}
                           </span>
@@ -1774,7 +1837,7 @@ const CharacterAttributeCalculator = ({
                           <span className="ml-2 inline-block whitespace-nowrap text-xs text-slate-500">
                             等级 +
                             {formatAttribute(
-                              LEVEL_69_FIXED_STATUS_ATTRIBUTES.mana -
+                              fixedStatusAttributes.mana -
                                 LEVEL_ONE_STATUS_ATTRIBUTES.mana
                             )}
                           </span>
@@ -1814,7 +1877,7 @@ const CharacterAttributeCalculator = ({
                     真气
                   </span>
                   <strong className="text-sm text-amber-700">
-                    {LEVEL_69_FIXED_STATUS_ATTRIBUTES.trueEnergy}
+                    {fixedStatusAttributes.trueEnergy}
                   </strong>
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-amber-100">
@@ -1883,7 +1946,7 @@ const CharacterAttributeCalculator = ({
                       </span>
                     </div>
                     <p className="mt-1.5 text-xs leading-5 text-slate-500">
-                      当前值 = 1 级物理角色初始值 + {CHARACTER_UPGRADE_COUNT} 次固定成长 + 潜力点 + 属性加成。
+                      当前值 = 1 级物理角色初始值 + {characterUpgradeCount} 次固定成长 + 潜力点 + 属性加成。
                     </p>
                   </div>
 
@@ -2129,7 +2192,7 @@ const CharacterAttributeCalculator = ({
                     </p>
                   </div>
                   <span className="shrink-0 text-xs font-medium text-emerald-600">
-                    69 级规则值
+                    {characterLevel} 级规则值
                   </span>
                 </div>
 
@@ -2315,8 +2378,8 @@ const CharacterAttributeCalculator = ({
 
       <section className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 text-xs leading-6 text-blue-900 sm:px-5">
         <strong className="font-semibold">当前计算口径：</strong>
-        以 1 级物理角色截图样本为基准，升至 69 级共成长 {CHARACTER_UPGRADE_COUNT} 次，
-        可分配潜力点 {TOTAL_POTENTIAL_POINTS}。初始力量多 10 点，以及法攻/法防/物攻/物防/速度初值是否随机，均待更多新号样本确认。
+        以 1 级物理角色截图样本为基准，升至 {characterLevel} 级共成长 {characterUpgradeCount} 次，
+        可分配潜力点 {totalPotentialPoints}。初始力量多 10 点，以及法攻/法防/物攻/物防/速度初值是否随机，均待更多新号样本确认。
       </section>
     </div>
   );

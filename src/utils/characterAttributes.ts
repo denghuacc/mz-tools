@@ -1,4 +1,6 @@
 export const CHARACTER_LEVEL = 69;
+export const CHARACTER_LEVEL_OPTIONS = [69, 89, 110] as const;
+export type CharacterLevel = (typeof CHARACTER_LEVEL_OPTIONS)[number];
 export const INITIAL_CHARACTER_LEVEL = 1;
 export const FIXED_ATTRIBUTE_POINTS_PER_LEVEL = 2;
 export const POTENTIAL_POINTS_PER_LEVEL = 10;
@@ -7,6 +9,23 @@ export const CHARACTER_UPGRADE_COUNT =
 export const GAME_LAUNCH_YEAR = 2021;
 export const SANSHENG_PILL_COUNT_PER_YEAR = 3;
 export const SANSHENG_PILL_ATTRIBUTE_POINTS = 2;
+
+/** 将旧缓存或外部输入映射到最近的受支持等级档位。 */
+export const normalizeCharacterLevel = (value: unknown): CharacterLevel => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return CHARACTER_LEVEL;
+  }
+
+  return CHARACTER_LEVEL_OPTIONS.reduce((nearest, option) =>
+    Math.abs(option - value) < Math.abs(nearest - value) ? option : nearest
+  );
+};
+
+export const getCharacterUpgradeCount = (characterLevel: CharacterLevel) =>
+  characterLevel - INITIAL_CHARACTER_LEVEL;
+
+export const getTotalPotentialPoints = (characterLevel: CharacterLevel) =>
+  getCharacterUpgradeCount(characterLevel) * POTENTIAL_POINTS_PER_LEVEL;
 
 /** 按开服后的自然年数计算三生造化丹累计上限；2026 年为第 5 年。 */
 export const calculateSanshengPillMaximumCount = (
@@ -110,13 +129,14 @@ export type CharacterAllocationPresetId =
 
 /** 将每级 10 点的比例方案换算为当前等级的实际潜力点。 */
 export const calculatePresetAllocation = (
-  ratio: CharacterAllocation
+  ratio: CharacterAllocation,
+  characterLevel: CharacterLevel = CHARACTER_LEVEL
 ): CharacterAllocation => ({
-  constitution: ratio.constitution * CHARACTER_UPGRADE_COUNT,
-  spirit: ratio.spirit * CHARACTER_UPGRADE_COUNT,
-  strength: ratio.strength * CHARACTER_UPGRADE_COUNT,
-  endurance: ratio.endurance * CHARACTER_UPGRADE_COUNT,
-  agility: ratio.agility * CHARACTER_UPGRADE_COUNT,
+  constitution: ratio.constitution * getCharacterUpgradeCount(characterLevel),
+  spirit: ratio.spirit * getCharacterUpgradeCount(characterLevel),
+  strength: ratio.strength * getCharacterUpgradeCount(characterLevel),
+  endurance: ratio.endurance * getCharacterUpgradeCount(characterLevel),
+  agility: ratio.agility * getCharacterUpgradeCount(characterLevel),
 });
 
 export const LEVEL_ONE_PRIMARY_ATTRIBUTES: CharacterAllocation = {
@@ -148,6 +168,22 @@ export const LEVEL_69_FIXED_STATUS_ATTRIBUTES = {
     CHARACTER_UPGRADE_COUNT * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.mana,
   trueEnergy: FIXED_TRUE_ENERGY,
 } as const;
+
+export const calculateFixedStatusAttributes = (
+  characterLevel: CharacterLevel
+) => {
+  const upgradeCount = getCharacterUpgradeCount(characterLevel);
+
+  return {
+    health:
+      LEVEL_ONE_STATUS_ATTRIBUTES.health +
+      upgradeCount * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.health,
+    mana:
+      LEVEL_ONE_STATUS_ATTRIBUTES.mana +
+      upgradeCount * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.mana,
+    trueEnergy: FIXED_TRUE_ENERGY,
+  };
+};
 
 export const LEVEL_ONE_DERIVED_ATTRIBUTES = {
   magicAttack: 100,
@@ -311,6 +347,15 @@ export const LEVEL_69_ADVANCED_ATTRIBUTES: AdvancedAttributes = {
     CHARACTER_UPGRADE_COUNT * SEAL_HIT_POINTS_PER_UPGRADE,
 };
 
+export const calculateLevelAdvancedAttributes = (
+  characterLevel: CharacterLevel
+): AdvancedAttributes => ({
+  ...LEVEL_ONE_ADVANCED_ATTRIBUTES,
+  sealHit:
+    LEVEL_ONE_ADVANCED_ATTRIBUTES.sealHit +
+    getCharacterUpgradeCount(characterLevel) * SEAL_HIT_POINTS_PER_UPGRADE,
+});
+
 export const FIXED_PRIMARY_ATTRIBUTES: CharacterAllocation = {
   constitution:
     LEVEL_ONE_PRIMARY_ATTRIBUTES.constitution +
@@ -327,6 +372,21 @@ export const FIXED_PRIMARY_ATTRIBUTES: CharacterAllocation = {
   agility:
     LEVEL_ONE_PRIMARY_ATTRIBUTES.agility +
     CHARACTER_UPGRADE_COUNT * FIXED_ATTRIBUTE_POINTS_PER_LEVEL,
+};
+
+export const calculateFixedPrimaryAttributes = (
+  characterLevel: CharacterLevel
+): CharacterAllocation => {
+  const upgradePoints =
+    getCharacterUpgradeCount(characterLevel) * FIXED_ATTRIBUTE_POINTS_PER_LEVEL;
+
+  return {
+    constitution: LEVEL_ONE_PRIMARY_ATTRIBUTES.constitution + upgradePoints,
+    spirit: LEVEL_ONE_PRIMARY_ATTRIBUTES.spirit + upgradePoints,
+    strength: LEVEL_ONE_PRIMARY_ATTRIBUTES.strength + upgradePoints,
+    endurance: LEVEL_ONE_PRIMARY_ATTRIBUTES.endurance + upgradePoints,
+    agility: LEVEL_ONE_PRIMARY_ATTRIBUTES.agility + upgradePoints,
+  };
 };
 
 export const TOTAL_POTENTIAL_POINTS =
@@ -363,7 +423,8 @@ export type EffectiveCharacterAttributes = {
 /** 潜力属性先参与派生公式，直接属性再叠加到最终结果。 */
 export const applyCharacterAttributeBonuses = (
   calculated: CalculatedCharacterAttributes,
-  bonuses: CharacterAttributeBonuses
+  bonuses: CharacterAttributeBonuses,
+  characterLevel: CharacterLevel = CHARACTER_LEVEL
 ): EffectiveCharacterAttributes => {
   const magicAttributeBonus =
     bonuses.constitution * 0.1 +
@@ -395,7 +456,7 @@ export const applyCharacterAttributeBonuses = (
           (1 + bonuses.healthPercent / 100)
       ),
       mana: roundAttribute(
-        LEVEL_69_FIXED_STATUS_ATTRIBUTES.mana + bonuses.mana
+        calculateFixedStatusAttributes(characterLevel).mana + bonuses.mana
       ),
     },
     derived: {
@@ -456,17 +517,20 @@ export const applyCharacterAttributeBonuses = (
   };
 };
 
-/** 根据 69 级固定成长和玩家分配的潜力点计算当前已知裸属性。 */
+/** 根据角色等级固定成长和玩家分配的潜力点计算当前已知裸属性。 */
 export const calculateCharacterAttributes = (
-  allocation: CharacterAllocation
+  allocation: CharacterAllocation,
+  characterLevel: CharacterLevel = CHARACTER_LEVEL
 ): CalculatedCharacterAttributes => {
+  const fixedPrimaryAttributes = calculateFixedPrimaryAttributes(characterLevel);
+  const fixedStatusAttributes = calculateFixedStatusAttributes(characterLevel);
   const primary = {
     constitution:
-      FIXED_PRIMARY_ATTRIBUTES.constitution + allocation.constitution,
-    spirit: FIXED_PRIMARY_ATTRIBUTES.spirit + allocation.spirit,
-    strength: FIXED_PRIMARY_ATTRIBUTES.strength + allocation.strength,
-    endurance: FIXED_PRIMARY_ATTRIBUTES.endurance + allocation.endurance,
-    agility: FIXED_PRIMARY_ATTRIBUTES.agility + allocation.agility,
+      fixedPrimaryAttributes.constitution + allocation.constitution,
+    spirit: fixedPrimaryAttributes.spirit + allocation.spirit,
+    strength: fixedPrimaryAttributes.strength + allocation.strength,
+    endurance: fixedPrimaryAttributes.endurance + allocation.endurance,
+    agility: fixedPrimaryAttributes.agility + allocation.agility,
   };
   const allocatedPoints = PRIMARY_ATTRIBUTE_KEYS.reduce(
     (total, attribute) => total + allocation[attribute],
@@ -486,7 +550,7 @@ export const calculateCharacterAttributes = (
     primary,
     derived: {
       health:
-        LEVEL_69_FIXED_STATUS_ATTRIBUTES.health + constitutionGrowth * 3,
+        fixedStatusAttributes.health + constitutionGrowth * 3,
       magicAttack: roundAttribute(
         LEVEL_ONE_DERIVED_ATTRIBUTES.magicAttack +
           constitutionGrowth * 0.1 +
@@ -515,8 +579,8 @@ export const calculateCharacterAttributes = (
       ),
     },
     // 潜力点不影响进阶属性；封印命中只按角色升级次数固定成长。
-    advanced: LEVEL_69_ADVANCED_ATTRIBUTES,
+    advanced: calculateLevelAdvancedAttributes(characterLevel),
     allocatedPoints,
-    remainingPoints: TOTAL_POTENTIAL_POINTS - allocatedPoints,
+    remainingPoints: getTotalPotentialPoints(characterLevel) - allocatedPoints,
   };
 };

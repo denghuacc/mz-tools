@@ -363,13 +363,22 @@ describe("App 组件", () => {
     const user = userEvent.setup();
     const { unmount } = render(<App />);
 
-    await user.click(screen.getByRole("tab", { name: "角色装备" }));
-    const characterLevelInput = screen.getByRole("spinbutton", {
+    await user.click(screen.getByRole("tab", { name: "角色面板" }));
+    const characterLevelSelect = screen.getByRole("combobox", {
       name: "角色等级",
     });
-    await user.clear(characterLevelInput);
-    await user.type(characterLevelInput, "105");
-    await user.tab();
+    expect(
+      within(characterLevelSelect)
+        .getAllByRole("option")
+        .map((option) => option.getAttribute("value"))
+    ).toEqual(["69", "89", "110"]);
+    await user.selectOptions(characterLevelSelect, "110");
+    expect(screen.getByText("力 +1090")).toBeInTheDocument();
+    expect(screen.getByText(/可分配潜力点 1090/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "角色装备" }));
+    expect(screen.getByText("当前角色 110 级")).toBeInTheDocument();
+    expect(screen.getByText("宝石上限 14 级")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "编辑武器" }));
     const weaponDialog = screen.getByRole("dialog", { name: "编辑武器" });
@@ -379,7 +388,7 @@ describe("App 组件", () => {
     );
     await user.selectOptions(
       within(weaponDialog).getByRole("combobox", { name: "武器：宝石等级" }),
-      "13"
+      "14"
     );
     await user.click(
       within(weaponDialog).getByRole("checkbox", {
@@ -408,11 +417,11 @@ describe("App 组件", () => {
       const storedState = JSON.parse(
         window.localStorage.getItem(EQUIPMENT_ATTRIBUTES_STORAGE_KEY) ?? "{}"
       );
-      expect(storedState.characterLevel).toBe(105);
+      expect(storedState.characterLevel).toBe(110);
       expect(storedState.equipment.weapon.baseAttributes.physicalAttack).toBe(700);
       expect(storedState.equipment.weapon.gem).toEqual({
         type: "diamond",
-        level: 13,
+        level: 14,
         breakthrough: true,
       });
       expect(storedState.equipment.weapon.independentAffix).toEqual({
@@ -440,7 +449,7 @@ describe("App 组件", () => {
       "aria-selected",
       "true"
     );
-    expect(screen.getByRole("spinbutton", { name: "角色等级" })).toHaveValue(105);
+    expect(screen.getByText("当前角色 110 级")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "编辑武器" }));
     const restoredDialog = screen.getByRole("dialog", { name: "编辑武器" });
     expect(
@@ -451,7 +460,7 @@ describe("App 组件", () => {
     ).toHaveValue("diamond");
     expect(
       within(restoredDialog).getByRole("combobox", { name: "武器：宝石等级" })
-    ).toHaveValue("13");
+    ).toHaveValue("14");
     expect(
       within(restoredDialog).getByRole("checkbox", {
         name: /突破 · 额外提升 1 级/,
@@ -492,7 +501,7 @@ describe("App 组件", () => {
 
     render(<App />);
 
-    expect(screen.getByRole("spinbutton", { name: "角色等级" })).toHaveValue(69);
+    expect(screen.getByText("当前角色 69 级")).toBeInTheDocument();
     await userEvent.setup().click(
       screen.getByRole("button", { name: "编辑武器" })
     );

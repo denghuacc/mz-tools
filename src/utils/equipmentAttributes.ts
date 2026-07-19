@@ -2,11 +2,13 @@ import {
   AFFINITY_BONUS_FIELDS,
   CHARACTER_BONUS_ATTRIBUTE_KEYS,
   createEmptyCharacterAttributeBonuses,
+  normalizeCharacterLevel,
 } from "./characterAttributes";
 import type {
   CharacterAffinityBonusAttribute,
   CharacterAttributeBonuses,
   CharacterBonusAttribute,
+  CharacterLevel,
   PrimaryAttribute,
 } from "./characterAttributes";
 
@@ -947,7 +949,7 @@ export const normalizeEquipmentSet = (value: unknown): EquipmentSet | null => {
 };
 
 export type EquipmentCalculatorState = {
-  characterLevel: number;
+  characterLevel: CharacterLevel;
   equipment: EquipmentSet;
 };
 
@@ -996,12 +998,7 @@ export const normalizeEquipmentCalculatorState = (
   const equipment = normalizeEquipmentSet(value.equipment);
   if (!equipment) return null;
 
-  const characterLevel =
-    typeof value.characterLevel === "number" &&
-    Number.isInteger(value.characterLevel) &&
-    value.characterLevel >= 1
-      ? value.characterLevel
-      : DEFAULT_EQUIPMENT_CHARACTER_LEVEL;
+  const characterLevel = normalizeCharacterLevel(value.characterLevel);
 
   return {
     characterLevel,

@@ -142,16 +142,16 @@ describe("角色装备属性汇总", () => {
 
   it("应该在计算和恢复时把宝石等级限制到当前角色上限", () => {
     const state = createInitialEquipmentCalculatorState();
-    state.characterLevel = 104;
+    state.characterLevel = 89;
     state.equipment.weapon = {
       ...state.equipment.weapon,
       gem: { type: "diamond", level: 13, breakthrough: false },
     };
 
-    expect(calculateEquipmentGemBonus(state.equipment.weapon, 104)?.level).toBe(12);
+    expect(calculateEquipmentGemBonus(state.equipment.weapon, 89)?.level).toBe(10);
     expect(normalizeEquipmentCalculatorState(state)?.equipment.weapon.gem).toEqual({
       type: "diamond",
-      level: 12,
+      level: 10,
       breakthrough: false,
     });
 
@@ -164,7 +164,7 @@ describe("角色装备属性汇总", () => {
 
   it("角色等级提高后应该把已覆盖的突破等级转为普通等级", () => {
     const state = createInitialEquipmentCalculatorState();
-    state.characterLevel = 70;
+    state.characterLevel = 89;
     state.equipment.weapon = {
       ...state.equipment.weapon,
       gem: { type: "diamond", level: 8, breakthrough: true },

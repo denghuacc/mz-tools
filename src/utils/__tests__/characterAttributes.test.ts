@@ -5,7 +5,9 @@ import {
   calculateSanshengPillMaximumCount,
   calculatePresetAllocation,
   calculateCharacterAttributes,
+  calculateFixedStatusAttributes,
   CHARACTER_ALLOCATION_PRESETS,
+  CHARACTER_LEVEL_OPTIONS,
   CHARACTER_UPGRADE_COUNT,
   combineCharacterAttributeBonuses,
   createEmptyCharacterAttributeBonuses,
@@ -13,9 +15,11 @@ import {
   FIXED_PRIMARY_ATTRIBUTES,
   FIXED_TRUE_ENERGY,
   getPrimaryAttributeBonusTotal,
+  getTotalPotentialPoints,
   LEVEL_69_ADVANCED_ATTRIBUTES,
   LEVEL_69_FIXED_STATUS_ATTRIBUTES,
   LEVEL_ONE_ADVANCED_ATTRIBUTES,
+  normalizeCharacterLevel,
   SEAL_HIT_POINTS_PER_UPGRADE,
   STATUS_ATTRIBUTE_POINTS_PER_UPGRADE,
   TOTAL_POTENTIAL_POINTS,
@@ -222,6 +226,30 @@ describe("角色面板计算", () => {
       endurance: 136,
       agility: 408,
     });
+  });
+
+  it("应该只支持三个角色等级档位并按等级重算成长和潜力点", () => {
+    expect(CHARACTER_LEVEL_OPTIONS).toEqual([69, 89, 110]);
+    expect(normalizeCharacterLevel(105)).toBe(110);
+    expect(normalizeCharacterLevel(70)).toBe(69);
+    expect(normalizeCharacterLevel("89")).toBe(69);
+
+    expect(getTotalPotentialPoints(89)).toBe(880);
+    expect(getTotalPotentialPoints(110)).toBe(1090);
+    expect(calculateFixedStatusAttributes(110)).toEqual({
+      health: 1433,
+      mana: 811,
+      trueEnergy: 100,
+    });
+
+    const level110Allocation = calculatePresetAllocation(
+      CHARACTER_ALLOCATION_PRESETS[0].ratio,
+      110
+    );
+    expect(level110Allocation.strength).toBe(1090);
+    expect(
+      calculateCharacterAttributes(level110Allocation, 110).remainingPoints
+    ).toBe(0);
   });
 
   it("应该生成 69 级固定成长与完整潜力点", () => {

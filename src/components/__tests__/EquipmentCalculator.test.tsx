@@ -3,9 +3,17 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import EquipmentCalculator from "../EquipmentCalculator";
 import { createInitialEquipmentCalculatorState } from "../../utils/equipmentAttributes";
+import type { CharacterLevel } from "../../utils/characterAttributes";
 
-const EquipmentCalculatorHarness = () => {
-  const [state, setState] = useState(createInitialEquipmentCalculatorState);
+const EquipmentCalculatorHarness = ({
+  initialCharacterLevel = 69,
+}: {
+  initialCharacterLevel?: CharacterLevel;
+}) => {
+  const [state, setState] = useState(() => ({
+    ...createInitialEquipmentCalculatorState(),
+    characterLevel: initialCharacterLevel,
+  }));
 
   return <EquipmentCalculator state={state} onChange={setState} />;
 };
@@ -38,7 +46,8 @@ describe("EquipmentCalculator", () => {
     const user = userEvent.setup();
     render(<EquipmentCalculatorHarness />);
 
-    expect(screen.getByRole("spinbutton", { name: "角色等级" })).toHaveValue(69);
+    expect(screen.queryByRole("spinbutton", { name: "角色等级" })).not.toBeInTheDocument();
+    expect(screen.getByText("当前角色 69 级")).toBeInTheDocument();
     expect(screen.getByText("宝石上限 8 级")).toBeInTheDocument();
 
     const weaponCard = screen.getByRole("heading", { name: "武器" })
@@ -98,17 +107,15 @@ describe("EquipmentCalculator", () => {
     ).toBeInTheDocument();
   });
 
-  it("应该在 105 级切换宝石上限并在降低角色等级时收紧已选等级", async () => {
+  it("应该引用角色面板等级限制宝石等级", async () => {
     const user = userEvent.setup();
-    render(<EquipmentCalculatorHarness />);
+    render(<EquipmentCalculatorHarness initialCharacterLevel={110} />);
 
-    const characterLevel = screen.getByRole("spinbutton", { name: "角色等级" });
-    await user.clear(characterLevel);
-    await user.type(characterLevel, "105");
-    await user.tab();
-
-    expect(characterLevel).toHaveValue(105);
-    expect(screen.getByText("宝石上限 13 级")).toBeInTheDocument();
+    expect(screen.getByText("当前角色 110 级")).toBeInTheDocument();
+    expect(screen.getByText("宝石上限 14 级")).toBeInTheDocument();
+    expect(
+      screen.getByText(/等级由角色面板统一设置/)
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "编辑鞋子" }));
     const dialog = screen.getByRole("dialog", { name: "编辑鞋子" });
@@ -119,17 +126,9 @@ describe("EquipmentCalculator", () => {
       name: "鞋子：宝石等级",
     });
     await user.selectOptions(gemType, "amethyst");
-    await user.selectOptions(gemLevel, "13");
+    await user.selectOptions(gemLevel, "14");
 
-    expect(gemLevel).toHaveValue("13");
-
-    await user.clear(characterLevel);
-    await user.type(characterLevel, "104");
-    await user.tab();
-
-    expect(characterLevel).toHaveValue(104);
-    expect(screen.getByText("宝石上限 12 级")).toBeInTheDocument();
-    expect(gemLevel).toHaveValue("12");
+    expect(gemLevel).toHaveValue("14");
   });
 
   it("应该将一至两条附加五维与百炼分开编辑和汇总", async () => {

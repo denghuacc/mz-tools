@@ -10,7 +10,6 @@ import {
   calculateEquipmentGemBonus,
   calculateEquipmentItemAttributes,
   calculateEquipmentSummary,
-  clampEquipmentGemLevels,
   getGemLevelLimit,
   getEquipmentEffectLabels,
   getSeasonEquipmentResonance,
@@ -87,9 +86,6 @@ const EquipmentCalculator = ({
 }: EquipmentCalculatorProps) => {
   const { characterLevel, equipment } = state;
   const [activeSlot, setActiveSlot] = useState<EquipmentSlot | null>(null);
-  const [characterLevelInput, setCharacterLevelInput] = useState(
-    String(characterLevel)
-  );
   const closeEditor = useCallback(() => setActiveSlot(null), []);
   const summary = useMemo(
     () => calculateEquipmentSummary(equipment, characterLevel),
@@ -106,28 +102,6 @@ const EquipmentCalculator = ({
       equipment: { ...equipment, [item.slot]: item },
     });
   };
-  const updateCharacterLevel = (value: number) => {
-    const nextCharacterLevel = Math.max(1, Math.floor(value));
-    setCharacterLevelInput(String(nextCharacterLevel));
-    onChange({
-      characterLevel: nextCharacterLevel,
-      equipment: clampEquipmentGemLevels(equipment, nextCharacterLevel),
-    });
-  };
-  const handleCharacterLevelInput = (value: string) => {
-    setCharacterLevelInput(value);
-  };
-  const commitCharacterLevelInput = () => {
-    const nextValue = Number(characterLevelInput);
-
-    if (Number.isInteger(nextValue) && nextValue >= 1) {
-      updateCharacterLevel(nextValue);
-      return;
-    }
-
-    setCharacterLevelInput(String(characterLevel));
-  };
-
   return (
     <div className="space-y-5">
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(300px,0.72fr)_minmax(620px,1.28fr)]">
@@ -146,31 +120,16 @@ const EquipmentCalculator = ({
             </div>
 
             <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/60 p-3">
-              <div className="flex items-end gap-3">
-                <label className="min-w-0 flex-1">
-                  <span className="text-xs font-medium text-slate-600">角色等级</span>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    aria-label="角色等级"
-                    className="mt-1.5 w-full rounded-lg border border-blue-100 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-                    value={characterLevelInput}
-                    onChange={(event) =>
-                      handleCharacterLevelInput(event.target.value)
-                    }
-                    onBlur={commitCharacterLevelInput}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") event.currentTarget.blur();
-                    }}
-                  />
-                </label>
-                <span className="mb-2 shrink-0 text-xs font-medium text-blue-700">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-medium text-slate-600">
+                  当前角色 {characterLevel} 级
+                </span>
+                <span className="shrink-0 text-xs font-medium text-blue-700">
                   宝石上限 {getGemLevelLimit(characterLevel)} 级
                 </span>
               </div>
               <p className="mt-2 text-[11px] leading-4 text-slate-500">
-                105 级前为等级整除 10 后 +2，105 级起 +3。
+                等级由角色面板统一设置，装备宝石会自动引用并限制可选等级。
               </p>
             </div>
 

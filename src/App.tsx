@@ -21,6 +21,7 @@ import {
 import type { FavoriteKind } from "./utils/favorites";
 import {
   calculateEquipmentSummary,
+  clampEquipmentGemLevels,
   createInitialEquipmentCalculatorState,
   createInitialEquipmentSet,
   normalizeEquipmentCalculatorState,
@@ -33,6 +34,7 @@ import {
   saveCalculatorState,
 } from "./utils/calculatorStorage";
 import type { EquipmentCalculatorState } from "./utils/equipmentAttributes";
+import type { CharacterLevel } from "./utils/characterAttributes";
 
 type PageId =
   | "home"
@@ -177,7 +179,7 @@ const CalculatorPage = () => {
     : isCharacter
     ? {
         title: "角色面板计算器",
-        description: "分配 69 级角色潜力点，查看装备和其它加成后的属性。",
+        description: "按角色等级分配潜力点，查看装备和其它加成后的属性。",
       }
     : isWeapon
       ? {
@@ -192,6 +194,13 @@ const CalculatorPage = () => {
   const handleToolChange = (tool: CalculatorTool) => {
     setActiveTool(tool);
     updatePreferences({ activeTool: tool });
+  };
+
+  const handleCharacterLevelChange = (characterLevel: CharacterLevel) => {
+    setEquipmentState((current) => ({
+      characterLevel,
+      equipment: clampEquipmentGemLevels(current.equipment, characterLevel),
+    }));
   };
 
   return (
@@ -245,6 +254,8 @@ const CalculatorPage = () => {
       >
         {isCharacter ? (
           <CharacterAttributeCalculator
+            characterLevel={equipmentState.characterLevel}
+            onCharacterLevelChange={handleCharacterLevelChange}
             equipmentBonuses={equipmentSummary.characterBonuses}
             equipmentItemCount={equipmentSummary.activeItemCount}
           />
@@ -273,7 +284,7 @@ const CalculatorPage = () => {
             <div className="mt-4 space-y-3 text-sm leading-6 text-slate-500">
               {isCharacter ? (
                 <>
-                  <p>当前固定为 69 级，仅计算五维固定成长和潜力点。</p>
+                  <p>支持 69、89、110 级，并按等级计算五维固定成长和潜力点。</p>
                   <p>本期只做状态与 10 项基础属性，进阶属性后续补充。</p>
                 </>
               ) : isWeapon ? (
