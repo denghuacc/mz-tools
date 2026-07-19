@@ -45,4 +45,7 @@ out/
 .cache/
 .parcel-cache/
 
+# Local Codex audit and reference artifacts
+.codex/
+
 .vercel
