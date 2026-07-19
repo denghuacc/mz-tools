@@ -5,10 +5,16 @@ type EditorDialogProps = {
   title: string;
   children: ReactNode;
   onClose: () => void;
+  isCloseDisabled?: boolean;
 };
 
 /** 通用编辑窗口，统一处理遮罩、关闭、滚动锁定与焦点恢复。 */
-const EditorDialog = ({ title, children, onClose }: EditorDialogProps) => {
+const EditorDialog = ({
+  title,
+  children,
+  onClose,
+  isCloseDisabled = false,
+}: EditorDialogProps) => {
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -20,7 +26,7 @@ const EditorDialog = ({ title, children, onClose }: EditorDialogProps) => {
     closeButtonRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !isCloseDisabled) {
         onClose();
       }
     };
@@ -35,13 +41,13 @@ const EditorDialog = ({ title, children, onClose }: EditorDialogProps) => {
         previousActiveElement.focus();
       }
     };
-  }, [onClose]);
+  }, [isCloseDisabled, onClose]);
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-[1px] sm:p-6"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
+        if (event.target === event.currentTarget && !isCloseDisabled) {
           onClose();
         }
       }}
@@ -59,8 +65,9 @@ const EditorDialog = ({ title, children, onClose }: EditorDialogProps) => {
           <button
             ref={closeButtonRef}
             type="button"
-            className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:text-slate-200 disabled:hover:bg-transparent"
             aria-label="关闭编辑"
+            disabled={isCloseDisabled}
             onClick={onClose}
           >
             <svg
@@ -84,7 +91,8 @@ const EditorDialog = ({ title, children, onClose }: EditorDialogProps) => {
         <div className="flex justify-end border-t border-slate-200 bg-white px-4 py-3 sm:px-5">
           <button
             type="button"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300"
+            disabled={isCloseDisabled}
             onClick={onClose}
           >
             完成
@@ -96,4 +104,3 @@ const EditorDialog = ({ title, children, onClose }: EditorDialogProps) => {
 };
 
 export default EditorDialog;
-

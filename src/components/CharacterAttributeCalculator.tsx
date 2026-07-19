@@ -19,6 +19,7 @@ import {
 } from "../utils/characterTraining";
 import type { CharacterTrainingLevels } from "../utils/characterTraining";
 import EditorDialog from "./EditorDialog";
+import EditIconButton from "./EditIconButton";
 import GuildBlessingBonusControl from "./GuildBlessingBonusControl";
 import GuildTalentBonusControl from "./GuildTalentBonusControl";
 import PotentialAllocationControl from "./PotentialAllocationControl";
@@ -59,8 +60,11 @@ import {
   CHARACTER_LEVEL_OPTIONS,
   combineCharacterAttributeBonuses,
   createEmptyCharacterAttributeBonuses,
+  DEFAULT_AGILITY_CHARACTER_ALLOCATION,
+  DEFAULT_CUSTOM_CHARACTER_ALLOCATION,
   EMPTY_CHARACTER_ALLOCATION,
   getCharacterUpgradeCount,
+  getCustomCharacterAllocationValidationError,
   getPrimaryAttributeBonusTotal,
   getTotalPotentialPoints,
   LEVEL_ONE_ADVANCED_ATTRIBUTES,
@@ -70,10 +74,12 @@ import {
 } from "../utils/characterAttributes";
 import type {
   CharacterAllocation,
+  CharacterAllocationMode,
   CharacterAllocationPresetId,
   CharacterAttributeBonuses,
   CharacterBonusAttribute,
   CharacterLevel,
+  CustomCharacterAllocationScheme,
   PrimaryAttribute,
 } from "../utils/characterAttributes";
 import {
@@ -630,7 +636,10 @@ const createStarBlessingBonuses = (
 
 /** 新增长期表单字段时，必须同步更新默认值、标准化、保存对象和恢复测试。 */
 type CharacterCalculatorState = {
+  allocationMode: CharacterAllocationMode;
   selectedPresetId: CharacterAllocationPresetId;
+  customAllocationScheme: CustomCharacterAllocationScheme;
+  customAllocation: CharacterAllocation;
   skillBonuses: CharacterAttributeBonuses;
   temporaryTalismanStar: TemporaryTalismanStar | null;
   temporaryTalismanAttributes: readonly TemporaryTalismanBonusAttribute[];
@@ -653,7 +662,10 @@ type CharacterCalculatorState = {
 };
 
 const createDefaultCharacterCalculatorState = (): CharacterCalculatorState => ({
+  allocationMode: "preset",
   selectedPresetId: CHARACTER_ALLOCATION_PRESETS[0].id,
+  customAllocationScheme: "strength-or-spirit",
+  customAllocation: { ...DEFAULT_CUSTOM_CHARACTER_ALLOCATION },
   skillBonuses: createEmptyCharacterAttributeBonuses(),
   temporaryTalismanStar: null,
   temporaryTalismanAttributes: [],
@@ -731,6 +743,36 @@ const normalizeNonNegativeNumber = (
   value <= maximum
     ? value
     : fallback;
+
+const normalizeCustomCharacterAllocation = (
+  value: unknown,
+  scheme: CustomCharacterAllocationScheme
+): CharacterAllocation => {
+  const fallback = {
+    ...(scheme === "agility"
+      ? DEFAULT_AGILITY_CHARACTER_ALLOCATION
+      : DEFAULT_CUSTOM_CHARACTER_ALLOCATION),
+  };
+  if (!isRecord(value)) return fallback;
+
+  const allocation = { ...EMPTY_CHARACTER_ALLOCATION };
+  for (const attribute of PRIMARY_ATTRIBUTE_KEYS) {
+    const storedValue = value[attribute];
+    if (
+      typeof storedValue !== "number" ||
+      !Number.isInteger(storedValue) ||
+      storedValue < 0 ||
+      storedValue > 10
+    ) {
+      return fallback;
+    }
+    allocation[attribute] = storedValue;
+  }
+
+  return getCustomCharacterAllocationValidationError(allocation, scheme)
+    ? fallback
+    : allocation;
+};
 
 const normalizeTianshuCounts = (
   value: unknown
@@ -868,6 +910,10 @@ const normalizeCharacterCalculatorState = (
     CHARACTER_PRESET_ID_SET.has(value.selectedPresetId)
       ? (value.selectedPresetId as CharacterAllocationPresetId)
       : CHARACTER_ALLOCATION_PRESETS[0].id;
+  const customAllocationScheme: CustomCharacterAllocationScheme =
+    value.customAllocationScheme === "agility"
+      ? "agility"
+      : "strength-or-spirit";
   const talismanOptionId =
     typeof value.talismanOptionId === "string" &&
     TALISMAN_OPTION_ID_SET.has(value.talismanOptionId)
@@ -877,7 +923,13 @@ const normalizeCharacterCalculatorState = (
     value.temporaryTalismanStar === 6 ? 6 : null;
 
   return {
+    allocationMode: value.allocationMode === "custom" ? "custom" : "preset",
     selectedPresetId,
+    customAllocationScheme,
+    customAllocation: normalizeCustomCharacterAllocation(
+      value.customAllocation,
+      customAllocationScheme
+    ),
     skillBonuses: normalizeCharacterBonuses(value.skillBonuses),
     temporaryTalismanStar,
     temporaryTalismanAttributes:
@@ -959,8 +1011,17 @@ const CharacterAttributeCalculator = ({
   equipmentItemCount = 0,
 }: CharacterAttributeCalculatorProps) => {
   const [initialState] = useState(loadCharacterCalculatorState);
+  const [allocationMode, setAllocationMode] =
+    useState<CharacterAllocationMode>(initialState.allocationMode);
   const [selectedPresetId, setSelectedPresetId] =
     useState<CharacterAllocationPresetId>(initialState.selectedPresetId);
+  const [customAllocationScheme, setCustomAllocationScheme] =
+    useState<CustomCharacterAllocationScheme>(
+      initialState.customAllocationScheme
+    );
+  const [customAllocation, setCustomAllocation] = useState(
+    initialState.customAllocation
+  );
   const [activeAttributeTab, setActiveAttributeTab] =
     useState<AttributeTab>("basic");
   const [areBonusDetailsVisible, setAreBonusDetailsVisible] = useState(true);
@@ -1042,7 +1103,10 @@ const CharacterAttributeCalculator = ({
     saveCalculatorState<CharacterCalculatorState>(
       CHARACTER_ATTRIBUTES_STORAGE_KEY,
       {
+        allocationMode,
         selectedPresetId,
+        customAllocationScheme,
+        customAllocation,
         skillBonuses,
         temporaryTalismanStar,
         temporaryTalismanAttributes,
@@ -1065,7 +1129,10 @@ const CharacterAttributeCalculator = ({
       }
     );
   }, [
+    allocationMode,
     selectedPresetId,
+    customAllocationScheme,
+    customAllocation,
     skillBonuses,
     temporaryTalismanStar,
     temporaryTalismanAttributes,
@@ -1182,9 +1249,18 @@ const CharacterAttributeCalculator = ({
   const selectedPreset =
     CHARACTER_ALLOCATION_PRESETS.find(({ id }) => id === selectedPresetId) ??
     CHARACTER_ALLOCATION_PRESETS[0];
+  const customAllocationValidationError =
+    getCustomCharacterAllocationValidationError(
+      customAllocation,
+      customAllocationScheme
+    );
+  const selectedAllocationRatio =
+    allocationMode === "custom" && customAllocationValidationError === null
+      ? customAllocation
+      : selectedPreset.ratio;
   const allocation = useMemo(
-    () => calculatePresetAllocation(selectedPreset.ratio, characterLevel),
-    [characterLevel, selectedPreset]
+    () => calculatePresetAllocation(selectedAllocationRatio, characterLevel),
+    [characterLevel, selectedAllocationRatio]
   );
   const calculated = useMemo(
     () => calculateCharacterAttributes(allocation, characterLevel),
@@ -1247,10 +1323,28 @@ const CharacterAttributeCalculator = ({
         calculated,
         totalBonuses,
         characterLevel
-      ),
+    ),
     [calculated, characterLevel, totalBonuses]
   );
-  const allocationSummary = PRIMARY_ATTRIBUTE_KEYS.filter(
+  const customMainAttribute: PrimaryAttribute =
+    customAllocation.strength > 0 ? "strength" : "spirit";
+  const allocationDisplayOrder: readonly PrimaryAttribute[] =
+    allocationMode === "custom"
+      ? customAllocationScheme === "agility"
+        ? ["agility", "constitution", "endurance"]
+        : [customMainAttribute, "constitution", "endurance", "agility"]
+      : PRIMARY_ATTRIBUTE_KEYS;
+  const allocationPlanLabel =
+    allocationMode === "custom"
+      ? allocationDisplayOrder
+          .filter((attribute) => customAllocation[attribute] > 0)
+          .map(
+            (attribute) =>
+              `${customAllocation[attribute]}${PRIMARY_ATTRIBUTE_SHORT_LABELS[attribute]}`
+          )
+          .join("")
+      : selectedPreset.label;
+  const allocationSummary = allocationDisplayOrder.filter(
     (attribute) => allocation[attribute] > 0
   )
     .map(
@@ -1673,9 +1767,23 @@ const CharacterAttributeCalculator = ({
       renderContent: (title) => (
         <PotentialAllocationControl
           title={title}
+          allocationMode={allocationMode}
           selectedPresetId={selectedPresetId}
+          customScheme={customAllocationScheme}
+          customAllocation={customAllocation}
+          customValidationError={customAllocationValidationError}
           summary={allocationSummary}
-          onSelect={setSelectedPresetId}
+          onAllocationModeChange={setAllocationMode}
+          onSelectPreset={setSelectedPresetId}
+          onCustomSchemeChange={(scheme) => {
+            setCustomAllocationScheme(scheme);
+            setCustomAllocation({
+              ...(scheme === "agility"
+                ? DEFAULT_AGILITY_CHARACTER_ALLOCATION
+                : DEFAULT_CUSTOM_CHARACTER_ALLOCATION),
+            });
+          }}
+          onCustomAllocationChange={setCustomAllocation}
         />
       ),
     },
@@ -1950,25 +2058,26 @@ const CharacterAttributeCalculator = ({
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    className="w-full shrink-0 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-left transition hover:border-blue-200 hover:bg-blue-50/60 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-44"
-                    aria-label="编辑潜力点分配"
-                    onClick={() => setActiveEditorId("allocation")}
+                  <section
+                    className="w-full shrink-0 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 sm:w-64"
+                    aria-label="潜力点分配摘要"
                   >
-                    <span className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="text-[11px] text-slate-500">潜力点分配</span>
-                      <span className="text-xs font-medium text-blue-600">编辑</span>
-                    </span>
-                    <span className="mt-1 flex items-baseline justify-between gap-2">
+                      <EditIconButton
+                        label="编辑潜力点分配"
+                        onClick={() => setActiveEditorId("allocation")}
+                      />
+                    </div>
+                    <div className="mt-1 flex items-baseline justify-between gap-2">
                       <strong className="shrink-0 whitespace-nowrap text-sm font-semibold text-slate-900">
-                        {selectedPreset.label}
+                        {allocationPlanLabel}
                       </strong>
                       <span className="truncate text-[11px] font-medium text-emerald-600">
                         {allocationSummary}
                       </span>
-                    </span>
-                  </button>
+                    </div>
+                  </section>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -2371,7 +2480,15 @@ const CharacterAttributeCalculator = ({
       </div>
 
       {activeEditor && (
-        <EditorDialog title={activeEditor.title} onClose={closeEditor}>
+        <EditorDialog
+          title={activeEditor.title}
+          onClose={closeEditor}
+          isCloseDisabled={
+            activeEditor.id === "allocation" &&
+            allocationMode === "custom" &&
+            customAllocationValidationError !== null
+          }
+        >
           {activeEditor.renderContent(activeEditor.title)}
         </EditorDialog>
       )}

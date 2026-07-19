@@ -38,6 +38,12 @@ describe("CharacterAttributeCalculator", () => {
   it("应该为每个属性加成卡片显示编辑图标", () => {
     render(<CharacterAttributeCalculator />);
 
+    const allocationEditButton = screen.getByRole("button", {
+      name: "编辑潜力点分配",
+    });
+    expect(within(allocationEditButton).queryByText("编辑")).not.toBeInTheDocument();
+    expect(allocationEditButton.querySelector("svg")).not.toBeNull();
+
     const editButtons = within(screen.getByTestId("attribute-bonus-rail"))
       .getAllByRole("button", { name: /^编辑/ });
 
@@ -199,11 +205,13 @@ describe("CharacterAttributeCalculator", () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
 
-    const allocationSummary = screen.getByRole("button", {
-      name: "编辑潜力点分配",
+    const allocationSummary = screen.getByRole("region", {
+      name: "潜力点分配摘要",
     });
     expect(within(allocationSummary).getByText("10力")).toBeInTheDocument();
     expect(within(allocationSummary).getByText("力 +680")).toBeInTheDocument();
+    await user.click(within(allocationSummary).getByText("10力"));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     const allocationDialog = await openBonusEditor(user, "潜力点分配");
     const defaultPreset = within(allocationDialog).getByRole("radio", {
@@ -1004,10 +1012,20 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).getByText("治疗强度 +31")).toBeInTheDocument();
   });
 
-  it("应该只提供当前阶段允许的七种加点方案", async () => {
+  it("应该按 10、8、6 点主属性顺序提供常见方案和自由加点入口", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
     const allocationDialog = await openBonusEditor(user, "潜力点分配");
+
+    const allocationModeGroup = within(allocationDialog).getByRole(
+      "radiogroup",
+      { name: "潜力点分配方式" }
+    );
+    expect(
+      within(allocationModeGroup)
+        .getAllByRole("radio")
+        .map((option) => option.textContent)
+    ).toEqual(["常见方案", "自由加点"]);
 
     expect(
       within(
@@ -1021,14 +1039,192 @@ describe("CharacterAttributeCalculator", () => {
       "10力",
       "10灵",
       "10敏",
+      "8力2敏",
+      "8灵2敏",
+      "8灵2耐",
+      "8敏2体",
+      "8敏2耐",
       "6力4敏",
+      "6灵4敏",
       "6灵4耐",
       "6敏4耐",
       "6敏2体2耐",
     ]);
+    await user.click(
+      within(allocationModeGroup).getByRole("radio", { name: "自由加点" })
+    );
+    expect(
+      within(allocationDialog).getByRole("radiogroup", {
+        name: "自由加点规则",
+      })
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "重置加点" })
     ).not.toBeInTheDocument();
+  });
+
+  it("应该按力灵互斥规则自由分配并在合法后应用结果", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const allocationDialog = await openBonusEditor(user, "潜力点分配");
+
+    await user.click(
+      within(allocationDialog).getByRole("radio", { name: "自由加点" })
+    );
+    const strengthInput = within(allocationDialog).getByRole("spinbutton", {
+      name: "自由加点：力量",
+    });
+    const spiritInput = within(allocationDialog).getByRole("spinbutton", {
+      name: "自由加点：灵力",
+    });
+    const agilityInput = within(allocationDialog).getByRole("spinbutton", {
+      name: "自由加点：敏捷",
+    });
+    expect(strengthInput).toHaveValue(10);
+    expect(spiritInput).toBeDisabled();
+
+    fireEvent.change(strengthInput, { target: { value: "8" } });
+    expect(within(allocationDialog).getByRole("alert")).toHaveTextContent(
+      "当前还需分配 2 点"
+    );
+    expect(
+      within(allocationDialog).getByRole("button", { name: "完成" })
+    ).toBeDisabled();
+
+    fireEvent.change(agilityInput, { target: { value: "2" } });
+    expect(within(allocationDialog).queryByRole("alert")).not.toBeInTheDocument();
+    const completeButton = within(allocationDialog).getByRole("button", {
+      name: "完成",
+    });
+    expect(completeButton).toBeEnabled();
+    await user.click(completeButton);
+
+    const allocationSummary = screen.getByRole("region", {
+      name: "潜力点分配摘要",
+    });
+    expect(allocationSummary).toHaveClass("sm:w-64");
+    expect(within(allocationSummary).getByText("8力2敏")).toBeInTheDocument();
+    expect(
+      within(allocationSummary).getByText("力 +544 · 敏 +136")
+    ).toBeInTheDocument();
+
+    const reopenedDialog = await openBonusEditor(user, "潜力点分配");
+    await user.click(
+      within(reopenedDialog).getByRole("radio", { name: "灵力" })
+    );
+    expect(
+      within(reopenedDialog).getByRole("spinbutton", {
+        name: "自由加点：力量",
+      })
+    ).toBeDisabled();
+    expect(
+      within(reopenedDialog).getByRole("spinbutton", {
+        name: "自由加点：灵力",
+      })
+    ).toHaveValue(8);
+  });
+
+  it("应该保存并恢复 5敏3体2耐 的敏主属性自由方案", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<CharacterAttributeCalculator />);
+    const allocationDialog = await openBonusEditor(user, "潜力点分配");
+
+    await user.click(
+      within(allocationDialog).getByRole("radio", { name: "自由加点" })
+    );
+    await user.click(
+      within(allocationDialog).getByRole("radio", { name: "敏主属性" })
+    );
+    const agilityInput = within(allocationDialog).getByRole("spinbutton", {
+      name: "自由加点：敏捷",
+    });
+    const constitutionInput = within(allocationDialog).getByRole("spinbutton", {
+      name: "自由加点：体力",
+    });
+    const enduranceInput = within(allocationDialog).getByRole("spinbutton", {
+      name: "自由加点：耐力",
+    });
+    expect(
+      within(allocationDialog).getByRole("spinbutton", {
+        name: "自由加点：力量",
+      })
+    ).toBeDisabled();
+    expect(
+      within(allocationDialog).getByRole("spinbutton", {
+        name: "自由加点：灵力",
+      })
+    ).toBeDisabled();
+
+    fireEvent.change(agilityInput, { target: { value: "5" } });
+    fireEvent.change(constitutionInput, { target: { value: "3" } });
+    expect(within(allocationDialog).getByRole("alert")).toHaveTextContent(
+      "当前还需分配 2 点"
+    );
+    fireEvent.change(enduranceInput, { target: { value: "2" } });
+    expect(within(allocationDialog).queryByRole("alert")).not.toBeInTheDocument();
+    await user.click(
+      within(allocationDialog).getByRole("button", { name: "完成" })
+    );
+
+    const allocationSummary = screen.getByRole("region", {
+      name: "潜力点分配摘要",
+    });
+    expect(
+      within(allocationSummary).getByText("5敏3体2耐")
+    ).toBeInTheDocument();
+    expect(
+      within(allocationSummary).getByText("敏 +340 · 体 +204 · 耐 +136")
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+      );
+      expect(stored.allocationMode).toBe("custom");
+      expect(stored.customAllocationScheme).toBe("agility");
+      expect(stored.customAllocation).toEqual({
+        constitution: 3,
+        spirit: 0,
+        strength: 0,
+        endurance: 2,
+        agility: 5,
+      });
+    });
+
+    unmount();
+    render(<CharacterAttributeCalculator />);
+    const restoredSummary = screen.getByRole("region", {
+      name: "潜力点分配摘要",
+    });
+    expect(within(restoredSummary).getByText("5敏3体2耐")).toBeInTheDocument();
+    expect(
+      within(restoredSummary).getByText("敏 +340 · 体 +204 · 耐 +136")
+    ).toBeInTheDocument();
+  });
+
+  it("应该把缓存中的非法自由方案回退为对应规则的默认方案", () => {
+    window.localStorage.setItem(
+      CHARACTER_ATTRIBUTES_STORAGE_KEY,
+      JSON.stringify({
+        allocationMode: "custom",
+        customAllocationScheme: "agility",
+        customAllocation: {
+          constitution: 10,
+          spirit: 0,
+          strength: 0,
+          endurance: 0,
+          agility: 0,
+        },
+      })
+    );
+
+    render(<CharacterAttributeCalculator />);
+
+    const allocationSummary = screen.getByRole("region", {
+      name: "潜力点分配摘要",
+    });
+    expect(within(allocationSummary).getByText("10敏")).toBeInTheDocument();
+    expect(within(allocationSummary).getByText("敏 +680")).toBeInTheDocument();
   });
 
   it("应该在完成编辑后通过摘要卡展示属性增减", async () => {
@@ -1153,11 +1349,23 @@ describe("CharacterAttributeCalculator", () => {
         endurance: 0,
         agility: 0,
       });
+      expect(stored.allocationMode).toBe("preset");
+      expect(stored.customAllocationScheme).toBe("strength-or-spirit");
+      expect(stored.customAllocation).toEqual({
+        constitution: 0,
+        spirit: 0,
+        strength: 10,
+        endurance: 0,
+        agility: 0,
+      });
       expect(Object.keys(stored).sort()).toEqual(
         [
+          "allocationMode",
           "characterTrainingLevels",
           "charmAttribute",
           "charmValue",
+          "customAllocation",
+          "customAllocationScheme",
           "divineSoulValue",
           "guildTalentOptionIds",
           "isGuildBlessingEnabled",

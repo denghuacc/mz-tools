@@ -14,6 +14,7 @@ import {
   EMPTY_CHARACTER_ALLOCATION,
   FIXED_PRIMARY_ATTRIBUTES,
   FIXED_TRUE_ENERGY,
+  getCustomCharacterAllocationValidationError,
   getPrimaryAttributeBonusTotal,
   getTotalPotentialPoints,
   LEVEL_69_ADVANCED_ATTRIBUTES,
@@ -226,6 +227,106 @@ describe("角色面板计算", () => {
       endurance: 136,
       agility: 408,
     });
+  });
+
+  it("应该校验两类自由加点规则且每级总和必须为 10", () => {
+    expect(
+      getCustomCharacterAllocationValidationError(
+        {
+          constitution: 0,
+          spirit: 0,
+          strength: 8,
+          endurance: 0,
+          agility: 2,
+        },
+        "strength-or-spirit"
+      )
+    ).toBeNull();
+    expect(
+      getCustomCharacterAllocationValidationError(
+        {
+          constitution: 1,
+          spirit: 8,
+          strength: 0,
+          endurance: 1,
+          agility: 0,
+        },
+        "strength-or-spirit"
+      )
+    ).toBeNull();
+    expect(
+      getCustomCharacterAllocationValidationError(
+        {
+          constitution: 3,
+          spirit: 0,
+          strength: 0,
+          endurance: 2,
+          agility: 5,
+        },
+        "agility"
+      )
+    ).toBeNull();
+
+    expect(
+      getCustomCharacterAllocationValidationError(
+        {
+          constitution: 0,
+          spirit: 4,
+          strength: 6,
+          endurance: 0,
+          agility: 0,
+        },
+        "strength-or-spirit"
+      )
+    ).toBe("力和灵互斥，必须且只能选择一项作为主属性。");
+    expect(
+      getCustomCharacterAllocationValidationError(
+        {
+          constitution: 0,
+          spirit: 0,
+          strength: 5,
+          endurance: 0,
+          agility: 5,
+        },
+        "strength-or-spirit"
+      )
+    ).toBe("力或灵的主属性加点必须为 6～10 点。");
+    expect(
+      getCustomCharacterAllocationValidationError(
+        {
+          constitution: 5,
+          spirit: 0,
+          strength: 0,
+          endurance: 5,
+          agility: 0,
+        },
+        "agility"
+      )
+    ).toBe("敏主属性方案至少分配 1 点敏。");
+    expect(
+      getCustomCharacterAllocationValidationError(
+        {
+          constitution: 3,
+          spirit: 0,
+          strength: 0,
+          endurance: 2,
+          agility: 4,
+        },
+        "agility"
+      )
+    ).toBe("每级必须分配 10 点，当前还需分配 1 点。");
+    expect(
+      getCustomCharacterAllocationValidationError(
+        {
+          constitution: 4,
+          spirit: 0,
+          strength: 0,
+          endurance: 2,
+          agility: 5,
+        },
+        "agility"
+      )
+    ).toBe("每级必须分配 10 点，当前已超出 1 点。");
   });
 
   it("应该只支持三个角色等级档位并按等级重算成长和潜力点", () => {

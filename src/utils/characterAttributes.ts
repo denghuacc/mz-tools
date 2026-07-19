@@ -51,6 +51,10 @@ export const PRIMARY_ATTRIBUTE_KEYS = [
 
 export type PrimaryAttribute = (typeof PRIMARY_ATTRIBUTE_KEYS)[number];
 export type CharacterAllocation = Record<PrimaryAttribute, number>;
+export type CharacterAllocationMode = "preset" | "custom";
+export type CustomCharacterAllocationScheme =
+  | "strength-or-spirit"
+  | "agility";
 
 /** 将各五维服用颗数换算为实际属性点。 */
 export const calculateSanshengPillBonuses = (
@@ -85,6 +89,89 @@ export const EMPTY_CHARACTER_ALLOCATION: CharacterAllocation = {
   agility: 0,
 };
 
+export const DEFAULT_CUSTOM_CHARACTER_ALLOCATION: CharacterAllocation = {
+  constitution: 0,
+  spirit: 0,
+  strength: 10,
+  endurance: 0,
+  agility: 0,
+};
+
+export const DEFAULT_AGILITY_CHARACTER_ALLOCATION: CharacterAllocation = {
+  constitution: 0,
+  spirit: 0,
+  strength: 0,
+  endurance: 0,
+  agility: 10,
+};
+
+export const getCharacterAllocationTotal = (
+  allocation: CharacterAllocation
+): number =>
+  PRIMARY_ATTRIBUTE_KEYS.reduce(
+    (total, attribute) => total + allocation[attribute],
+    0
+  );
+
+/** 校验每级 10 点的自由加点规则；返回 null 表示可用于属性计算。 */
+export const getCustomCharacterAllocationValidationError = (
+  allocation: CharacterAllocation,
+  scheme: CustomCharacterAllocationScheme
+): string | null => {
+  const values = PRIMARY_ATTRIBUTE_KEYS.map(
+    (attribute) => allocation[attribute]
+  );
+
+  if (
+    values.some(
+      (value) => !Number.isInteger(value) || value < 0 || value > 10
+    )
+  ) {
+    return "每项加点必须是 0～10 的整数。";
+  }
+
+  if (scheme === "strength-or-spirit") {
+    const selectedMainAttributeCount = [
+      allocation.strength,
+      allocation.spirit,
+    ].filter((value) => value > 0).length;
+
+    if (selectedMainAttributeCount !== 1) {
+      return "力和灵互斥，必须且只能选择一项作为主属性。";
+    }
+
+    const mainAttributePoints = Math.max(
+      allocation.strength,
+      allocation.spirit
+    );
+    if (mainAttributePoints < 6 || mainAttributePoints > 10) {
+      return "力或灵的主属性加点必须为 6～10 点。";
+    }
+  } else {
+    if (allocation.strength !== 0 || allocation.spirit !== 0) {
+      return "敏主属性方案不能分配力或灵。";
+    }
+
+    if (allocation.agility < 1) {
+      return "敏主属性方案至少分配 1 点敏。";
+    }
+  }
+
+  const total = getCharacterAllocationTotal(allocation);
+  if (total < POTENTIAL_POINTS_PER_LEVEL) {
+    return `每级必须分配 10 点，当前还需分配 ${
+      POTENTIAL_POINTS_PER_LEVEL - total
+    } 点。`;
+  }
+  if (total > POTENTIAL_POINTS_PER_LEVEL) {
+    return `每级必须分配 10 点，当前已超出 ${
+      total - POTENTIAL_POINTS_PER_LEVEL
+    } 点。`;
+  }
+
+  return null;
+};
+
 /** 当前开发阶段开放的加点比例；每个方案每级固定分配 10 点潜力。 */
 export const CHARACTER_ALLOCATION_PRESETS = [
   {
@@ -103,9 +190,39 @@ export const CHARACTER_ALLOCATION_PRESETS = [
     ratio: { constitution: 0, spirit: 0, strength: 0, endurance: 0, agility: 10 },
   },
   {
+    id: "8-strength-2-agility",
+    label: "8力2敏",
+    ratio: { constitution: 0, spirit: 0, strength: 8, endurance: 0, agility: 2 },
+  },
+  {
+    id: "8-spirit-2-agility",
+    label: "8灵2敏",
+    ratio: { constitution: 0, spirit: 8, strength: 0, endurance: 0, agility: 2 },
+  },
+  {
+    id: "8-spirit-2-endurance",
+    label: "8灵2耐",
+    ratio: { constitution: 0, spirit: 8, strength: 0, endurance: 2, agility: 0 },
+  },
+  {
+    id: "8-agility-2-constitution",
+    label: "8敏2体",
+    ratio: { constitution: 2, spirit: 0, strength: 0, endurance: 0, agility: 8 },
+  },
+  {
+    id: "8-agility-2-endurance",
+    label: "8敏2耐",
+    ratio: { constitution: 0, spirit: 0, strength: 0, endurance: 2, agility: 8 },
+  },
+  {
     id: "6-strength-4-agility",
     label: "6力4敏",
     ratio: { constitution: 0, spirit: 0, strength: 6, endurance: 0, agility: 4 },
+  },
+  {
+    id: "6-spirit-4-agility",
+    label: "6灵4敏",
+    ratio: { constitution: 0, spirit: 6, strength: 0, endurance: 0, agility: 4 },
   },
   {
     id: "6-spirit-4-endurance",

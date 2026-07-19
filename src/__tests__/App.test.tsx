@@ -116,7 +116,7 @@ describe("App 组件", () => {
     ).toBeInTheDocument();
     expect(
       within(
-        screen.getByRole("button", { name: "编辑潜力点分配" })
+        screen.getByRole("region", { name: "潜力点分配摘要" })
       ).getByText("10力")
     ).toBeInTheDocument();
 
