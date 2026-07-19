@@ -13,7 +13,7 @@
 - [x] 官方攻略索引：按主题浏览官网攻略与版本资料。
 - [x] 本地收藏与设置：收藏常用资料，并管理当前浏览器中的本地数据。
 
-当前规则与数据核验状态见 [RULES.md](./RULES.md)。
+当前规则与数据核验状态见 [docs/RULES.md](./docs/RULES.md)。
 资料来源和维护范围见 [docs/DATA_SOURCES.md](./docs/DATA_SOURCES.md)。
 本地数据的保存范围和开发检查清单见 [docs/LOCAL_STORAGE.md](./docs/LOCAL_STORAGE.md)。
 
@@ -43,6 +43,7 @@ pnpm build
 
 - 保持较小改动且附带测试用例；重大变更请先发 Issue 讨论。
 - 使用 Codex 或其他编码代理开发前，先阅读 [AGENTS.md](./AGENTS.md)。
+- 项目状态徽章的清单与维护方式见 [README_BADGES.md](./README_BADGES.md)。
 - 该仓库以个人兴趣为主，不保证长期兼容性或对外支持。
 
 ## 许可证

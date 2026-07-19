@@ -14,7 +14,7 @@
 
 1. 先阅读 `package.json` 和与任务相关的源码、测试及文档，不要根据目录名猜实现。
 2. 检查工作区已有改动；未明确属于当前任务的文件和修改不得覆盖、删除或重新格式化。
-3. 数值规则相关任务先读 `RULES.md`，资料内容相关任务先读 `docs/DATA_SOURCES.md`。
+3. 数值规则相关任务先读 `docs/RULES.md`，资料内容相关任务先读 `docs/DATA_SOURCES.md`。
 4. 计算器表单或本地状态相关任务必须先读 `docs/LOCAL_STORAGE.md`。
 5. 需求略有歧义时，优先依据现有实现做可逆的小改动；只有会明显改变产品行为时才询问。
 
@@ -74,7 +74,7 @@ pnpm build
 ## 游戏规则与资料
 
 - 不得把未核验的游戏数值描述为已验证事实。
-- 调整转换比例、等级属性或装备规则时，同步更新 `RULES.md`、对应配置和测试。
+- 调整转换比例、等级属性或装备规则时，同步更新 `docs/RULES.md`、对应配置和测试。
 - 数据查询与攻略内容优先引用官网或官方公告，维护要求见 `docs/DATA_SOURCES.md`。
 - 没有可靠来源时明确标记“待复核”，不要用推测补全数值。
 
@@ -155,7 +155,7 @@ Use the following structure, based on Conventional Commits:
 
 - `feat`: Add a new user-facing capability or materially extend an existing one.
 - `fix`: Correct a defect, regression, incorrect calculation, broken interaction, or invalid behavior.
-- `docs`: Change documentation only, including `README.md`, `RULES.md`, data-source notes, or maintenance guides.
+- `docs`: Change documentation only, including `README.md`, `docs/RULES.md`, data-source notes, or maintenance guides.
 - `test`: Add, update, or reorganize tests without changing production behavior.
 - `refactor`: Restructure production code without intentionally changing external behavior.
 - `perf`: Improve measured or clearly identified performance characteristics without changing expected behavior.
