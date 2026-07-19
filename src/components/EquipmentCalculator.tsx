@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import EditorDialog from "./EditorDialog";
 import EquipmentItemEditor from "./EquipmentItemEditor";
 import EditIconButton from "./EditIconButton";
+import ResetButton from "./ResetButton";
 import {
   EQUIPMENT_ATTRIBUTE_LABELS,
   EQUIPMENT_GEM_CONFIG,
@@ -10,6 +11,7 @@ import {
   calculateEquipmentGemBonus,
   calculateEquipmentItemAttributes,
   calculateEquipmentSummary,
+  createEmptyEquipmentSet,
   getGemLevelLimit,
   getEquipmentEffectLabels,
   getSeasonEquipmentResonance,
@@ -223,7 +225,14 @@ const EquipmentCalculator = ({
                 顺序为武器、上衣、发冠、下装、饰品、鞋子、戒指、项链。
               </p>
             </div>
-            <span className="shrink-0 text-xs text-slate-400">点击卡片编辑</span>
+            <ResetButton
+              confirmationTitle="确认重置八件装备？"
+              confirmationMessage="重置后将清除八件装备的全部属性、宝石、词条和特效，此操作无法撤销。角色等级会保留。"
+              onConfirm={() => {
+                setActiveSlot(null);
+                onChange({ ...state, equipment: createEmptyEquipmentSet() });
+              }}
+            />
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">

@@ -42,6 +42,45 @@ describe("EquipmentCalculator", () => {
     expect(weaponCard).toHaveTextContent("敏 +32");
   });
 
+  it("应该在二次确认后清空八件装备并保留角色等级", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness initialCharacterLevel={110} />);
+
+    const cards = screen.getByRole("heading", { name: "八件装备" })
+      .closest("section");
+    expect(cards).not.toBeNull();
+    const weaponCard = within(cards!).getByRole("heading", { name: "武器" })
+      .closest("article");
+    expect(weaponCard).not.toBeNull();
+    expect(weaponCard).toHaveTextContent("力 +33");
+    expect(screen.queryByText("点击卡片编辑")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "重置" }));
+    const firstConfirmation = screen.getByRole("alertdialog", {
+      name: "确认重置八件装备？",
+    });
+    expect(within(firstConfirmation).getByRole("button", { name: "取消" }))
+      .toHaveFocus();
+    await user.click(
+      within(firstConfirmation).getByRole("button", { name: "取消" })
+    );
+
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(weaponCard).toHaveTextContent("力 +33");
+
+    await user.click(screen.getByRole("button", { name: "重置" }));
+    await user.click(
+      within(
+        screen.getByRole("alertdialog", { name: "确认重置八件装备？" })
+      ).getByRole("button", { name: "确认重置" })
+    );
+
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(within(cards!).getAllByText("暂无属性")).toHaveLength(8);
+    expect(weaponCard).not.toHaveTextContent("力 +33");
+    expect(screen.getByText("当前角色 110 级")).toBeInTheDocument();
+  });
+
   it("应该按装备部位选择一种宝石并把等级属性计入汇总", async () => {
     const user = userEvent.setup();
     render(<EquipmentCalculatorHarness />);

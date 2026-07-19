@@ -1265,6 +1265,85 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("已配置 2 / 15")).toBeInTheDocument();
   });
 
+  it("应该在二次确认后重置全部属性加成并保留潜力点方案", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    const allocationDialog = await openBonusEditor(user, "潜力点分配");
+    await user.click(
+      within(allocationDialog).getByRole("radio", { name: "8力2敏" })
+    );
+    await user.click(
+      within(allocationDialog).getByRole("button", { name: "完成" })
+    );
+
+    const skillDialog = await openBonusEditor(user, "技能");
+    await user.type(
+      within(skillDialog).getByRole("spinbutton", { name: "技能：气血" }),
+      "100"
+    );
+    await user.click(
+      within(skillDialog).getByRole("button", { name: "完成" })
+    );
+
+    const trainingDialog = await openBonusEditor(user, "人物修炼");
+    await user.selectOptions(
+      within(trainingDialog).getByRole("combobox", { name: "攻击修炼等级" }),
+      "12"
+    );
+    await user.click(
+      within(trainingDialog).getByRole("checkbox", { name: "攻击修炼突破" })
+    );
+    await user.click(
+      within(trainingDialog).getByRole("button", { name: "完成" })
+    );
+
+    const skillCard = screen.getByRole("heading", { name: "技能" })
+      .closest("article");
+    expect(skillCard).not.toBeNull();
+    expect(skillCard).toHaveTextContent("气血 +100");
+
+    await user.click(screen.getByRole("button", { name: "重置" }));
+    const firstConfirmation = screen.getByRole("alertdialog", {
+      name: "确认重置属性加成？",
+    });
+    await user.click(
+      within(firstConfirmation).getByRole("button", { name: "取消" })
+    );
+
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(skillCard).toHaveTextContent("气血 +100");
+
+    await user.click(screen.getByRole("button", { name: "重置" }));
+    await user.click(
+      within(
+        screen.getByRole("alertdialog", { name: "确认重置属性加成？" })
+      ).getByRole("button", { name: "确认重置" })
+    );
+
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(skillCard).not.toHaveTextContent("气血 +100");
+    expect(screen.getByText("已配置 1 / 15")).toBeInTheDocument();
+    expect(
+      within(
+        screen.getByRole("region", { name: "潜力点分配摘要" })
+      ).getByText("8力2敏")
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+      );
+      expect(stored.skillBonuses.health).toBe(0);
+      expect(stored.characterTrainingLevels).toEqual({
+        attack: { level: 1, breakthrough: false },
+        physicalDefense: { level: 1, breakthrough: false },
+        magicDefense: { level: 1, breakthrough: false },
+      });
+      expect(stored.selectedPresetId).toBe("8-strength-2-agility");
+    });
+  });
+
   it("应该保存全部角色面板配置并在重新挂载后恢复", async () => {
     const user = userEvent.setup();
     const { unmount } = render(<CharacterAttributeCalculator />);

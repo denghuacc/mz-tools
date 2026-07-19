@@ -669,6 +669,12 @@ export const createInitialEquipmentSet = (): EquipmentSet => ({
   }),
 });
 
+/** 创建不含任何属性、宝石、词条或特效的八件装备配置。 */
+export const createEmptyEquipmentSet = (): EquipmentSet =>
+  Object.fromEntries(
+    EQUIPMENT_SLOTS.map((slot) => [slot, createItem(slot)])
+  ) as EquipmentSet;
+
 const EQUIPMENT_ATTRIBUTE_SET = new Set<string>(
   EQUIPMENT_ATTRIBUTE_OPTIONS.map(({ attribute }) => attribute)
 );

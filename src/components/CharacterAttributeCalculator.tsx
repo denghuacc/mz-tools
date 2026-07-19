@@ -1503,6 +1503,33 @@ const CharacterAttributeCalculator = ({
     });
   };
 
+  const resetAttributeBonuses = () => {
+    const defaults = createDefaultCharacterCalculatorState();
+
+    setSkillBonuses(defaults.skillBonuses);
+    setTemporaryTalismanStar(defaults.temporaryTalismanStar);
+    setTemporaryTalismanAttributes(defaults.temporaryTalismanAttributes);
+    setSoulArtifactBonuses(defaults.soulArtifactBonuses);
+    setDivineSoulValue(defaults.divineSoulValue);
+    setTianshuBonusCounts(defaults.tianshuBonusCounts);
+    setTalismanOptionId(defaults.talismanOptionId);
+    setSeasonArtifactAttribute(defaults.seasonArtifactAttribute);
+    setSeasonArtifactValue(defaults.seasonArtifactValue);
+    setCharmAttribute(defaults.charmAttribute);
+    setCharmValue(defaults.charmValue);
+    setSanshengPillCounts(defaults.sanshengPillCounts);
+    setSatinSelections(defaults.satinSelections);
+    setTransformationTalismanSelections(
+      defaults.transformationTalismanSelections
+    );
+    setIsGuildBlessingEnabled(defaults.isGuildBlessingEnabled);
+    setGuildTalentOptionIds(defaults.guildTalentOptionIds);
+    setCharacterTrainingLevels(defaults.characterTrainingLevels);
+    setStarBlessingAttributes(defaults.starBlessingAttributes);
+    setStarBlessingValue(defaults.starBlessingValue);
+    setActiveEditorId(null);
+  };
+
   const attributeBonusSources: readonly AttributeBonusSource[] = [
     {
       id: "skill",
@@ -1815,6 +1842,7 @@ const CharacterAttributeCalculator = ({
           <AttributeBonusSummaryPanel
             sources={attributeBonusSources}
             onEdit={(sourceId) => setActiveEditorId(sourceId)}
+            onReset={resetAttributeBonuses}
           />
         </div>
 
