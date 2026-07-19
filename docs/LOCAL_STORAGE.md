@@ -10,7 +10,7 @@
 
 必须保存：
 
-- 角色属性计算器中的潜力方案和各类属性加成配置。
+- 角色面板计算器中的潜力方案和各类属性加成配置。
 - 角色装备计算器中的角色等级、八件装备、宝石及突破状态、属性词条、独立词条、开关和特效配置。
 - 后续新增的高输入量计算器表单，包括需要用户逐项录入或配置较多字段的工具。
 
@@ -26,7 +26,7 @@
 
 | 用途 | localStorage key |
 | --- | --- |
-| 角色属性配置 | `mz-tools.character-attributes.v2` |
+| 角色面板配置 | `mz-tools.character-attributes.v2` |
 | 角色等级与八件装备配置 | `mz-tools.equipment-attributes.v2` |
 | 计算器选择偏好 | `mz-tools.preferences.v1` |
 | 本地收藏 | `mz-tools.favorites.v1` |
@@ -35,7 +35,7 @@
 
 装备配置 v2 在根状态中新增角色等级，并为每件装备增加宝石配置。读取不到 v2 时会自动从 `mz-tools.equipment-attributes.v1` 迁移原有八件装备，角色等级使用默认值 69；旧 key 暂时保留用于兼容，不再写入。
 
-角色属性配置 v2 将灵符从自由数值改为“星级 + 属性选项”。读取不到 v2 时会从 `mz-tools.character-attributes.v1` 恢复其他角色配置，旧版灵符自由数值不迁移；旧 key 保留兼容，不再写入。
+角色面板配置 v2 将灵符从自由数值改为“星级 + 属性选项”。读取不到 v2 时会从 `mz-tools.character-attributes.v1` 恢复其他角色配置，旧版灵符自由数值不迁移；旧 key 保留兼容，不再写入。
 
 三生造化丹按五维分别保存用户已服用的原始颗数，属性点由“颗数 × 2”实时计算；旧版 v2 缓存缺少该字段时自动使用 0 颗，不需要升级存储 key。
 
@@ -45,7 +45,7 @@
 2. 在 `src/utils/calculatorStorage.ts` 中定义独立、带版本号的 key。
 3. 首次渲染时读取缓存，并对未知、缺失和非法字段进行校验或补默认值。
 4. 用户输入变化后保存原始配置，不保存可重新计算的结果。
-5. 新增角色属性字段时，同步更新 `CharacterCalculatorState`、默认值、标准化逻辑、保存对象和 effect 依赖。
+5. 新增角色面板字段时，同步更新 `CharacterCalculatorState`、默认值、标准化逻辑、保存对象和 effect 依赖。
 6. 新增装备字段时，同步更新 `EquipmentItem` 和 `normalizeEquipmentItem`；类型检查必须能够发现遗漏。
 7. 增加“修改字段 → 卸载或刷新 → 恢复字段”的测试，并验证损坏缓存不会阻断计算器。
 8. 运行 `pnpm lint`、`pnpm test --run` 和 `pnpm build`。

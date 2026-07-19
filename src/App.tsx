@@ -172,11 +172,11 @@ const CalculatorPage = () => {
   const toolMeta = isEquipment
     ? {
         title: "角色装备计算器",
-        description: "录入八件装备，汇总装备属性并同步到角色属性。",
+        description: "录入八件装备，汇总装备属性并同步到角色面板。",
       }
     : isCharacter
     ? {
-        title: "角色属性计算器",
+        title: "角色面板计算器",
         description: "分配 69 级角色潜力点，查看装备和其它加成后的属性。",
       }
     : isWeapon
@@ -215,7 +215,7 @@ const CalculatorPage = () => {
           [
             ["weapon", "武器转换"],
             ["ring", "戒指转换"],
-            ["character", "角色属性"],
+            ["character", "角色面板"],
             ["equipment", "角色装备"],
           ] as const
         ).map(([tool, label]) => (

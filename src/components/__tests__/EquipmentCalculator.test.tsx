@@ -472,14 +472,20 @@ describe("EquipmentCalculator", () => {
       await user.type(input, value);
     }
 
-    const combatSummary = screen.getByRole("heading", {
-      name: "战斗词条",
+    const panelSummary = screen.getByRole("heading", {
+      name: "面板属性",
     }).parentElement;
+    const combatSummary = screen.getByRole("heading", {
+      name: "战斗属性",
+    }).parentElement;
+    expect(panelSummary).not.toBeNull();
     expect(combatSummary).not.toBeNull();
-    expect(within(combatSummary!).getByText("封印命中")).toBeInTheDocument();
-    expect(within(combatSummary!).getByText("抗封")).toBeInTheDocument();
-    expect(within(combatSummary!).getByText("闪避")).toBeInTheDocument();
-    expect(within(combatSummary!).getByText("+3%")).toBeInTheDocument();
+    expect(within(panelSummary!).getByText("封印命中")).toBeInTheDocument();
+    expect(within(panelSummary!).getByText("抗封")).toBeInTheDocument();
+    expect(within(panelSummary!).getByText("闪避")).toBeInTheDocument();
+    expect(within(panelSummary!).getByText("+3%")).toBeInTheDocument();
+    expect(within(combatSummary!).queryByText("封印命中")).not.toBeInTheDocument();
+    expect(within(combatSummary!).queryByText("抗封")).not.toBeInTheDocument();
 
     await user.click(
       within(dialog).getByRole("button", { name: "删除戒指副属性 3" })

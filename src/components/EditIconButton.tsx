@@ -3,7 +3,7 @@ type EditIconButtonProps = {
   onClick: () => void;
 };
 
-/** 统一角色属性卡片和装备卡片的编辑入口。 */
+/** 统一角色面板卡片和装备卡片的编辑入口。 */
 const EditIconButton = ({ label, onClick }: EditIconButtonProps) => (
   <button
     type="button"

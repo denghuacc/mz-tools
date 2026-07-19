@@ -21,7 +21,7 @@ import {
   TOTAL_POTENTIAL_POINTS,
 } from "../characterAttributes";
 
-describe("角色属性计算", () => {
+describe("角色面板计算", () => {
   it("应该校验魂器五维属性的带符号增减总和为零", () => {
     const balancedBonuses = {
       strength: 10,

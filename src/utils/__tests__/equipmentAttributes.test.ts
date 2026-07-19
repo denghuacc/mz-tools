@@ -273,7 +273,7 @@ describe("角色装备属性汇总", () => {
     });
   });
 
-  it("应该按截图示例汇总八件装备并映射到角色属性", () => {
+  it("应该按截图示例汇总八件装备并映射到角色面板", () => {
     const summary = calculateEquipmentSummary(createInitialEquipmentSet());
 
     expect(summary.activeItemCount).toBe(8);

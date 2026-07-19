@@ -14,7 +14,7 @@ import {
 } from "../../utils/calculatorStorage";
 
 describe("CharacterAttributeCalculator", () => {
-  it("应该展示角色属性计算结构", () => {
+  it("应该展示角色面板计算结构", () => {
     render(<CharacterAttributeCalculator />);
 
     expect(
@@ -31,6 +31,7 @@ describe("CharacterAttributeCalculator", () => {
     const trueEnergyRow = screen.getByText("真气").closest("div");
     expect(trueEnergyRow).not.toBeNull();
     expect(within(trueEnergyRow!).getByText("100")).toBeInTheDocument();
+    expect(screen.getByTestId("mana-value-bar")).toHaveClass("bg-blue-500");
     expect(screen.queryByText("进阶属性与亲和")).not.toBeInTheDocument();
   });
 
@@ -41,6 +42,23 @@ describe("CharacterAttributeCalculator", () => {
       .getAllByRole("button", { name: /^编辑/ });
 
     expect(editButtons).toHaveLength(15);
+    expect(editButtons.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "编辑技能",
+      "编辑人物修炼",
+      "编辑神魂",
+      "编辑天书",
+      "编辑法宝",
+      "编辑魅灵",
+      "编辑缎纹",
+      "编辑幻形符",
+      "编辑灵符",
+      "编辑魂器",
+      "编辑赛季神器",
+      "编辑帮派祝福",
+      "编辑帮派天赋",
+      "编辑星运祈福",
+      "编辑三生造化丹",
+    ]);
     editButtons.forEach((button) => {
       expect(button.textContent).toBe("");
       expect(button.querySelector("svg")).not.toBeNull();
@@ -892,7 +910,7 @@ describe("CharacterAttributeCalculator", () => {
     await user.click(advancedTab);
 
     expect(advancedTab).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("heading", { name: "状态条" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "数值条" })).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "进阶属性 · 9 项" })
     ).toBeInTheDocument();
@@ -900,6 +918,8 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("100%")).toBeInTheDocument();
     expect(screen.getByText("150")).toBeInTheDocument();
     expect(screen.getByText("等级 +136")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "亲和" })).toBeInTheDocument();
+    expect(screen.queryByText("进战怒气")).not.toBeInTheDocument();
     expect(
       screen.getAllByText(/系亲和$/).map((element) => element.textContent)
     ).toEqual([
@@ -968,17 +988,10 @@ describe("CharacterAttributeCalculator", () => {
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
     const resultPanel = within(screen.getByTestId("attribute-result-panel"));
     const healingRow = resultPanel.getByText("治疗强度").closest("div");
-    const battleEntryAngerRow = resultPanel
-      .getByText("进战怒气")
-      .closest("div");
     expect(healingRow).not.toBeNull();
-    expect(battleEntryAngerRow).not.toBeNull();
     expect(within(healingRow!).getByText("灵符 +31")).toBeInTheDocument();
     expect(within(healingRow!).getByText("36")).toBeInTheDocument();
-    expect(
-      within(battleEntryAngerRow!).getByText("灵符 +17")
-    ).toBeInTheDocument();
-    expect(within(battleEntryAngerRow!).getByText("17")).toBeInTheDocument();
+    expect(resultPanel.queryByText("进战怒气")).not.toBeInTheDocument();
 
     const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
       .getByRole("heading", { name: "灵符" })
@@ -1056,7 +1069,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("已配置 2 / 15")).toBeInTheDocument();
   });
 
-  it("应该保存全部角色属性配置并在重新挂载后恢复", async () => {
+  it("应该保存全部角色面板配置并在重新挂载后恢复", async () => {
     const user = userEvent.setup();
     const { unmount } = render(<CharacterAttributeCalculator />);
 

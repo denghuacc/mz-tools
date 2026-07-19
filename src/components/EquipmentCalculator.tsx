@@ -37,7 +37,7 @@ const SUMMARY_GROUPS: readonly {
     attributes: ["constitution", "spirit", "strength", "endurance", "agility"],
   },
   {
-    title: "基础属性",
+    title: "面板属性",
     attributes: [
       "health",
       "healthPercent",
@@ -49,18 +49,18 @@ const SUMMARY_GROUPS: readonly {
       "speed",
       "healingPower",
       "speedPercent",
+      "sealHit",
+      "sealResistance",
+      "dodgeRate",
     ],
   },
   {
-    title: "战斗词条",
+    title: "战斗属性",
     attributes: [
       "physicalDamageResult",
       "magicalDamageResult",
       "physicalDamageReduction",
       "magicalDamageReduction",
-      "sealHit",
-      "sealResistance",
-      "dodgeRate",
     ],
   },
   {
@@ -137,7 +137,7 @@ const EquipmentCalculator = ({
               <div>
                 <h2 className="text-base font-semibold text-slate-900">装备总属性</h2>
                 <p className="mt-1 text-xs leading-5 text-slate-500">
-                  已直接接入角色属性计算器的可映射字段。
+                  已直接接入角色面板计算器的可映射字段。
                 </p>
               </div>
               <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600">

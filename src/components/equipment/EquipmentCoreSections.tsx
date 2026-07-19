@@ -36,7 +36,7 @@ export const EquipmentStatusSection = ({
   return (
     <EquipmentEditorSection
       title={`${EQUIPMENT_SLOT_LABELS[item.slot]}状态`}
-      description="关闭后保留录入值，但不计入装备总属性和角色属性。"
+      description="关闭后保留录入值，但不计入装备总属性和角色面板。"
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2.5 text-sm text-slate-700">

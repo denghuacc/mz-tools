@@ -452,7 +452,6 @@ const ADVANCED_ATTRIBUTE_COLUMNS = [
     { label: "治疗强度", attribute: "healingPower", unit: "" },
     { label: "封印命中", attribute: "sealHit", unit: "", growsWithLevel: true },
     { label: "封印抵抗", attribute: "sealResistance", unit: "" },
-    { label: "进战怒气", attribute: "battleEntryAnger", unit: "" },
   ],
 ] as const;
 
@@ -1376,21 +1375,35 @@ const CharacterAttributeCalculator = ({
 
   const attributeBonusSources: readonly AttributeBonusSource[] = [
     {
-      id: "soulArtifact",
-      title: "魂器",
-      items: soulArtifactSummaryItems,
-      validationError: soulArtifactValidationError,
+      id: "skill",
+      title: "技能",
+      items: skillSummaryItems,
       renderContent: (title) => (
         <AttributeBonusCard
           title={title}
-          description="体/灵/力/耐/敏可增可减，五项增减合计必须为 0；其余属性只能增加。"
-          fields={SOUL_ARTIFACT_BONUS_FIELDS}
-          values={soulArtifactBonuses}
-          onChange={updateSoulArtifactBonus}
+          description="不同门派的技能加成不同，请按实际数值填写；速度减少时填负数。"
+          fields={SKILL_BONUS_FIELDS}
+          values={skillBonuses}
+          onChange={updateSkillBonus}
           onReset={() =>
-            setSoulArtifactBonuses(createEmptyCharacterAttributeBonuses())
+            setSkillBonuses(createEmptyCharacterAttributeBonuses())
           }
-          validationError={soulArtifactValidationError}
+        />
+      ),
+    },
+    {
+      id: "characterTraining",
+      title: "人物修炼",
+      details: characterTrainingDetails,
+      items: characterTrainingSummaryItems,
+      renderContent: (title) => (
+        <CharacterTrainingBonusControl
+          title={title}
+          levels={characterTrainingLevels}
+          onChange={setCharacterTrainingLevels}
+          onReset={() =>
+            setCharacterTrainingLevels(createDefaultCharacterTrainingLevels())
+          }
         />
       ),
     },
@@ -1446,25 +1459,6 @@ const CharacterAttributeCalculator = ({
       ),
     },
     {
-      id: "seasonArtifact",
-      title: "赛季神器",
-      items: seasonArtifactSummaryItems,
-      renderContent: (title) => (
-        <SinglePrimaryAttributeBonusControl
-          title={title}
-          description="选择一项属性，并填写本次实际潜能点。"
-          selectedAttribute={seasonArtifactAttribute}
-          value={seasonArtifactValue}
-          onSelect={setSeasonArtifactAttribute}
-          onValueChange={setSeasonArtifactValue}
-          onReset={() => {
-            setSeasonArtifactAttribute(null);
-            setSeasonArtifactValue(0);
-          }}
-        />
-      ),
-    },
-    {
       id: "charm",
       title: "魅灵",
       items: charmSummaryItems,
@@ -1481,25 +1475,6 @@ const CharacterAttributeCalculator = ({
             setCharmAttribute(null);
             setCharmValue(0);
           }}
-        />
-      ),
-    },
-    {
-      id: "sanshengPill",
-      title: "三生造化丹",
-      badge:
-        sanshengPillUsedCount > 0
-          ? `已服 ${sanshengPillUsedCount} / ${sanshengPillMaximumCount} 颗`
-          : undefined,
-      details: `${currentYear} 年上限 ${sanshengPillMaximumCount} 颗`,
-      items: sanshengPillSummaryItems,
-      renderContent: (title) => (
-        <SanshengPillBonusControl
-          title={title}
-          counts={sanshengPillCounts}
-          currentYear={currentYear}
-          maximumCount={sanshengPillMaximumCount}
-          onChange={setSanshengPillCounts}
         />
       ),
     },
@@ -1527,6 +1502,66 @@ const CharacterAttributeCalculator = ({
           fields={TRANSFORMATION_TALISMAN_BONUS_FIELDS}
           selections={transformationTalismanSelections}
           onChange={setTransformationTalismanSelections}
+        />
+      ),
+    },
+    {
+      id: "temporaryTalisman",
+      title: "灵符",
+      badge: temporaryTalismanStar
+        ? `${temporaryTalismanStar}星灵符`
+        : undefined,
+      items: temporaryTalismanSummaryItems,
+      renderContent: (title) => (
+        <TemporaryTalismanBonusControl
+          title={title}
+          options={TEMPORARY_TALISMAN_BONUS_FIELDS}
+          selectedStar={temporaryTalismanStar}
+          selectedAttributes={temporaryTalismanAttributes}
+          onStarChange={setTemporaryTalismanStar}
+          onSelectedAttributesChange={setTemporaryTalismanAttributes}
+          onReset={() => {
+            setTemporaryTalismanStar(null);
+            setTemporaryTalismanAttributes([]);
+          }}
+        />
+      ),
+    },
+    {
+      id: "soulArtifact",
+      title: "魂器",
+      items: soulArtifactSummaryItems,
+      validationError: soulArtifactValidationError,
+      renderContent: (title) => (
+        <AttributeBonusCard
+          title={title}
+          description="体/灵/力/耐/敏可增可减，五项增减合计必须为 0；其余属性只能增加。"
+          fields={SOUL_ARTIFACT_BONUS_FIELDS}
+          values={soulArtifactBonuses}
+          onChange={updateSoulArtifactBonus}
+          onReset={() =>
+            setSoulArtifactBonuses(createEmptyCharacterAttributeBonuses())
+          }
+          validationError={soulArtifactValidationError}
+        />
+      ),
+    },
+    {
+      id: "seasonArtifact",
+      title: "赛季神器",
+      items: seasonArtifactSummaryItems,
+      renderContent: (title) => (
+        <SinglePrimaryAttributeBonusControl
+          title={title}
+          description="选择一项属性，并填写本次实际潜能点。"
+          selectedAttribute={seasonArtifactAttribute}
+          value={seasonArtifactValue}
+          onSelect={setSeasonArtifactAttribute}
+          onValueChange={setSeasonArtifactValue}
+          onReset={() => {
+            setSeasonArtifactAttribute(null);
+            setSeasonArtifactValue(0);
+          }}
         />
       ),
     },
@@ -1561,22 +1596,6 @@ const CharacterAttributeCalculator = ({
       ),
     },
     {
-      id: "characterTraining",
-      title: "人物修炼",
-      details: characterTrainingDetails,
-      items: characterTrainingSummaryItems,
-      renderContent: (title) => (
-        <CharacterTrainingBonusControl
-          title={title}
-          levels={characterTrainingLevels}
-          onChange={setCharacterTrainingLevels}
-          onReset={() =>
-            setCharacterTrainingLevels(createDefaultCharacterTrainingLevels())
-          }
-        />
-      ),
-    },
-    {
       id: "starBlessing",
       title: "星运祈福",
       items: starBlessingSummaryItems,
@@ -1592,41 +1611,21 @@ const CharacterAttributeCalculator = ({
       ),
     },
     {
-      id: "temporaryTalisman",
-      title: "灵符",
-      badge: temporaryTalismanStar
-        ? `${temporaryTalismanStar}星灵符`
-        : undefined,
-      items: temporaryTalismanSummaryItems,
+      id: "sanshengPill",
+      title: "三生造化丹",
+      badge:
+        sanshengPillUsedCount > 0
+          ? `已服 ${sanshengPillUsedCount} / ${sanshengPillMaximumCount} 颗`
+          : undefined,
+      details: `${currentYear} 年上限 ${sanshengPillMaximumCount} 颗`,
+      items: sanshengPillSummaryItems,
       renderContent: (title) => (
-        <TemporaryTalismanBonusControl
+        <SanshengPillBonusControl
           title={title}
-          options={TEMPORARY_TALISMAN_BONUS_FIELDS}
-          selectedStar={temporaryTalismanStar}
-          selectedAttributes={temporaryTalismanAttributes}
-          onStarChange={setTemporaryTalismanStar}
-          onSelectedAttributesChange={setTemporaryTalismanAttributes}
-          onReset={() => {
-            setTemporaryTalismanStar(null);
-            setTemporaryTalismanAttributes([]);
-          }}
-        />
-      ),
-    },
-    {
-      id: "skill",
-      title: "技能",
-      items: skillSummaryItems,
-      renderContent: (title) => (
-        <AttributeBonusCard
-          title={title}
-          description="不同门派的技能加成不同，请按实际数值填写；速度减少时填负数。"
-          fields={SKILL_BONUS_FIELDS}
-          values={skillBonuses}
-          onChange={updateSkillBonus}
-          onReset={() =>
-            setSkillBonuses(createEmptyCharacterAttributeBonuses())
-          }
+          counts={sanshengPillCounts}
+          currentYear={currentYear}
+          maximumCount={sanshengPillMaximumCount}
+          onChange={setSanshengPillCounts}
         />
       ),
     },
@@ -1683,7 +1682,7 @@ const CharacterAttributeCalculator = ({
           <div>
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-base font-semibold text-slate-900">状态条</h2>
+                <h2 className="text-base font-semibold text-slate-900">数值条</h2>
                 <p className="mt-1.5 text-xs leading-5 text-slate-500">
                   气血和法力均按等级成长；气血还会随体力增加，真气固定为 100。
                 </p>
@@ -1804,7 +1803,10 @@ const CharacterAttributeCalculator = ({
                     }
                   />
                 </div>
-                <div className="mt-2 h-1.5 rounded-full bg-blue-100" />
+                <div
+                  className="mt-2 h-1.5 rounded-full bg-blue-500"
+                  data-testid="mana-value-bar"
+                />
               </div>
               <div className="rounded-xl border border-amber-100 bg-amber-50/50 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
@@ -2184,8 +2186,7 @@ const CharacterAttributeCalculator = ({
                                       </span>
                                     )}
                                   {(attribute.attribute === "healingPower" ||
-                                    attribute.attribute === "sealHit" ||
-                                    attribute.attribute === "battleEntryAnger") &&
+                                    attribute.attribute === "sealHit") &&
                                     temporaryTalismanBonuses[
                                       attribute.attribute
                                     ] > 0 && (

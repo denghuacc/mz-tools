@@ -105,11 +105,11 @@ describe("App 组件", () => {
     expect(loadPreferences().activeTool).toBe("ring");
   });
 
-  it("应该支持切换到角色属性计算器", async () => {
+  it("应该支持切换到角色面板计算器", async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("tab", { name: "角色属性" }));
+    await user.click(screen.getByRole("tab", { name: "角色面板" }));
 
     expect(
       screen.getByRole("heading", { name: "基础属性 · 10 项" })
@@ -137,7 +137,7 @@ describe("App 组件", () => {
     expect(loadPreferences().activeTool).toBe("character");
   });
 
-  it("应该在角色属性后提供角色装备并把装备加成接入角色属性", async () => {
+  it("应该在角色面板后提供角色装备并把装备加成接入角色面板", async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -145,7 +145,7 @@ describe("App 组件", () => {
     expect(calculatorTabs).toEqual([
       "武器转换",
       "戒指转换",
-      "角色属性",
+      "角色面板",
       "角色装备",
     ]);
 
@@ -154,7 +154,7 @@ describe("App 组件", () => {
     expect(screen.getByText("8 / 8 件")).toBeInTheDocument();
     expect(loadPreferences().activeTool).toBe("equipment");
 
-    await user.click(screen.getByRole("tab", { name: "角色属性" }));
+    await user.click(screen.getByRole("tab", { name: "角色面板" }));
     expect(screen.getByLabelText("装备属性接入状态")).toHaveTextContent("8 / 8 件");
     expect(screen.getByText("装备 +138")).toBeInTheDocument();
   });
@@ -335,7 +335,7 @@ describe("App 组件", () => {
     );
     expect(screen.getByRole("heading", { name: "设置" })).toBeInTheDocument();
     expect(screen.getByText(/当前收藏 0 项/)).toBeInTheDocument();
-    expect(screen.getByText(/角色属性和八件装备输入会保存在当前浏览器/)).toBeInTheDocument();
+    expect(screen.getByText(/角色面板和八件装备输入会保存在当前浏览器/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "清空收藏" })).toBeDisabled();
 
     await user.click(screen.getByRole("button", { name: "重置计算器偏好" }));

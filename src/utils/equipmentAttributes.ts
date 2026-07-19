@@ -1154,7 +1154,7 @@ export const calculateEquipmentItemAttributes = (
   return attributes;
 };
 
-/** 将八件装备汇总为装备总览，并提取角色属性计算器能够识别的字段。 */
+/** 将八件装备汇总为装备总览，并提取角色面板计算器能够识别的字段。 */
 export const calculateEquipmentSummary = (
   equipment: EquipmentSet,
   characterLevel = DEFAULT_EQUIPMENT_CHARACTER_LEVEL
