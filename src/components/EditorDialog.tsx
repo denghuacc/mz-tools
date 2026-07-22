@@ -6,6 +6,7 @@ type EditorDialogProps = {
   children: ReactNode;
   onClose: () => void;
   isCloseDisabled?: boolean;
+  titlePrefix?: string;
 };
 
 /** 通用编辑窗口，统一处理遮罩、关闭、滚动锁定与焦点恢复。 */
@@ -14,6 +15,7 @@ const EditorDialog = ({
   children,
   onClose,
   isCloseDisabled = false,
+  titlePrefix = "编辑",
 }: EditorDialogProps) => {
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -60,13 +62,13 @@ const EditorDialog = ({
       >
         <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3.5 sm:px-5">
           <h2 id={titleId} className="text-base font-semibold text-slate-900">
-            编辑{title}
+            {titlePrefix}{title}
           </h2>
           <button
             ref={closeButtonRef}
             type="button"
             className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:text-slate-200 disabled:hover:bg-transparent"
-            aria-label="关闭编辑"
+            aria-label="关闭弹窗"
             disabled={isCloseDisabled}
             onClick={onClose}
           >

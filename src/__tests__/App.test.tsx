@@ -112,7 +112,9 @@ describe("App 组件", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("tab", { name: "角色面板" }));
+    await user.click(
+      screen.getByRole("tab", { name: "角色面板 (测试版)" })
+    );
 
     expect(
       screen.getByRole("heading", { name: "基础属性 · 10 项" })
@@ -148,16 +150,20 @@ describe("App 组件", () => {
     expect(calculatorTabs).toEqual([
       "武器转换",
       "戒指转换",
-      "角色面板",
-      "角色装备",
+      "角色面板 (测试版)",
+      "角色装备 (测试版)",
     ]);
 
-    await user.click(screen.getByRole("tab", { name: "角色装备" }));
+    await user.click(
+      screen.getByRole("tab", { name: "角色装备 (测试版)" })
+    );
     expect(screen.getByRole("heading", { name: "装备总属性" })).toBeInTheDocument();
     expect(screen.getByText("8 / 8 件")).toBeInTheDocument();
     expect(loadPreferences().activeTool).toBe("equipment");
 
-    await user.click(screen.getByRole("tab", { name: "角色面板" }));
+    await user.click(
+      screen.getByRole("tab", { name: "角色面板 (测试版)" })
+    );
     expect(
       screen.queryByRole("region", { name: "装备属性接入状态" })
     ).not.toBeInTheDocument();
@@ -466,7 +472,9 @@ describe("App 组件", () => {
     const user = userEvent.setup();
     const { unmount } = render(<App />);
 
-    await user.click(screen.getByRole("tab", { name: "角色面板" }));
+    await user.click(
+      screen.getByRole("tab", { name: "角色面板 (测试版)" })
+    );
     const characterLevelSelect = screen.getByRole("combobox", {
       name: "角色等级",
     });
@@ -479,7 +487,9 @@ describe("App 组件", () => {
     expect(screen.getByText("力 +1100")).toBeInTheDocument();
     expect(screen.getByText(/可分配潜力点 1100/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: "角色装备" }));
+    await user.click(
+      screen.getByRole("tab", { name: "角色装备 (测试版)" })
+    );
     expect(screen.getByText("当前角色 110 级")).toBeInTheDocument();
     expect(screen.getByText("宝石上限 14 级")).toBeInTheDocument();
 
@@ -548,10 +558,9 @@ describe("App 组件", () => {
     unmount();
     render(<App />);
 
-    expect(screen.getByRole("tab", { name: "角色装备" })).toHaveAttribute(
-      "aria-selected",
-      "true"
-    );
+    expect(
+      screen.getByRole("tab", { name: "角色装备 (测试版)" })
+    ).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("当前角色 110 级")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "编辑武器" }));
     const restoredDialog = screen.getByRole("dialog", { name: "编辑武器" });

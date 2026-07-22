@@ -270,8 +270,8 @@ const CalculatorPage = () => {
           [
             ["weapon", "武器转换"],
             ["ring", "戒指转换"],
-            ["character", "角色面板"],
-            ["equipment", "角色装备"],
+            ["character", "角色面板 (测试版)"],
+            ["equipment", "角色装备 (测试版)"],
           ] as const
         ).map(([tool, label]) => (
           <button

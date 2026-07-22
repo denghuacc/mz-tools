@@ -17,6 +17,48 @@ import {
 } from "../../utils/calculatorStorage";
 
 describe("CharacterAttributeCalculator", () => {
+  it("应该通过信息弹窗说明当前计算口径和数据范围", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    expect(
+      screen.getByText(/当前计算仅在现有样本范围内有效/)
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "查看当前计算口径详情" })
+    );
+
+    const dialog = screen.getByRole("dialog", {
+      name: "当前计算口径说明",
+    });
+    expect(dialog).toHaveTextContent(
+      "五维转换公式来自第三方博主测试， 官方未发布对应公式"
+    );
+    expect(dialog).toHaveTextContent("所有结果仅供参考， 以实际游戏数据为准");
+    expect(dialog).toHaveTextContent("0 级五维：体、灵、力、耐、敏均为 20 点");
+    expect(dialog).toHaveTextContent(
+      "五维各固定增加 2 点，另获得 10 点可分配潜力"
+    );
+    expect(dialog).toHaveTextContent(
+      /当前 69 级从 0 级起共升级 69 次；\s*未分配潜力前五维各为 158 点，可分配潜力共 690 点/
+    );
+
+    const conversionTable = within(dialog).getByRole("table", {
+      name: "五维属性转换规则",
+    });
+    expect(
+      within(conversionTable).getByRole("row", { name: "体力 +3 — +0.1 — +0.1 +0.1" })
+    ).toBeInTheDocument();
+    expect(
+      within(conversionTable).getByRole("row", { name: "敏捷 — — — — — +0.5" })
+    ).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole("button", { name: "完成" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("应该展示角色面板计算结构", () => {
     render(<CharacterAttributeCalculator />);
 

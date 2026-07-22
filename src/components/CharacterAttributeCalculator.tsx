@@ -11,6 +11,7 @@ import AttributeBonusCard from "./AttributeBonusCard";
 import AttributeBonusSummaryPanel from "./AttributeBonusSummaryPanel";
 import type { AttributeBonusSummarySource } from "./AttributeBonusSummaryPanel";
 import CharacterTrainingBonusControl from "./CharacterTrainingBonusControl";
+import CharacterCalculationScope from "./CharacterCalculationScope";
 import {
   calculateCharacterTrainingBonuses,
   createDefaultCharacterTrainingLevels,
@@ -2835,12 +2836,11 @@ const CharacterAttributeCalculator = ({
         </EditorDialog>
       )}
 
-      <section className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 text-xs leading-6 text-blue-900 sm:px-5">
-        <strong className="font-semibold">当前计算口径：</strong>
-        0 级五维均为 20 点；升至 {characterLevel} 级共成长 {characterUpgradeCount} 次，
-        可分配潜力点 {totalPotentialPoints}。面板最终值暂按向下取整展示，内部保留完整计算精度。
-        1 级样本中多出的 10 点力量来自首批潜力分配；法攻/法防/物攻/物防/速度初值是否随机，仍待更多新号样本确认。
-      </section>
+      <CharacterCalculationScope
+        characterLevel={characterLevel}
+        characterUpgradeCount={characterUpgradeCount}
+        totalPotentialPoints={totalPotentialPoints}
+      />
     </div>
   );
 };
