@@ -471,8 +471,8 @@ describe("App 组件", () => {
         .map((option) => option.getAttribute("value"))
     ).toEqual(["69", "89", "110"]);
     await user.selectOptions(characterLevelSelect, "110");
-    expect(screen.getByText("力 +1090")).toBeInTheDocument();
-    expect(screen.getByText(/可分配潜力点 1090/)).toBeInTheDocument();
+    expect(screen.getByText("力 +1100")).toBeInTheDocument();
+    expect(screen.getByText(/可分配潜力点 1100/)).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "角色装备" }));
     expect(screen.getByText("当前角色 110 级")).toBeInTheDocument();
