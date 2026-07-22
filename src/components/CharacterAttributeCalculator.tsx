@@ -448,34 +448,41 @@ const createTianshuStarSoulOptions = (characterLevel: CharacterLevel) => [
     label: "气血 +1%",
     bonuses: { healthPercent: 1 },
   },
+  // 等级类星魂沿用天书的两行文案：先展示计算规则，再展示当前等级的换算结果。
   {
     id: "magic-defense-level-02",
-    label: `法防 +${characterLevel * 0.2}`,
+    label: "等级 × 0.2 法防",
+    effectLabel: `+${characterLevel * 0.2} 法防`,
     bonuses: { magicDefense: characterLevel * 0.2 },
   },
   {
     id: "magic-defense-level-01",
-    label: `法防 +${characterLevel * 0.1}`,
+    label: "等级 × 0.1 法防",
+    effectLabel: `+${characterLevel * 0.1} 法防`,
     bonuses: { magicDefense: characterLevel * 0.1 },
   },
   {
     id: "physical-defense-level-02",
-    label: `物防 +${characterLevel * 0.2}`,
+    label: "等级 × 0.2 物防",
+    effectLabel: `+${characterLevel * 0.2} 物防`,
     bonuses: { physicalDefense: characterLevel * 0.2 },
   },
   {
     id: "physical-defense-level-01",
-    label: `物防 +${characterLevel * 0.1}`,
+    label: "等级 × 0.1 物防",
+    effectLabel: `+${characterLevel * 0.1} 物防`,
     bonuses: { physicalDefense: characterLevel * 0.1 },
   },
   {
     id: "speed-level-01",
-    label: `速度 +${characterLevel * 0.1}`,
+    label: "等级 × 0.1 速度",
+    effectLabel: `+${characterLevel * 0.1} 速度`,
     bonuses: { speed: characterLevel * 0.1 },
   },
   {
     id: "speed-level-005",
-    label: `速度 +${characterLevel * 0.05}`,
+    label: "等级 × 0.05 速度",
+    effectLabel: `+${characterLevel * 0.05} 速度`,
     bonuses: { speed: characterLevel * 0.05 },
   },
 ] as const;

@@ -621,15 +621,25 @@ describe("CharacterAttributeCalculator", () => {
     const optionLabels = [
       "气血 +2%",
       "气血 +1%",
-      "法防 +13.8",
-      "法防 +6.9",
-      "物防 +13.8",
-      "物防 +6.9",
-      "速度 +6.9",
-      "速度 +3.45",
+      "等级 × 0.2 法防",
+      "等级 × 0.1 法防",
+      "等级 × 0.2 物防",
+      "等级 × 0.1 物防",
+      "等级 × 0.1 速度",
+      "等级 × 0.05 速度",
     ];
 
     expect(within(dialog).getAllByRole("checkbox")).toHaveLength(8);
+    for (const effectLabel of [
+      "+13.8 法防",
+      "+6.9 法防",
+      "+13.8 物防",
+      "+6.9 物防",
+      "+6.9 速度",
+      "+3.45 速度",
+    ]) {
+      expect(within(dialog).getByText(effectLabel)).toBeInTheDocument();
+    }
     for (const label of optionLabels) {
       await user.click(
         within(dialog).getByRole("checkbox", { name: label })

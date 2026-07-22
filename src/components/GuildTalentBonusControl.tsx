@@ -2,7 +2,7 @@ type GuildTalentBonusControlProps<OptionId extends string> = {
   title: string;
   description?: string;
   groupLabel?: string;
-  options: readonly { id: OptionId; label: string }[];
+  options: readonly { id: OptionId; label: string; effectLabel?: string }[];
   selectedOptionIds: readonly OptionId[];
   onChange: (optionIds: readonly OptionId[]) => void;
 };
@@ -48,7 +48,7 @@ const GuildTalentBonusControl = <OptionId extends string>({
         role="group"
         aria-label={groupLabel}
       >
-        {options.map(({ id, label }) => {
+        {options.map(({ id, label, effectLabel }) => {
           const isSelected = selectedOptionIds.includes(id);
 
           return (
@@ -67,7 +67,16 @@ const GuildTalentBonusControl = <OptionId extends string>({
                 className="h-4 w-4 shrink-0 accent-orange-500"
                 onChange={() => toggleOption(id)}
               />
-              <span className="text-xs font-medium leading-5">{label}</span>
+              <span className="min-w-0">
+                <span className="block text-xs font-medium leading-5">
+                  {label}
+                </span>
+                {effectLabel && (
+                  <span className="mt-0.5 block text-[11px] font-medium text-orange-600">
+                    {effectLabel}
+                  </span>
+                )}
+              </span>
             </label>
           );
         })}
