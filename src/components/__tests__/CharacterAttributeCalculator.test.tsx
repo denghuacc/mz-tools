@@ -47,12 +47,13 @@ describe("CharacterAttributeCalculator", () => {
     const editButtons = within(screen.getByTestId("attribute-bonus-rail"))
       .getAllByRole("button", { name: /^编辑/ });
 
-    expect(editButtons).toHaveLength(15);
+    expect(editButtons).toHaveLength(16);
     expect(editButtons.map((button) => button.getAttribute("aria-label"))).toEqual([
       "编辑技能",
       "编辑人物修炼",
       "编辑神魂",
       "编辑天书",
+      "编辑天书星魂",
       "编辑法宝",
       "编辑魅灵",
       "编辑缎纹",
@@ -109,6 +110,79 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("鹤云幡 · 物攻 +27.6")).toBeInTheDocument();
     expect(screen.getByText("法宝（鹤云幡） +27.6")).toBeInTheDocument();
     expect(screen.getAllByText("法宝（鹤云幡） +5%")).toHaveLength(2);
+  });
+
+  it("应该让琥珀朱绫实时获得幻形符一半属性", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+
+    const transformationDialog = await openBonusEditor(user, "幻形符");
+    await user.click(
+      within(transformationDialog).getByRole("button", { name: "气血" })
+    );
+    await user.click(
+      within(transformationDialog).getByRole("button", {
+        name: "物理暴击率",
+      })
+    );
+    await user.type(
+      within(transformationDialog).getByRole("spinbutton", {
+        name: "幻形符：气血",
+      }),
+      "100"
+    );
+    await user.type(
+      within(transformationDialog).getByRole("spinbutton", {
+        name: "幻形符：物理暴击率",
+      }),
+      "3.5"
+    );
+    await user.click(
+      within(transformationDialog).getByRole("button", { name: "完成" })
+    );
+
+    const talismanDialog = await openBonusEditor(user, "法宝");
+    const physicalAttackOption = within(talismanDialog).getByRole("radio", {
+      name: /物攻法宝：天魔幡/,
+    });
+    const amberOption = within(talismanDialog).getByRole("checkbox", {
+      name: /法宝：琥珀朱绫/,
+    });
+    expect(
+      within(talismanDialog).getByText("当前幻形符属性 × 50%")
+    ).toBeInTheDocument();
+    await user.click(physicalAttackOption);
+    await user.click(amberOption);
+    expect(physicalAttackOption).toHaveAttribute("aria-checked", "true");
+    expect(amberOption).toBeChecked();
+    await user.click(
+      within(talismanDialog).getByRole("button", { name: "完成" })
+    );
+
+    const summaryCard = screen.getByRole("heading", { name: "法宝" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    expect(
+      within(summaryCard!).getByText("天魔幡 · 物攻 +41.4")
+    ).toBeInTheDocument();
+    expect(
+      within(summaryCard!).getByText("琥珀朱绫 · 气血 +50")
+    ).toBeInTheDocument();
+    expect(
+      within(summaryCard!).getByText("物理暴击率 +1.75%")
+    ).toBeInTheDocument();
+    expect(screen.getByText("+法宝（琥珀朱绫） 50")).toBeInTheDocument();
+    expect(screen.getByText("1540")).toBeInTheDocument();
+    expect(screen.getByText("法宝（天魔幡） +41.4"))
+      .toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "进阶属性" }));
+    expect(screen.getByText("法宝（琥珀朱绫） +1.75%"))
+      .toBeInTheDocument();
+    const physicalCriticalRow = screen.getByText("物理暴击").closest("div");
+    expect(physicalCriticalRow).not.toBeNull();
+    expect(within(physicalCriticalRow!).getByText("7%"))
+      .toBeInTheDocument();
   });
 
   it("应该按当前年份限制三生造化丹颗数并换算五维属性", async () => {
@@ -425,7 +499,7 @@ describe("CharacterAttributeCalculator", () => {
 
     expect(
       within(tianshuDialog).getAllByRole("button", { name: /^增加天书：/ })
-    ).toHaveLength(20);
+    ).toHaveLength(22);
 
     for (const optionTitle of [
       "20体",
@@ -437,6 +511,8 @@ describe("CharacterAttributeCalculator", () => {
       "2封印抵抗",
       "3封印抗性",
       "2%速度",
+      "2%法术暴击率",
+      "2%物理暴击率",
       "2点火系亲和",
       "2点火系亲和",
     ]) {
@@ -451,7 +527,7 @@ describe("CharacterAttributeCalculator", () => {
       within(tianshuDialog).getByLabelText("20体已选次数")
     ).toHaveTextContent("×2");
     expect(
-      within(tianshuDialog).getByLabelText("天书已选择 11 次")
+      within(tianshuDialog).getByLabelText("天书已选择 13 次")
     ).toBeInTheDocument();
 
     const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
@@ -463,6 +539,8 @@ describe("CharacterAttributeCalculator", () => {
       "气血 +69",
       "法攻 +48.3",
       "封印抵抗 +5",
+      "物理暴击率 +2%",
+      "法术暴击率 +2%",
       "速度 +2%",
       "火系亲和 +4",
     ]) {
@@ -483,8 +561,62 @@ describe("CharacterAttributeCalculator", () => {
     expect(fireAffinityCard).not.toBeNull();
     expect(within(sealResistanceRow!).getByText("天书 +5")).toBeInTheDocument();
     expect(within(sealResistanceRow!).getByText("9")).toBeInTheDocument();
+    expect(screen.getAllByText("天书 +2%")).toHaveLength(2);
+    expect(within(screen.getByText("物理暴击").closest("div")!).getByText("4%"))
+      .toBeInTheDocument();
+    expect(within(screen.getByText("法术暴击").closest("div")!).getByText("3%"))
+      .toBeInTheDocument();
     expect(within(fireAffinityCard!).getByText("天书 +4")).toBeInTheDocument();
     expect(within(fireAffinityCard!).getByText("4")).toBeInTheDocument();
+  });
+
+  it("应该让天书星魂每项最多选择一次并按等级叠加属性", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const dialog = await openBonusEditor(user, "天书星魂");
+    const optionLabels = [
+      "气血 +2%",
+      "气血 +1%",
+      "法防 +13.8",
+      "法防 +6.9",
+      "物防 +13.8",
+      "物防 +6.9",
+      "速度 +6.9",
+      "速度 +3.45",
+    ];
+
+    expect(within(dialog).getAllByRole("checkbox")).toHaveLength(8);
+    for (const label of optionLabels) {
+      await user.click(
+        within(dialog).getByRole("checkbox", { name: label })
+      );
+    }
+    expect(dialog).toHaveTextContent("已选 8 / 8 项");
+    await user.click(within(dialog).getByRole("button", { name: "完成" }));
+
+    const summaryCard = screen.getByRole("heading", {
+      name: "天书星魂",
+    }).closest("article");
+    expect(summaryCard).not.toBeNull();
+    for (const summary of [
+      "气血 +3%",
+      "法防 +20.7",
+      "物防 +20.7",
+      "速度 +10.35",
+    ]) {
+      expect(within(summaryCard!).getByText(summary)).toBeInTheDocument();
+    }
+    expect(within(summaryCard!).getByText("已选 8 / 8"))
+      .toBeInTheDocument();
+    expect(screen.getByText("天书星魂 +3%"))
+      .toBeInTheDocument();
+    expect(screen.getByText("1431")).toBeInTheDocument();
+
+    const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
+    expect(within(derivedColumn).getAllByText("天书星魂 +20.7"))
+      .toHaveLength(2);
+    expect(within(derivedColumn).getByText("天书星魂 +10.35"))
+      .toBeInTheDocument();
   });
 
   it("应该单选赛季神器属性并填写本次实际潜能点", async () => {
@@ -1269,7 +1401,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).getByText("物攻 +122")).toBeInTheDocument();
     expect(within(summaryCard!).queryByText("3 项变更")).not.toBeInTheDocument();
     expect(within(summaryCard!).queryByText("另 1 项")).not.toBeInTheDocument();
-    expect(screen.getByText("已配置 2 / 15")).toBeInTheDocument();
+    expect(screen.getByText("已配置 2 / 16")).toBeInTheDocument();
   });
 
   it("应该在二次确认后重置全部属性加成并保留潜力点方案", async () => {
@@ -1330,7 +1462,7 @@ describe("CharacterAttributeCalculator", () => {
 
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(skillCard).not.toHaveTextContent("气血 +100");
-    expect(screen.getByText("已配置 1 / 15")).toBeInTheDocument();
+    expect(screen.getByText("已配置 1 / 16")).toBeInTheDocument();
     expect(
       within(
         screen.getByRole("region", { name: "潜力点分配摘要" })
@@ -1388,6 +1520,24 @@ describe("CharacterAttributeCalculator", () => {
       within(guildTalentDialog).getByRole("button", { name: "完成" })
     );
 
+    const starSoulDialog = await openBonusEditor(user, "天书星魂");
+    await user.click(
+      within(starSoulDialog).getByRole("checkbox", { name: "气血 +2%" })
+    );
+    await user.click(
+      within(starSoulDialog).getByRole("button", { name: "完成" })
+    );
+
+    const amberTalismanDialog = await openBonusEditor(user, "法宝");
+    await user.click(
+      within(amberTalismanDialog).getByRole("checkbox", {
+        name: "法宝：琥珀朱绫",
+      })
+    );
+    await user.click(
+      within(amberTalismanDialog).getByRole("button", { name: "完成" })
+    );
+
     const trainingDialog = await openBonusEditor(user, "人物修炼");
     await user.selectOptions(
       within(trainingDialog).getByRole("combobox", { name: "攻击修炼等级" }),
@@ -1423,6 +1573,8 @@ describe("CharacterAttributeCalculator", () => {
       expect(stored.temporaryTalismanStar).toBe(6);
       expect(stored.temporaryTalismanAttributes).toEqual(["health"]);
       expect(stored.guildTalentOptionIds).toEqual(["attack", "critical"]);
+      expect(stored.tianshuStarSoulOptionIds).toEqual(["health-percent-2"]);
+      expect(stored.isAmberTalismanEnabled).toBe(true);
       expect(stored.characterTrainingLevels).toEqual({
         attack: { level: 12, breakthrough: true },
         physicalDefense: { level: 1, breakthrough: false },
@@ -1454,6 +1606,7 @@ describe("CharacterAttributeCalculator", () => {
           "customAllocationScheme",
           "divineSoulValue",
           "guildTalentOptionIds",
+          "isAmberTalismanEnabled",
           "isGuildBlessingEnabled",
           "sanshengPillCounts",
           "satinSelections",
@@ -1468,6 +1621,7 @@ describe("CharacterAttributeCalculator", () => {
           "temporaryTalismanAttributes",
           "temporaryTalismanStar",
           "tianshuBonusCounts",
+          "tianshuStarSoulOptionIds",
           "transformationTalismanSelections",
         ].sort()
       );
@@ -1478,7 +1632,18 @@ describe("CharacterAttributeCalculator", () => {
 
     expect(screen.getByText("+技能 100")).toBeInTheDocument();
     expect(screen.getByText("+灵符 309")).toBeInTheDocument();
+    expect(screen.getByText("天书星魂 +2%"))
+      .toBeInTheDocument();
     expect(screen.getByText("三生造化丹 +4")).toBeInTheDocument();
+    const restoredTalismanDialog = await openBonusEditor(user, "法宝");
+    expect(
+      within(restoredTalismanDialog).getByRole("checkbox", {
+        name: "法宝：琥珀朱绫",
+      })
+    ).toBeChecked();
+    await user.click(
+      within(restoredTalismanDialog).getByRole("button", { name: "完成" })
+    );
     const restoredTalentCard = screen
       .getByRole("heading", { name: "帮派天赋" })
       .closest("article");

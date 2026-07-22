@@ -1,13 +1,17 @@
 type GuildTalentBonusControlProps<OptionId extends string> = {
   title: string;
+  description?: string;
+  groupLabel?: string;
   options: readonly { id: OptionId; label: string }[];
   selectedOptionIds: readonly OptionId[];
   onChange: (optionIds: readonly OptionId[]) => void;
 };
 
-/** 每项帮派天赋独立勾选一次，组合属性中的两项属性同时生效。 */
+/** 展示一组每项最多选择一次的固定属性选项。 */
 const GuildTalentBonusControl = <OptionId extends string>({
   title,
+  description = "每项可单独选择一次；斜杠两侧的属性属于同一天赋，选择后同时生效。",
+  groupLabel = "帮派天赋选择",
   options,
   selectedOptionIds,
   onChange,
@@ -26,7 +30,7 @@ const GuildTalentBonusControl = <OptionId extends string>({
         <div>
           <h2 className="text-base font-semibold text-slate-900">{title}</h2>
           <p className="mt-1 text-xs leading-5 text-slate-500">
-            每项可单独选择一次；斜杠两侧的属性属于同一天赋，选择后同时生效。
+            {description}
           </p>
         </div>
         <button
@@ -42,7 +46,7 @@ const GuildTalentBonusControl = <OptionId extends string>({
       <div
         className="mt-4 grid gap-2 sm:grid-cols-2"
         role="group"
-        aria-label="帮派天赋选择"
+        aria-label={groupLabel}
       >
         {options.map(({ id, label }) => {
           const isSelected = selectedOptionIds.includes(id);
