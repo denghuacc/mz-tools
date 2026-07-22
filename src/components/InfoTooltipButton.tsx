@@ -15,7 +15,6 @@ const InfoTooltipButton = ({ label, details }: InfoTooltipButtonProps) => {
         type="button"
         aria-label={label}
         aria-describedby={tooltipId}
-        title={details}
         className="flex size-5 items-center justify-center rounded-full text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <svg

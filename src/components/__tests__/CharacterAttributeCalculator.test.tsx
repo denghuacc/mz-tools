@@ -1055,7 +1055,7 @@ describe("CharacterAttributeCalculator", () => {
     const detailsButton = within(summaryCard!).getByRole("button", {
       name: "查看人物修炼详情",
     });
-    expect(detailsButton).toHaveAttribute("title", trainingDetails);
+    expect(detailsButton).not.toHaveAttribute("title");
     expect(
       within(summaryCard!).getByRole("tooltip", { hidden: true })
     ).toHaveTextContent(trainingDetails);
