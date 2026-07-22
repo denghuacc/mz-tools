@@ -7,7 +7,7 @@
 
 [![CI/CD](https://github.com/denghuacc/mz-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/denghuacc/mz-tools/actions/workflows/ci.yml)
 [![Deploy](https://github.com/denghuacc/mz-tools/actions/workflows/deploy.yml/badge.svg)](https://github.com/denghuacc/mz-tools/actions/workflows/deploy.yml)
-[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel&link=https://mz-converter.denghua.cc)](https://mz-converter.denghua.cc)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel&link=https://mz-tools.alandeng.cc)](https://mz-tools.alandeng.cc)
 [![Test Coverage](https://codecov.io/gh/denghuacc/mz-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/denghuacc/mz-tools)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-22%2B-green?logo=node.js)](https://nodejs.org)
@@ -18,7 +18,7 @@
 
 ## 🚀 在线访问
 
-**生产环境**: [https://mz-converter.denghua.cc](https://mz-converter.denghua.cc)
+**生产环境**: [https://mz-tools.alandeng.cc](https://mz-tools.alandeng.cc)
 
 > 💡 如果上述链接不可用，请运行 `pnpm run vercel:url` 获取实际部署网址
 ```

@@ -42,9 +42,13 @@ else
 fi
 
 echo ""
-echo "🎯 常用网址格式："
-echo "   • 生产环境: https://mz-tools.vercel.app"
-echo "   • 或者: https://mz-tools-[hash].vercel.app"
+echo "🎯 正式网址："
+echo "   • https://mz-tools.alandeng.cc"
+
+echo ""
+echo "🔗 Vercel 部署网址格式："
+echo "   • https://mz-tools.vercel.app"
+echo "   • https://mz-tools-[hash].vercel.app"
 
 echo ""
 echo "📱 其他获取方式："

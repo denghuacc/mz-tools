@@ -56,10 +56,10 @@ jobs:
         run: |
           echo "🚀 Successfully deployed to Vercel!"
           echo "✅ Production deployment completed"
-          echo "🌐 Live URL: ${{ steps.deploy.outputs.preview-url }}"
+          echo "🌐 Live URL: https://mz-tools.alandeng.cc"
           echo ""
           echo "📋 Deployment Details:"
           echo "   • Project: mz-tools"
           echo "   • Environment: Production"
           echo "   • Status: ✅ Success"
-          echo "   • URL: ${{ steps.deploy.outputs.preview-url }}"
+          echo "   • Vercel URL: ${{ steps.deploy.outputs.preview-url }}"

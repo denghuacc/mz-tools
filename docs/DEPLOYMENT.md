@@ -2,6 +2,8 @@
 
 项目使用 GitHub Actions 完成质量检查，并在主分支 CI 成功后部署到 Vercel。
 
+正式网址：[https://mz-tools.alandeng.cc](https://mz-tools.alandeng.cc)。Vercel 自动生成的网址仅用于部署排查和预览。
+
 ## 本地发布前检查
 
 环境要求以 `package.json` 为准：Node.js 22.13 以上、pnpm 11。`pnpm/action-setup` 会直接读取 `packageManager`，工作流不再维护第二份 pnpm 版本。
@@ -56,4 +58,4 @@ pnpm deploy:prod  # 生产部署
 - pnpm 版本冲突：确认工作流没有重新声明 `version`，并检查 `package.json#packageManager`。
 - 覆盖率失败：运行 `pnpm test:coverage -- --run`，根据报告补充用户行为测试，不降低门槛。
 - Vercel 鉴权失败：核对三个 Vercel Secrets 与项目归属，不要在日志或文档中输出 Secret 内容。
-- 生产验证：检查 [GitHub Actions](https://github.com/denghuacc/mz-tools/actions) 和 [线上站点](https://mz-converter.denghua.cc)。
+- 生产验证：检查 [GitHub Actions](https://github.com/denghuacc/mz-tools/actions) 和 [线上站点](https://mz-tools.alandeng.cc)。
