@@ -13,6 +13,7 @@ import {
   createEmptyCharacterAttributeBonuses,
   EMPTY_CHARACTER_ALLOCATION,
   FIXED_PRIMARY_ATTRIBUTES,
+  FIXED_SEAL_RESISTANCE,
   FIXED_TRUE_ENERGY,
   getCustomCharacterAllocationValidationError,
   getPrimaryAttributeBonusTotal,
@@ -20,6 +21,8 @@ import {
   LEVEL_69_ADVANCED_ATTRIBUTES,
   LEVEL_69_FIXED_STATUS_ATTRIBUTES,
   LEVEL_ONE_ADVANCED_ATTRIBUTES,
+  LEVEL_ZERO_PRIMARY_ATTRIBUTES,
+  LEVEL_ZERO_SEAL_HIT,
   normalizeCharacterLevel,
   SEAL_HIT_POINTS_PER_UPGRADE,
   STATUS_ATTRIBUTE_POINTS_PER_UPGRADE,
@@ -27,6 +30,16 @@ import {
 } from "../characterAttributes";
 
 describe("角色面板计算", () => {
+  it("应该把 0 级五维初始值统一设置为 20", () => {
+    expect(LEVEL_ZERO_PRIMARY_ATTRIBUTES).toEqual({
+      constitution: 20,
+      spirit: 20,
+      strength: 20,
+      endurance: 20,
+      agility: 20,
+    });
+  });
+
   it("应该校验魂器五维属性的带符号增减总和为零", () => {
     const balancedBonuses = {
       strength: 10,
@@ -73,16 +86,16 @@ describe("角色面板计算", () => {
     };
     const effective = applyCharacterAttributeBonuses(calculated, bonuses);
 
-    expect(effective.primary.strength).toBe(178);
+    expect(effective.primary.strength).toBe(168);
     expect(effective.primary.endurance).toBe(162);
     expect(effective.status).toEqual({ health: 1390, mana: 565 });
     expect(effective.derived).toMatchObject({
-      physicalAttack: 176,
+      physicalAttack: 171,
       physicalDefense: 193,
     });
-    expect(effective.derived.magicAttack).toBeCloseTo(239.4);
-    expect(effective.derived.magicDefense).toBeCloseTo(184.4);
-    expect(effective.derived.speed).toBeCloseTo(136);
+    expect(effective.derived.magicAttack).toBeCloseTo(236.4);
+    expect(effective.derived.magicDefense).toBeCloseTo(181.4);
+    expect(effective.derived.speed).toBeCloseTo(135);
     expect(effective.advanced).toEqual(calculated.advanced);
     expect(calculated.allocatedPoints).toBe(0);
     expect(calculated.remainingPoints).toBe(TOTAL_POTENTIAL_POINTS);
@@ -137,7 +150,7 @@ describe("角色面板计算", () => {
     };
     const effective = applyCharacterAttributeBonuses(calculated, bonuses);
 
-    expect(effective.derived.speed).toBeCloseTo(147.492, 10);
+    expect(effective.derived.speed).toBeCloseTo(146.472, 10);
     expect(effective.derived.speed).not.toBe(147.49);
     expect(effective.advanced.dodgeRate).toBe(8);
     expect(effective.advanced.sealResistance).toBe(6);
@@ -165,7 +178,7 @@ describe("角色面板计算", () => {
     const effective = applyCharacterAttributeBonuses(calculated, bonuses);
 
     expect(effective.derived.physicalDefense).toBeCloseTo(208.95);
-    expect(effective.derived.magicDefense).toBeCloseTo(211.05);
+    expect(effective.derived.magicDefense).toBeCloseTo(207.9);
   });
 
   it("应该在直接气血和体力气血之后应用气血百分比", () => {
@@ -202,8 +215,8 @@ describe("角色面板计算", () => {
     };
     const effective = applyCharacterAttributeBonuses(calculated, bonuses);
 
-    expect(effective.derived.magicAttack).toBeCloseTo(256);
-    expect(effective.derived.speed).toBeCloseTo(104.6);
+    expect(effective.derived.magicAttack).toBeCloseTo(253);
+    expect(effective.derived.speed).toBeCloseTo(103.6);
   });
 
   it("应该将每个预设比例换算为完整的 69 级潜力点", () => {
@@ -224,11 +237,11 @@ describe("角色面板计算", () => {
         )!.ratio
       )
     ).toEqual({
-      constitution: 136,
+      constitution: 138,
       spirit: 0,
       strength: 0,
-      endurance: 136,
-      agility: 408,
+      endurance: 138,
+      agility: 414,
     });
   });
 
@@ -338,8 +351,8 @@ describe("角色面板计算", () => {
     expect(normalizeCharacterLevel(70)).toBe(69);
     expect(normalizeCharacterLevel("89")).toBe(69);
 
-    expect(getTotalPotentialPoints(89)).toBe(880);
-    expect(getTotalPotentialPoints(110)).toBe(1090);
+    expect(getTotalPotentialPoints(89)).toBe(890);
+    expect(getTotalPotentialPoints(110)).toBe(1100);
     expect(calculateFixedStatusAttributes(110)).toEqual({
       health: 1433,
       mana: 811,
@@ -350,7 +363,7 @@ describe("角色面板计算", () => {
       CHARACTER_ALLOCATION_PRESETS[0].ratio,
       110
     );
-    expect(level110Allocation.strength).toBe(1090);
+    expect(level110Allocation.strength).toBe(1100);
     expect(
       calculateCharacterAttributes(level110Allocation, 110).remainingPoints
     ).toBe(0);
@@ -359,32 +372,32 @@ describe("角色面板计算", () => {
   it("应该生成 69 级固定成长与完整潜力点", () => {
     const result = calculateCharacterAttributes(EMPTY_CHARACTER_ALLOCATION);
 
-    expect(CHARACTER_UPGRADE_COUNT).toBe(68);
+    expect(CHARACTER_UPGRADE_COUNT).toBe(69);
     expect(FIXED_PRIMARY_ATTRIBUTES).toEqual({
       constitution: 158,
       spirit: 158,
-      strength: 168,
+      strength: 158,
       endurance: 158,
       agility: 158,
     });
-    expect(TOTAL_POTENTIAL_POINTS).toBe(680);
+    expect(TOTAL_POTENTIAL_POINTS).toBe(690);
     expect(result.primary).toEqual({
       constitution: 158,
       spirit: 158,
-      strength: 168,
+      strength: 158,
       endurance: 158,
       agility: 158,
     });
     expect(result.allocatedPoints).toBe(0);
-    expect(result.remainingPoints).toBe(680);
+    expect(result.remainingPoints).toBe(690);
     expect(result.derived).toMatchObject({
       health: 1390,
-      physicalAttack: 166,
+      physicalAttack: 161,
       physicalDefense: 189,
     });
-    expect(result.derived.magicAttack).toBeCloseTo(236);
-    expect(result.derived.magicDefense).toBeCloseTo(181);
-    expect(result.derived.speed).toBeCloseTo(134.6);
+    expect(result.derived.magicAttack).toBeCloseTo(233);
+    expect(result.derived.magicDefense).toBeCloseTo(178);
+    expect(result.derived.speed).toBeCloseTo(133.6);
   });
 
   it("应该按五维规则计算已知派生属性", () => {
@@ -397,16 +410,16 @@ describe("角色面板计算", () => {
     });
 
     expect(result.derived.health).toBe(1420);
-    expect(result.derived.magicAttack).toBeCloseTo(260);
-    expect(result.derived.magicDefense).toBeCloseTo(205);
-    expect(result.derived.physicalAttack).toBe(181);
+    expect(result.derived.magicAttack).toBeCloseTo(257);
+    expect(result.derived.magicDefense).toBeCloseTo(202);
+    expect(result.derived.physicalAttack).toBe(176);
     expect(result.derived.physicalDefense).toBe(229);
-    expect(result.derived.speed).toBeCloseTo(168.6);
+    expect(result.derived.speed).toBeCloseTo(167.6);
     expect(result.allocatedPoints).toBe(150);
-    expect(result.remainingPoints).toBe(530);
+    expect(result.remainingPoints).toBe(540);
   });
 
-  it("应该只让封印命中随等级成长且不受潜力点影响", () => {
+  it("应该让封印命中从 0 级 10 点起每级成长并保持封印抵抗为 2", () => {
     const emptyResult = calculateCharacterAttributes(EMPTY_CHARACTER_ALLOCATION);
     const allocatedResult = calculateCharacterAttributes({
       constitution: 0,
@@ -417,10 +430,15 @@ describe("角色面板计算", () => {
     });
 
     expect(SEAL_HIT_POINTS_PER_UPGRADE).toBe(2);
+    expect(LEVEL_ZERO_SEAL_HIT).toBe(10);
+    expect(FIXED_SEAL_RESISTANCE).toBe(2);
+    expect(LEVEL_ONE_ADVANCED_ATTRIBUTES.sealHit).toBe(12);
+    expect(LEVEL_ONE_ADVANCED_ATTRIBUTES.sealResistance).toBe(2);
     expect(LEVEL_69_ADVANCED_ATTRIBUTES).toEqual({
       ...LEVEL_ONE_ADVANCED_ATTRIBUTES,
       sealHit: 148,
     });
+    expect(LEVEL_69_ADVANCED_ATTRIBUTES.sealResistance).toBe(2);
     expect(emptyResult.advanced).toEqual(LEVEL_69_ADVANCED_ATTRIBUTES);
     expect(allocatedResult.advanced).toEqual(emptyResult.advanced);
   });

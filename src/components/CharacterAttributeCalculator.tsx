@@ -67,7 +67,7 @@ import {
   getCustomCharacterAllocationValidationError,
   getPrimaryAttributeBonusTotal,
   getTotalPotentialPoints,
-  LEVEL_ONE_ADVANCED_ATTRIBUTES,
+  LEVEL_ZERO_SEAL_HIT,
   LEVEL_ONE_STATUS_ATTRIBUTES,
   PRIMARY_ATTRIBUTE_KEYS,
   SEAL_HIT_POINTS_PER_UPGRADE,
@@ -2329,7 +2329,7 @@ const CharacterAttributeCalculator = ({
                       </span>
                     </div>
                     <p className="mt-1.5 text-xs leading-5 text-slate-500">
-                      当前值 = 1 级物理角色初始值 + {characterUpgradeCount} 次固定成长 + 潜力点 + 属性加成。
+                      当前值 = 0 级五维初始值 + {characterUpgradeCount} 次固定成长 + 潜力点 + 属性加成。
                     </p>
                   </div>
 
@@ -2586,7 +2586,7 @@ const CharacterAttributeCalculator = ({
                       进阶属性 · 9 项
                     </h2>
                     <p className="mt-1.5 text-xs leading-5 text-slate-500">
-                      潜力点不影响进阶属性；封印命中每次升级固定增加 {SEAL_HIT_POINTS_PER_UPGRADE} 点。
+                      潜力点不影响进阶属性；封印命中从 0 级 10 点起每级增加 {SEAL_HIT_POINTS_PER_UPGRADE} 点，封印抵抗固定为 2。
                     </p>
                   </div>
                   <span className="shrink-0 text-xs font-medium text-emerald-600">
@@ -2618,7 +2618,7 @@ const CharacterAttributeCalculator = ({
                                     <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-emerald-600">
                                       等级 +
                                       {calculated.advanced.sealHit -
-                                        LEVEL_ONE_ADVANCED_ATTRIBUTES.sealHit}
+                                        LEVEL_ZERO_SEAL_HIT}
                                     </span>
                                   )}
                                   {(attribute.attribute === "healingPower" ||
@@ -2828,9 +2828,9 @@ const CharacterAttributeCalculator = ({
 
       <section className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 text-xs leading-6 text-blue-900 sm:px-5">
         <strong className="font-semibold">当前计算口径：</strong>
-        以 1 级物理角色截图样本为基准，升至 {characterLevel} 级共成长 {characterUpgradeCount} 次，
+        0 级五维均为 20 点；升至 {characterLevel} 级共成长 {characterUpgradeCount} 次，
         可分配潜力点 {totalPotentialPoints}。面板最终值暂按向下取整展示，内部保留完整计算精度。
-        初始力量多 10 点，以及法攻/法防/物攻/物防/速度初值是否随机，均待更多新号样本确认。
+        1 级样本中多出的 10 点力量来自首批潜力分配；法攻/法防/物攻/物防/速度初值是否随机，仍待更多新号样本确认。
       </section>
     </div>
   );

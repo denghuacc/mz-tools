@@ -23,7 +23,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.queryByText("潜力点总计")).not.toBeInTheDocument();
     expect(screen.getByText("基础属性 · 10 项")).toBeInTheDocument();
     expect(screen.getByText("五项派生初值待验证")).toBeInTheDocument();
-    expect(screen.getByText("潜力 +680")).toBeInTheDocument();
+    expect(screen.getByText("潜力 +690")).toBeInTheDocument();
     expect(screen.getByText("1390")).toBeInTheDocument();
     expect(screen.getByText("565")).toBeInTheDocument();
     expect(screen.getByText("等级 +748")).toBeInTheDocument();
@@ -248,7 +248,7 @@ describe("CharacterAttributeCalculator", () => {
     );
     await user.click(within(skillDialog).getByRole("button", { name: "完成" }));
 
-    expect(screen.getByText("潜力 +680")).toBeInTheDocument();
+    expect(screen.getByText("潜力 +690")).toBeInTheDocument();
     expect(screen.getByText("+技能 100")).toBeInTheDocument();
 
     const hideButton = screen.getByRole("button", {
@@ -257,14 +257,14 @@ describe("CharacterAttributeCalculator", () => {
     expect(hideButton).toHaveAttribute("aria-pressed", "true");
     await user.click(hideButton);
 
-    expect(screen.queryByText("潜力 +680")).not.toBeInTheDocument();
+    expect(screen.queryByText("潜力 +690")).not.toBeInTheDocument();
     expect(screen.queryByText("+技能 100")).not.toBeInTheDocument();
     expect(screen.getByText("1490")).toBeInTheDocument();
     expect(screen.queryByText("等级 +748")).not.toBeInTheDocument();
     expect(screen.queryByText("等级 +408")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
-    expect(screen.queryByText("等级 +136")).not.toBeInTheDocument();
+    expect(screen.queryByText("等级 +138")).not.toBeInTheDocument();
     expect(screen.getByText("150")).toBeInTheDocument();
 
     const showButton = screen.getByRole("button", {
@@ -272,7 +272,7 @@ describe("CharacterAttributeCalculator", () => {
     });
     expect(showButton).toHaveAttribute("aria-pressed", "false");
     await user.click(showButton);
-    expect(screen.getByText("等级 +136")).toBeInTheDocument();
+    expect(screen.getByText("等级 +138")).toBeInTheDocument();
   });
 
   it("应该通过比例方案分配全部潜力点并实时更新属性", async () => {
@@ -283,7 +283,7 @@ describe("CharacterAttributeCalculator", () => {
       name: "潜力点分配摘要",
     });
     expect(within(allocationSummary).getByText("10力")).toBeInTheDocument();
-    expect(within(allocationSummary).getByText("力 +680")).toBeInTheDocument();
+    expect(within(allocationSummary).getByText("力 +690")).toBeInTheDocument();
     await user.click(within(allocationSummary).getByText("10力"));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
@@ -300,9 +300,9 @@ describe("CharacterAttributeCalculator", () => {
 
     expect(mixedPreset).toHaveAttribute("aria-checked", "true");
     expect(
-      within(allocationSummary).getByText("体 +136 · 耐 +136 · 敏 +408")
+      within(allocationSummary).getByText("体 +138 · 耐 +138 · 敏 +414")
     ).toBeInTheDocument();
-    expect(screen.getByText("1798")).toBeInTheDocument();
+    expect(screen.getByText("1804")).toBeInTheDocument();
   });
 
   it("应该自由叠加多条技能属性并支持清空", async () => {
@@ -1064,7 +1064,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("物理暴击")).toBeInTheDocument();
     expect(screen.getByText("100%")).toBeInTheDocument();
     expect(screen.getByText("150")).toBeInTheDocument();
-    expect(screen.getByText("等级 +136")).toBeInTheDocument();
+    expect(screen.getByText("等级 +138")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "亲和" })).toBeInTheDocument();
     expect(screen.queryByText("进战怒气")).not.toBeInTheDocument();
     expect(
@@ -1244,7 +1244,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(allocationSummary).toHaveClass("sm:w-64");
     expect(within(allocationSummary).getByText("8力2敏")).toBeInTheDocument();
     expect(
-      within(allocationSummary).getByText("力 +544 · 敏 +136")
+      within(allocationSummary).getByText("力 +552 · 敏 +138")
     ).toBeInTheDocument();
 
     const reopenedDialog = await openBonusEditor(user, "潜力点分配");
@@ -1312,7 +1312,7 @@ describe("CharacterAttributeCalculator", () => {
       within(allocationSummary).getByText("5敏3体2耐")
     ).toBeInTheDocument();
     expect(
-      within(allocationSummary).getByText("敏 +340 · 体 +204 · 耐 +136")
+      within(allocationSummary).getByText("敏 +345 · 体 +207 · 耐 +138")
     ).toBeInTheDocument();
 
     await waitFor(() => {
@@ -1337,7 +1337,7 @@ describe("CharacterAttributeCalculator", () => {
     });
     expect(within(restoredSummary).getByText("5敏3体2耐")).toBeInTheDocument();
     expect(
-      within(restoredSummary).getByText("敏 +340 · 体 +204 · 耐 +136")
+      within(restoredSummary).getByText("敏 +345 · 体 +207 · 耐 +138")
     ).toBeInTheDocument();
   });
 
@@ -1363,7 +1363,7 @@ describe("CharacterAttributeCalculator", () => {
       name: "潜力点分配摘要",
     });
     expect(within(allocationSummary).getByText("10敏")).toBeInTheDocument();
-    expect(within(allocationSummary).getByText("敏 +680")).toBeInTheDocument();
+    expect(within(allocationSummary).getByText("敏 +690")).toBeInTheDocument();
   });
 
   it("应该在完成编辑后通过摘要卡展示属性增减", async () => {

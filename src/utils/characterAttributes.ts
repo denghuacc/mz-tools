@@ -1,7 +1,8 @@
 export const CHARACTER_LEVEL = 69;
 export const CHARACTER_LEVEL_OPTIONS = [69, 89, 110] as const;
 export type CharacterLevel = (typeof CHARACTER_LEVEL_OPTIONS)[number];
-export const INITIAL_CHARACTER_LEVEL = 1;
+export const INITIAL_CHARACTER_LEVEL = 0;
+export const KNOWN_PANEL_BASE_LEVEL = 1;
 export const FIXED_ATTRIBUTE_POINTS_PER_LEVEL = 2;
 export const POTENTIAL_POINTS_PER_LEVEL = 10;
 export const CHARACTER_UPGRADE_COUNT =
@@ -23,6 +24,9 @@ export const normalizeCharacterLevel = (value: unknown): CharacterLevel => {
 
 export const getCharacterUpgradeCount = (characterLevel: CharacterLevel) =>
   characterLevel - INITIAL_CHARACTER_LEVEL;
+
+const getKnownPanelUpgradeCount = (characterLevel: CharacterLevel) =>
+  Math.max(0, characterLevel - KNOWN_PANEL_BASE_LEVEL);
 
 export const getTotalPotentialPoints = (characterLevel: CharacterLevel) =>
   getCharacterUpgradeCount(characterLevel) * POTENTIAL_POINTS_PER_LEVEL;
@@ -87,6 +91,23 @@ export const EMPTY_CHARACTER_ALLOCATION: CharacterAllocation = {
   strength: 0,
   endurance: 0,
   agility: 0,
+};
+
+export const LEVEL_ZERO_PRIMARY_ATTRIBUTES: CharacterAllocation = {
+  constitution: 20,
+  spirit: 20,
+  strength: 20,
+  endurance: 20,
+  agility: 20,
+};
+
+/** 已知 1 级物理样本把首批 10 点潜力全部分配给力量，用作派生属性参考。 */
+export const LEVEL_ONE_REFERENCE_PRIMARY_ATTRIBUTES: CharacterAllocation = {
+  constitution: 22,
+  spirit: 22,
+  strength: 32,
+  endurance: 22,
+  agility: 22,
 };
 
 export const DEFAULT_CUSTOM_CHARACTER_ALLOCATION: CharacterAllocation = {
@@ -256,14 +277,6 @@ export const calculatePresetAllocation = (
   agility: ratio.agility * getCharacterUpgradeCount(characterLevel),
 });
 
-export const LEVEL_ONE_PRIMARY_ATTRIBUTES: CharacterAllocation = {
-  constitution: 22,
-  spirit: 22,
-  strength: 32,
-  endurance: 22,
-  agility: 22,
-};
-
 export const LEVEL_ONE_STATUS_ATTRIBUTES = {
   health: 234,
   mana: 157,
@@ -279,17 +292,17 @@ export const FIXED_TRUE_ENERGY = 100;
 export const LEVEL_69_FIXED_STATUS_ATTRIBUTES = {
   health:
     LEVEL_ONE_STATUS_ATTRIBUTES.health +
-    CHARACTER_UPGRADE_COUNT * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.health,
+    getKnownPanelUpgradeCount(CHARACTER_LEVEL) * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.health,
   mana:
     LEVEL_ONE_STATUS_ATTRIBUTES.mana +
-    CHARACTER_UPGRADE_COUNT * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.mana,
+    getKnownPanelUpgradeCount(CHARACTER_LEVEL) * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.mana,
   trueEnergy: FIXED_TRUE_ENERGY,
 } as const;
 
 export const calculateFixedStatusAttributes = (
   characterLevel: CharacterLevel
 ) => {
-  const upgradeCount = getCharacterUpgradeCount(characterLevel);
+  const upgradeCount = getKnownPanelUpgradeCount(characterLevel);
 
   return {
     health:
@@ -445,6 +458,10 @@ export type AdvancedAttributes = {
   battleEntryAnger: number;
 };
 
+export const LEVEL_ZERO_SEAL_HIT = 10;
+export const SEAL_HIT_POINTS_PER_UPGRADE = 2;
+export const FIXED_SEAL_RESISTANCE = 2;
+
 export const LEVEL_ONE_ADVANCED_ATTRIBUTES: AdvancedAttributes = {
   physicalCritical: 2,
   magicalCritical: 1,
@@ -452,18 +469,16 @@ export const LEVEL_ONE_ADVANCED_ATTRIBUTES: AdvancedAttributes = {
   dodgeRate: 5,
   healingCritical: 0,
   healingPower: 0,
-  sealHit: 12,
-  sealResistance: 2,
+  sealHit: LEVEL_ZERO_SEAL_HIT + SEAL_HIT_POINTS_PER_UPGRADE,
+  sealResistance: FIXED_SEAL_RESISTANCE,
   battleEntryAnger: 0,
 };
-
-export const SEAL_HIT_POINTS_PER_UPGRADE = 2;
 
 export const LEVEL_69_ADVANCED_ATTRIBUTES: AdvancedAttributes = {
   ...LEVEL_ONE_ADVANCED_ATTRIBUTES,
   sealHit:
-    LEVEL_ONE_ADVANCED_ATTRIBUTES.sealHit +
-    CHARACTER_UPGRADE_COUNT * SEAL_HIT_POINTS_PER_UPGRADE,
+    LEVEL_ZERO_SEAL_HIT +
+    getCharacterUpgradeCount(CHARACTER_LEVEL) * SEAL_HIT_POINTS_PER_UPGRADE,
 };
 
 export const calculateLevelAdvancedAttributes = (
@@ -471,27 +486,9 @@ export const calculateLevelAdvancedAttributes = (
 ): AdvancedAttributes => ({
   ...LEVEL_ONE_ADVANCED_ATTRIBUTES,
   sealHit:
-    LEVEL_ONE_ADVANCED_ATTRIBUTES.sealHit +
+    LEVEL_ZERO_SEAL_HIT +
     getCharacterUpgradeCount(characterLevel) * SEAL_HIT_POINTS_PER_UPGRADE,
 });
-
-export const FIXED_PRIMARY_ATTRIBUTES: CharacterAllocation = {
-  constitution:
-    LEVEL_ONE_PRIMARY_ATTRIBUTES.constitution +
-    CHARACTER_UPGRADE_COUNT * FIXED_ATTRIBUTE_POINTS_PER_LEVEL,
-  spirit:
-    LEVEL_ONE_PRIMARY_ATTRIBUTES.spirit +
-    CHARACTER_UPGRADE_COUNT * FIXED_ATTRIBUTE_POINTS_PER_LEVEL,
-  strength:
-    LEVEL_ONE_PRIMARY_ATTRIBUTES.strength +
-    CHARACTER_UPGRADE_COUNT * FIXED_ATTRIBUTE_POINTS_PER_LEVEL,
-  endurance:
-    LEVEL_ONE_PRIMARY_ATTRIBUTES.endurance +
-    CHARACTER_UPGRADE_COUNT * FIXED_ATTRIBUTE_POINTS_PER_LEVEL,
-  agility:
-    LEVEL_ONE_PRIMARY_ATTRIBUTES.agility +
-    CHARACTER_UPGRADE_COUNT * FIXED_ATTRIBUTE_POINTS_PER_LEVEL,
-};
 
 export const calculateFixedPrimaryAttributes = (
   characterLevel: CharacterLevel
@@ -500,13 +497,16 @@ export const calculateFixedPrimaryAttributes = (
     getCharacterUpgradeCount(characterLevel) * FIXED_ATTRIBUTE_POINTS_PER_LEVEL;
 
   return {
-    constitution: LEVEL_ONE_PRIMARY_ATTRIBUTES.constitution + upgradePoints,
-    spirit: LEVEL_ONE_PRIMARY_ATTRIBUTES.spirit + upgradePoints,
-    strength: LEVEL_ONE_PRIMARY_ATTRIBUTES.strength + upgradePoints,
-    endurance: LEVEL_ONE_PRIMARY_ATTRIBUTES.endurance + upgradePoints,
-    agility: LEVEL_ONE_PRIMARY_ATTRIBUTES.agility + upgradePoints,
+    constitution: LEVEL_ZERO_PRIMARY_ATTRIBUTES.constitution + upgradePoints,
+    spirit: LEVEL_ZERO_PRIMARY_ATTRIBUTES.spirit + upgradePoints,
+    strength: LEVEL_ZERO_PRIMARY_ATTRIBUTES.strength + upgradePoints,
+    endurance: LEVEL_ZERO_PRIMARY_ATTRIBUTES.endurance + upgradePoints,
+    agility: LEVEL_ZERO_PRIMARY_ATTRIBUTES.agility + upgradePoints,
   };
 };
+
+export const FIXED_PRIMARY_ATTRIBUTES =
+  calculateFixedPrimaryAttributes(CHARACTER_LEVEL);
 
 export const TOTAL_POTENTIAL_POINTS =
   CHARACTER_UPGRADE_COUNT * POTENTIAL_POINTS_PER_LEVEL;
@@ -640,14 +640,15 @@ export const calculateCharacterAttributes = (
     0
   );
   const constitutionGrowth =
-    primary.constitution - LEVEL_ONE_PRIMARY_ATTRIBUTES.constitution;
-  const spiritGrowth = primary.spirit - LEVEL_ONE_PRIMARY_ATTRIBUTES.spirit;
+    primary.constitution - LEVEL_ONE_REFERENCE_PRIMARY_ATTRIBUTES.constitution;
+  const spiritGrowth =
+    primary.spirit - LEVEL_ONE_REFERENCE_PRIMARY_ATTRIBUTES.spirit;
   const strengthGrowth =
-    primary.strength - LEVEL_ONE_PRIMARY_ATTRIBUTES.strength;
+    primary.strength - LEVEL_ONE_REFERENCE_PRIMARY_ATTRIBUTES.strength;
   const enduranceGrowth =
-    primary.endurance - LEVEL_ONE_PRIMARY_ATTRIBUTES.endurance;
+    primary.endurance - LEVEL_ONE_REFERENCE_PRIMARY_ATTRIBUTES.endurance;
   const agilityGrowth =
-    primary.agility - LEVEL_ONE_PRIMARY_ATTRIBUTES.agility;
+    primary.agility - LEVEL_ONE_REFERENCE_PRIMARY_ATTRIBUTES.agility;
 
   return {
     primary,
@@ -678,7 +679,7 @@ export const calculateCharacterAttributes = (
         enduranceGrowth * 0.1 +
         agilityGrowth * 0.5,
     },
-    // 潜力点不影响进阶属性；封印命中只按角色升级次数固定成长。
+    // 封印命中从 0 级 10 点起每级增加 2 点；封印抵抗固定为 2。
     advanced: calculateLevelAdvancedAttributes(characterLevel),
     allocatedPoints,
     remainingPoints: getTotalPotentialPoints(characterLevel) - allocatedPoints,
