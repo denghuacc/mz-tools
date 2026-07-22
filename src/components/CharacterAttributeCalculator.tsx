@@ -177,6 +177,7 @@ const GUILD_TALENT_SUMMARY_FIELDS = [
   { attribute: "magicDefense", label: "法防" },
   { attribute: "speed", label: "速度" },
   { attribute: "speedPercent", label: "速度", unit: "%" },
+  { attribute: "hitRate", label: "命中率", unit: "%" },
   { attribute: "sealHit", label: "封印命中", unit: "%" },
 ] as const;
 
@@ -208,8 +209,8 @@ const GUILD_TALENT_OPTIONS = [
   },
   {
     id: "seal-hit",
-    label: "封印命中 +1%",
-    bonuses: { sealHit: 1 },
+    label: "命中率 +2% / 封印命中 +1%",
+    bonuses: { hitRate: 2, sealHit: 1 },
   },
 ] as const;
 
@@ -470,6 +471,10 @@ const ADVANCED_ATTRIBUTE_COLUMNS = [
 
 const formatAttribute = (value: number) =>
   Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+
+/** 游戏角色面板只展示整数；内部计算值仍保留完整精度。 */
+const formatPanelAttribute = (value: number) =>
+  String(Math.floor(Number(value.toFixed(10))));
 
 const formatBonus = (value: number) =>
   `${value > 0 ? "+" : ""}${formatAttribute(value)}`;
@@ -1952,7 +1957,7 @@ const CharacterAttributeCalculator = ({
                     }
                     value={
                       <strong className="shrink-0 text-base text-emerald-700">
-                        {formatAttribute(effectiveAttributes.status.health)}
+                        {formatPanelAttribute(effectiveAttributes.status.health)}
                       </strong>
                     }
                   />
@@ -1997,7 +2002,7 @@ const CharacterAttributeCalculator = ({
                     }
                     value={
                       <strong className="shrink-0 text-sm text-blue-700">
-                        {formatAttribute(effectiveAttributes.status.mana)}
+                        {formatPanelAttribute(effectiveAttributes.status.mana)}
                       </strong>
                     }
                   />
@@ -2219,7 +2224,9 @@ const CharacterAttributeCalculator = ({
                           }
                           value={
                             <strong className="shrink-0 text-sm text-slate-900">
-                              {formatAttribute(effectiveAttributes.derived[attribute])}
+                              {formatPanelAttribute(
+                                effectiveAttributes.derived[attribute]
+                              )}
                             </strong>
                           }
                         />
@@ -2308,7 +2315,9 @@ const CharacterAttributeCalculator = ({
                                   : "text-slate-900"
                               }`}
                             >
-                              {effectiveAttributes.primary[attribute]}
+                              {formatPanelAttribute(
+                                effectiveAttributes.primary[attribute]
+                              )}
                             </strong>
                           }
                         />
@@ -2441,6 +2450,7 @@ const CharacterAttributeCalculator = ({
                                     )}
                                   {(attribute.attribute === "physicalCritical" ||
                                     attribute.attribute === "magicalCritical" ||
+                                    attribute.attribute === "hitRate" ||
                                     attribute.attribute === "sealHit") &&
                                     guildTalentBonuses[attribute.attribute] > 0 && (
                                       <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-sky-600">
@@ -2451,6 +2461,7 @@ const CharacterAttributeCalculator = ({
                                           "physicalCritical" ||
                                           attribute.attribute ===
                                             "magicalCritical" ||
+                                          attribute.attribute === "hitRate" ||
                                           attribute.attribute === "sealHit") &&
                                           "%"}
                                       </span>
@@ -2466,7 +2477,11 @@ const CharacterAttributeCalculator = ({
                                     : "text-slate-900"
                                 }`}
                               >
-                                {effectiveAttributes.advanced[attribute.attribute]}
+                                {formatPanelAttribute(
+                                  effectiveAttributes.advanced[
+                                    attribute.attribute
+                                  ]
+                                )}
                                 {attribute.unit}
                               </strong>
                             }
@@ -2495,7 +2510,9 @@ const CharacterAttributeCalculator = ({
                           </span>
                         )}
                         <strong className="mt-1 block text-sm text-slate-800">
-                          {effectiveAttributes.affinity[attribute]}
+                          {formatPanelAttribute(
+                            effectiveAttributes.affinity[attribute]
+                          )}
                         </strong>
                       </div>
                     ))}
@@ -2524,7 +2541,8 @@ const CharacterAttributeCalculator = ({
       <section className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 text-xs leading-6 text-blue-900 sm:px-5">
         <strong className="font-semibold">当前计算口径：</strong>
         以 1 级物理角色截图样本为基准，升至 {characterLevel} 级共成长 {characterUpgradeCount} 次，
-        可分配潜力点 {totalPotentialPoints}。初始力量多 10 点，以及法攻/法防/物攻/物防/速度初值是否随机，均待更多新号样本确认。
+        可分配潜力点 {totalPotentialPoints}。面板最终值暂按向下取整展示，内部保留完整计算精度。
+        初始力量多 10 点，以及法攻/法防/物攻/物防/速度初值是否随机，均待更多新号样本确认。
       </section>
     </div>
   );

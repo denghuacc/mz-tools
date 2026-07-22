@@ -76,13 +76,13 @@ describe("角色面板计算", () => {
     expect(effective.primary.strength).toBe(178);
     expect(effective.primary.endurance).toBe(162);
     expect(effective.status).toEqual({ health: 1390, mana: 565 });
-    expect(effective.derived).toEqual({
+    expect(effective.derived).toMatchObject({
       physicalAttack: 176,
-      magicAttack: 239.4,
       physicalDefense: 193,
-      magicDefense: 184.4,
-      speed: 136,
     });
+    expect(effective.derived.magicAttack).toBeCloseTo(239.4);
+    expect(effective.derived.magicDefense).toBeCloseTo(184.4);
+    expect(effective.derived.speed).toBeCloseTo(136);
     expect(effective.advanced).toEqual(calculated.advanced);
     expect(calculated.allocatedPoints).toBe(0);
     expect(calculated.remainingPoints).toBe(TOTAL_POTENTIAL_POINTS);
@@ -106,7 +106,7 @@ describe("角色面板计算", () => {
     });
   });
 
-  it("应该把幻形符的物理和法术暴击率计入进阶属性", () => {
+  it("应该把百分比加成直接计入对应进阶属性", () => {
     const calculated = calculateCharacterAttributes(
       EMPTY_CHARACTER_ALLOCATION
     );
@@ -114,11 +114,13 @@ describe("角色面板计算", () => {
       ...createEmptyCharacterAttributeBonuses(),
       physicalCritical: 3.5,
       magicalCritical: 2,
+      hitRate: 2,
     };
     const effective = applyCharacterAttributeBonuses(calculated, bonuses);
 
     expect(effective.advanced.physicalCritical).toBe(5.5);
     expect(effective.advanced.magicalCritical).toBe(3);
+    expect(effective.advanced.hitRate).toBe(102);
   });
 
   it("应该在固定速度之后应用百分比速度并叠加闪避、封印抵抗和亲和", () => {
@@ -135,7 +137,8 @@ describe("角色面板计算", () => {
     };
     const effective = applyCharacterAttributeBonuses(calculated, bonuses);
 
-    expect(effective.derived.speed).toBe(147.49);
+    expect(effective.derived.speed).toBeCloseTo(147.492, 10);
+    expect(effective.derived.speed).not.toBe(147.49);
     expect(effective.advanced.dodgeRate).toBe(8);
     expect(effective.advanced.sealResistance).toBe(6);
     expect(effective.affinity).toEqual({
@@ -161,8 +164,8 @@ describe("角色面板计算", () => {
     };
     const effective = applyCharacterAttributeBonuses(calculated, bonuses);
 
-    expect(effective.derived.physicalDefense).toBe(208.95);
-    expect(effective.derived.magicDefense).toBe(211.05);
+    expect(effective.derived.physicalDefense).toBeCloseTo(208.95);
+    expect(effective.derived.magicDefense).toBeCloseTo(211.05);
   });
 
   it("应该在直接气血和体力气血之后应用气血百分比", () => {
@@ -199,8 +202,8 @@ describe("角色面板计算", () => {
     };
     const effective = applyCharacterAttributeBonuses(calculated, bonuses);
 
-    expect(effective.derived.magicAttack).toBe(256);
-    expect(effective.derived.speed).toBe(104.6);
+    expect(effective.derived.magicAttack).toBeCloseTo(256);
+    expect(effective.derived.speed).toBeCloseTo(104.6);
   });
 
   it("应该将每个预设比例换算为完整的 69 级潜力点", () => {
@@ -374,14 +377,14 @@ describe("角色面板计算", () => {
     });
     expect(result.allocatedPoints).toBe(0);
     expect(result.remainingPoints).toBe(680);
-    expect(result.derived).toEqual({
+    expect(result.derived).toMatchObject({
       health: 1390,
-      magicAttack: 236,
-      magicDefense: 181,
       physicalAttack: 166,
       physicalDefense: 189,
-      speed: 134.6,
     });
+    expect(result.derived.magicAttack).toBeCloseTo(236);
+    expect(result.derived.magicDefense).toBeCloseTo(181);
+    expect(result.derived.speed).toBeCloseTo(134.6);
   });
 
   it("应该按五维规则计算已知派生属性", () => {

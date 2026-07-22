@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import RingConverter from "./components/RingConverter";
 import WeaponConverter from "./components/WeaponConverter";
 import CharacterAttributeCalculator from "./components/CharacterAttributeCalculator";
+import CharacterProfileSlots from "./components/CharacterProfileSlots";
 import EquipmentCalculator from "./components/EquipmentCalculator";
 import DataPage from "./pages/DataPage";
 import FavoritesPage from "./pages/FavoritesPage";
@@ -35,6 +36,15 @@ import {
 } from "./utils/calculatorStorage";
 import type { EquipmentCalculatorState } from "./utils/equipmentAttributes";
 import type { CharacterLevel } from "./utils/characterAttributes";
+import {
+  activateCharacterProfileSlot,
+  loadCharacterProfileSlots,
+  loadCurrentCharacterStateSnapshot,
+  normalizeCharacterProfileName,
+  replaceCharacterProfileSlot,
+  restoreCharacterStateSnapshot,
+  saveCharacterProfileSlots,
+} from "./utils/characterProfiles";
 
 type PageId =
   | "home"
@@ -155,6 +165,11 @@ const CalculatorPage = () => {
   );
   const [equipmentState, setEquipmentState] =
     useState<EquipmentCalculatorState>(loadEquipmentCalculatorState);
+  const [characterProfileSlots, setCharacterProfileSlots] = useState(
+    loadCharacterProfileSlots
+  );
+  const [characterCalculatorKey, setCharacterCalculatorKey] = useState(0);
+  const [characterProfileNotice, setCharacterProfileNotice] = useState("");
   const isWeapon = activeTool === "weapon";
   const isCharacter = activeTool === "character";
   const isEquipment = activeTool === "equipment";
@@ -170,6 +185,10 @@ const CalculatorPage = () => {
   useEffect(() => {
     saveCalculatorState(EQUIPMENT_ATTRIBUTES_STORAGE_KEY, equipmentState);
   }, [equipmentState]);
+
+  useEffect(() => {
+    saveCharacterProfileSlots(characterProfileSlots);
+  }, [characterProfileSlots]);
 
   const toolMeta = isEquipment
     ? {
@@ -201,6 +220,33 @@ const CalculatorPage = () => {
       characterLevel,
       equipment: clampEquipmentGemLevels(current.equipment, characterLevel),
     }));
+  };
+
+  const handleSaveCharacterProfile = (slotIndex: number, name: string) => {
+    const normalizedName = normalizeCharacterProfileName(name, slotIndex);
+
+    setCharacterProfileSlots((currentSlots) =>
+      replaceCharacterProfileSlot(currentSlots, slotIndex, {
+        name: normalizedName,
+        characterState: loadCurrentCharacterStateSnapshot(),
+        equipmentState,
+        isActive: true,
+      })
+    );
+    setCharacterProfileNotice(`已保存“${normalizedName}”的完整角色配置。`);
+  };
+
+  const handleRestoreCharacterProfile = (slotIndex: number) => {
+    const profile = characterProfileSlots[slotIndex];
+    if (!profile) return;
+
+    restoreCharacterStateSnapshot(profile.characterState);
+    setCharacterProfileSlots((currentSlots) =>
+      activateCharacterProfileSlot(currentSlots, slotIndex)
+    );
+    setEquipmentState(profile.equipmentState);
+    setCharacterCalculatorKey((currentKey) => currentKey + 1);
+    setCharacterProfileNotice(`已恢复“${profile.name}”的完整角色配置。`);
   };
 
   return (
@@ -245,6 +291,15 @@ const CalculatorPage = () => {
         ))}
       </div>
 
+      {(isCharacter || isEquipment) && (
+        <CharacterProfileSlots
+          slots={characterProfileSlots}
+          notice={characterProfileNotice}
+          onSave={handleSaveCharacterProfile}
+          onRestore={handleRestoreCharacterProfile}
+        />
+      )}
+
       <div
         className={`grid items-start gap-5 ${
           isCharacter || isEquipment
@@ -254,6 +309,7 @@ const CalculatorPage = () => {
       >
         {isCharacter ? (
           <CharacterAttributeCalculator
+            key={characterCalculatorKey}
             characterLevel={equipmentState.characterLevel}
             onCharacterLevelChange={handleCharacterLevelChange}
             equipmentBonuses={equipmentSummary.characterBonuses}

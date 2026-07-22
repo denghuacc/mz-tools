@@ -326,6 +326,7 @@ export type CharacterDirectBonusAttribute =
 export const CHARACTER_ADVANCED_BONUS_ATTRIBUTE_KEYS = [
   "physicalCritical",
   "magicalCritical",
+  "hitRate",
   "dodgeRate",
   "healingPower",
   "sealHit",
@@ -386,6 +387,7 @@ export const createEmptyCharacterAttributeBonuses =
     agility: 0,
     physicalCritical: 0,
     magicalCritical: 0,
+    hitRate: 0,
     dodgeRate: 0,
     healingPower: 0,
     sealHit: 0,
@@ -524,8 +526,6 @@ export type CalculatedCharacterAttributes = {
   remainingPoints: number;
 };
 
-const roundAttribute = (value: number) => Math.round(value * 100) / 100;
-
 export type EffectiveCharacterAttributes = {
   primary: CharacterAllocation;
   status: Pick<CharacterAttributeBonuses, "health" | "mana">;
@@ -566,62 +566,48 @@ export const applyCharacterAttributeBonuses = (
       agility: calculated.primary.agility + bonuses.agility,
     },
     status: {
-      health: roundAttribute(
+      health:
         (calculated.derived.health +
           bonuses.constitution * 3 +
           bonuses.health) *
-          (1 + bonuses.healthPercent / 100)
-      ),
-      mana: roundAttribute(
-        calculateFixedStatusAttributes(characterLevel).mana + bonuses.mana
-      ),
+        (1 + bonuses.healthPercent / 100),
+      mana: calculateFixedStatusAttributes(characterLevel).mana + bonuses.mana,
     },
     derived: {
-      physicalAttack: roundAttribute(
+      physicalAttack:
         calculated.derived.physicalAttack +
-          bonuses.strength * 0.5 +
-          bonuses.physicalAttack
-      ),
-      magicAttack: roundAttribute(
-        calculated.derived.magicAttack + magicAttributeBonus + bonuses.magicAttack
-      ),
-      physicalDefense: roundAttribute(
+        bonuses.strength * 0.5 +
+        bonuses.physicalAttack,
+      magicAttack:
+        calculated.derived.magicAttack +
+        magicAttributeBonus +
+        bonuses.magicAttack,
+      physicalDefense:
         (calculated.derived.physicalDefense +
           bonuses.endurance +
           bonuses.physicalDefense) *
-          (1 + bonuses.physicalDefensePercent / 100)
-      ),
-      magicDefense: roundAttribute(
+        (1 + bonuses.physicalDefensePercent / 100),
+      magicDefense:
         (calculated.derived.magicDefense +
           magicAttributeBonus +
           bonuses.magicDefense) *
-          (1 + bonuses.magicDefensePercent / 100)
-      ),
-      speed: roundAttribute(
-        speedBeforePercentage * (1 + bonuses.speedPercent / 100)
-      ),
+        (1 + bonuses.magicDefensePercent / 100),
+      speed: speedBeforePercentage * (1 + bonuses.speedPercent / 100),
     },
     advanced: {
       ...calculated.advanced,
-      physicalCritical: roundAttribute(
-        calculated.advanced.physicalCritical + bonuses.physicalCritical
-      ),
-      magicalCritical: roundAttribute(
-        calculated.advanced.magicalCritical + bonuses.magicalCritical
-      ),
-      dodgeRate: roundAttribute(
-        calculated.advanced.dodgeRate + bonuses.dodgeRate
-      ),
-      healingPower: roundAttribute(
-        calculated.advanced.healingPower + bonuses.healingPower
-      ),
-      sealHit: roundAttribute(calculated.advanced.sealHit + bonuses.sealHit),
-      sealResistance: roundAttribute(
-        calculated.advanced.sealResistance + bonuses.sealResistance
-      ),
-      battleEntryAnger: roundAttribute(
-        calculated.advanced.battleEntryAnger + bonuses.battleEntryAnger
-      ),
+      physicalCritical:
+        calculated.advanced.physicalCritical + bonuses.physicalCritical,
+      magicalCritical:
+        calculated.advanced.magicalCritical + bonuses.magicalCritical,
+      hitRate: calculated.advanced.hitRate + bonuses.hitRate,
+      dodgeRate: calculated.advanced.dodgeRate + bonuses.dodgeRate,
+      healingPower: calculated.advanced.healingPower + bonuses.healingPower,
+      sealHit: calculated.advanced.sealHit + bonuses.sealHit,
+      sealResistance:
+        calculated.advanced.sealResistance + bonuses.sealResistance,
+      battleEntryAnger:
+        calculated.advanced.battleEntryAnger + bonuses.battleEntryAnger,
     },
     affinity: {
       fireAffinity: bonuses.fireAffinity,
@@ -668,32 +654,29 @@ export const calculateCharacterAttributes = (
     derived: {
       health:
         fixedStatusAttributes.health + constitutionGrowth * 3,
-      magicAttack: roundAttribute(
+      magicAttack:
         LEVEL_ONE_DERIVED_ATTRIBUTES.magicAttack +
-          constitutionGrowth * 0.1 +
-          spiritGrowth * 0.5 +
-          strengthGrowth * 0.3 +
-          enduranceGrowth * 0.1
-      ),
-      magicDefense: roundAttribute(
+        constitutionGrowth * 0.1 +
+        spiritGrowth * 0.5 +
+        strengthGrowth * 0.3 +
+        enduranceGrowth * 0.1,
+      magicDefense:
         LEVEL_ONE_DERIVED_ATTRIBUTES.magicDefense +
-          constitutionGrowth * 0.1 +
-          spiritGrowth * 0.5 +
-          strengthGrowth * 0.3 +
-          enduranceGrowth * 0.1
-      ),
+        constitutionGrowth * 0.1 +
+        spiritGrowth * 0.5 +
+        strengthGrowth * 0.3 +
+        enduranceGrowth * 0.1,
       physicalAttack:
         LEVEL_ONE_DERIVED_ATTRIBUTES.physicalAttack + strengthGrowth * 0.5,
       physicalDefense:
         LEVEL_ONE_DERIVED_ATTRIBUTES.physicalDefense + enduranceGrowth,
-      speed: roundAttribute(
+      speed:
         LEVEL_ONE_DERIVED_ATTRIBUTES.speed +
-          constitutionGrowth * 0.1 +
-          spiritGrowth * 0.05 +
-          strengthGrowth * 0.1 +
-          enduranceGrowth * 0.1 +
-          agilityGrowth * 0.5
-      ),
+        constitutionGrowth * 0.1 +
+        spiritGrowth * 0.05 +
+        strengthGrowth * 0.1 +
+        enduranceGrowth * 0.1 +
+        agilityGrowth * 0.5,
     },
     // 潜力点不影响进阶属性；封印命中只按角色升级次数固定成长。
     advanced: calculateLevelAdvancedAttributes(characterLevel),

@@ -297,7 +297,7 @@ describe("CharacterAttributeCalculator", () => {
     fireEvent.change(speedInput, { target: { value: "-30" } });
 
     expect(speedInput).toHaveValue(-30);
-    expect(screen.getByText("172.6")).toBeInTheDocument();
+    expect(screen.getByText("172")).toBeInTheDocument();
     expect(screen.getByText("-30")).toHaveClass("text-rose-600");
     const skillCard = within(skillDialog)
       .getByRole("heading", { name: "技能" })
@@ -599,7 +599,7 @@ describe("CharacterAttributeCalculator", () => {
 
     const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
     expect(within(derivedColumn).getByText("536")).toBeInTheDocument();
-    expect(within(derivedColumn).getByText("217.6")).toBeInTheDocument();
+    expect(within(derivedColumn).getByText("217")).toBeInTheDocument();
     expect(within(derivedColumn).getByText("缎纹 +30")).toBeInTheDocument();
     expect(within(derivedColumn).getByText("缎纹 +15")).toBeInTheDocument();
 
@@ -662,7 +662,9 @@ describe("CharacterAttributeCalculator", () => {
 
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
     expect(screen.getByText("幻形符 +3.5%")).toBeInTheDocument();
-    expect(screen.getByText("5.5%")).toBeInTheDocument();
+    const physicalCriticalRow = screen.getByText("物理暴击").closest("div");
+    expect(physicalCriticalRow).not.toBeNull();
+    expect(within(physicalCriticalRow!).getByText("5%")).toBeInTheDocument();
   });
 
   it("应该整组启用固定的帮派祝福属性", async () => {
@@ -721,7 +723,7 @@ describe("CharacterAttributeCalculator", () => {
       "物防 +8 / 法防 +6",
       "速度 +4",
       "速度 +2%",
-      "封印命中 +1%",
+      "命中率 +2% / 封印命中 +1%",
     ];
     expect(within(talentDialog).getAllByRole("checkbox")).toHaveLength(6);
 
@@ -759,6 +761,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(
       within(summaryCard!).getByText("物理暴击 +3%")
     ).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("命中率 +2%")).toBeInTheDocument();
     expect(within(summaryCard!).getByText("封印命中 +1%")).toBeInTheDocument();
 
     const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
@@ -766,7 +769,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(speedRow).not.toBeNull();
     expect(within(speedRow!).getByText("天赋 +4")).toBeInTheDocument();
     expect(within(speedRow!).getByText("天赋 +2%")).toBeInTheDocument();
-    expect(within(speedRow!).getByText("210.73")).toBeInTheDocument();
+    expect(within(speedRow!).getByText("210")).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
     const resultPanel = within(screen.getByTestId("attribute-result-panel"));
@@ -779,6 +782,10 @@ describe("CharacterAttributeCalculator", () => {
     expect(magicalCriticalRow).not.toBeNull();
     expect(within(physicalCriticalRow!).getByText("5%")).toBeInTheDocument();
     expect(within(magicalCriticalRow!).getByText("4%")).toBeInTheDocument();
+    const hitRateRow = resultPanel.getByText("命中率").closest("div");
+    expect(hitRateRow).not.toBeNull();
+    expect(within(hitRateRow!).getByText("天赋 +2%")).toBeInTheDocument();
+    expect(within(hitRateRow!).getByText("102%")).toBeInTheDocument();
     expect(resultPanel.getByText("天赋 +1%")).toBeInTheDocument();
     expect(resultPanel.getByText("151")).toBeInTheDocument();
   });
@@ -988,7 +995,7 @@ describe("CharacterAttributeCalculator", () => {
 
     const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
     const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
-    expect(within(derivedColumn).getByText("576.5")).toBeInTheDocument();
+    expect(within(derivedColumn).getByText("576")).toBeInTheDocument();
     expect(within(potentialColumn).getByText("865")).toBeInTheDocument();
     expect(screen.getByText("1699")).toBeInTheDocument();
     expect(screen.getByText("874")).toBeInTheDocument();

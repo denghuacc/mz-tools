@@ -6,11 +6,14 @@ import {
   updatePreferences,
 } from "../utils/preferences";
 import {
+  CHARACTER_ATTRIBUTES_STORAGE_KEY,
+  CHARACTER_PROFILES_STORAGE_KEY,
   EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
   LEGACY_EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
 } from "../utils/calculatorStorage";
 import {
   EQUIPMENT_SLOTS,
+  createInitialEquipmentCalculatorState,
   createInitialEquipmentSet,
 } from "../utils/equipmentAttributes";
 
@@ -157,6 +160,101 @@ describe("App 组件", () => {
     await user.click(screen.getByRole("tab", { name: "角色面板" }));
     expect(screen.getByLabelText("装备属性接入状态")).toHaveTextContent("8 / 8 件");
     expect(screen.getByText("装备 +138")).toBeInTheDocument();
+  });
+
+  it("应该保存三个角色存档并一键恢复角色面板和装备配置", async () => {
+    const storedEquipmentState = createInitialEquipmentCalculatorState();
+    storedEquipmentState.equipment.weapon = {
+      ...storedEquipmentState.equipment.weapon,
+      baseAttributes: {
+        ...storedEquipmentState.equipment.weapon.baseAttributes,
+        physicalAttack: 700,
+      },
+    };
+    window.localStorage.setItem(
+      CHARACTER_ATTRIBUTES_STORAGE_KEY,
+      JSON.stringify({ skillBonuses: { health: 100 } })
+    );
+    window.localStorage.setItem(
+      EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
+      JSON.stringify(storedEquipmentState)
+    );
+    updatePreferences({ activeTool: "character" });
+    const user = userEvent.setup();
+    render(<App />);
+
+    const profileRegion = screen.getByRole("region", { name: "角色存档" });
+    expect(
+      within(profileRegion).getAllByRole("button", { name: /恢复存档/ })
+    ).toHaveLength(3);
+    expect(
+      within(profileRegion).getByRole("button", { name: "恢复存档1" })
+    ).toBeDisabled();
+
+    const profileNameInput = within(profileRegion).getByRole("textbox", {
+      name: "存档1名称",
+    });
+    await user.clear(profileNameInput);
+    await user.type(profileNameInput, "鬼王69");
+    await user.click(
+      within(profileRegion).getByRole("button", {
+        name: "保存当前到存档1",
+      })
+    );
+
+    await waitFor(() => {
+      const storedProfiles = JSON.parse(
+        window.localStorage.getItem(CHARACTER_PROFILES_STORAGE_KEY) ?? "[]"
+      );
+      expect(storedProfiles[0].name).toBe("鬼王69");
+      expect(storedProfiles[0].isActive).toBe(true);
+      expect(storedProfiles[0].characterState.skillBonuses.health).toBe(100);
+      expect(
+        storedProfiles[0].equipmentState.equipment.weapon.baseAttributes
+          .physicalAttack
+      ).toBe(700);
+      expect(storedProfiles.slice(1)).toEqual([null, null]);
+    });
+    expect(profileNameInput.closest("article")).toHaveAttribute(
+      "aria-current",
+      "true"
+    );
+
+    const skillEditButton = screen.getByRole("button", { name: "编辑技能" });
+    await user.click(skillEditButton);
+    const skillDialog = screen.getByRole("dialog", { name: "编辑技能" });
+    const healthInput = within(skillDialog).getByRole("spinbutton", {
+      name: "技能：气血",
+    });
+    await user.clear(healthInput);
+    await user.type(healthInput, "200");
+    await user.click(within(skillDialog).getByRole("button", { name: "完成" }));
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "角色等级" }),
+      "110"
+    );
+
+    await user.click(
+      within(profileRegion).getByRole("button", { name: "恢复存档1" })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "已恢复“鬼王69”的完整角色配置"
+      );
+      expect(
+        screen.getByRole("combobox", { name: "角色等级" })
+      ).toHaveValue("69");
+      expect(screen.getByText("+技能 100")).toBeInTheDocument();
+
+      const restoredEquipmentState = JSON.parse(
+        window.localStorage.getItem(EQUIPMENT_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+      );
+      expect(restoredEquipmentState.characterLevel).toBe(69);
+      expect(
+        restoredEquipmentState.equipment.weapon.baseAttributes.physicalAttack
+      ).toBe(700);
+    });
   });
 
   it("应该从本地偏好恢复上次使用的工具", () => {
