@@ -79,7 +79,7 @@ export const EquipmentEditorSection = ({
   children,
 }: {
   title: string;
-  description?: string;
+  description?: ReactNode;
   children: ReactNode;
 }) => (
   <section className="rounded-xl border border-slate-200 bg-white p-4">

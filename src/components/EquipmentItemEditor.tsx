@@ -35,7 +35,6 @@ const EquipmentItemEditor = ({
       <EquipmentStatusSection {...sectionProps} />
       <EquipmentBaseAttributesSection {...sectionProps} />
       <EquipmentAttributesSection {...sectionProps} />
-      <EquipmentIndependentAffixSection {...sectionProps} />
       {isSeasonEquipmentSlot(item.slot) ? (
         <SeasonEquipmentEffectSection {...sectionProps} />
       ) : (
@@ -45,6 +44,7 @@ const EquipmentItemEditor = ({
           characterLevel={characterLevel}
         />
       )}
+      <EquipmentIndependentAffixSection {...sectionProps} />
     </div>
   );
 };

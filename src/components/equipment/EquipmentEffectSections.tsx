@@ -4,10 +4,8 @@ import {
   EQUIPMENT_AFFINITY_EFFECT_OPTIONS,
   EQUIPMENT_AFFINITY_EFFECT_VALUE,
   EQUIPMENT_ATTRIBUTE_LABELS,
-  EQUIPMENT_BASE_ATTRIBUTE_CONFIG,
   EQUIPMENT_GEM_CONFIG,
   EQUIPMENT_GEM_SLOT_CONFIG,
-  EQUIPMENT_PRIMARY_ATTRIBUTES,
   EQUIPMENT_SLOTS,
   EQUIPMENT_SLOT_LABELS,
   MAX_GEM_EQUIPMENT_COUNT,
@@ -23,7 +21,6 @@ import type {
   EquipmentAffinityEffectAttribute,
   EquipmentGemType,
   EquipmentItem,
-  EquipmentPrimaryAttributeLine,
   EquipmentSet,
   SeasonEffectLevel,
 } from "../../utils/equipmentAttributes";
@@ -172,105 +169,6 @@ const EquipmentGemSection = ({
   );
 };
 
-const EquipmentCastingSection = ({
-  item,
-  onChange,
-}: EquipmentSectionProps) => (
-  <EquipmentEditorSection
-    title="铸灵属性"
-    description="当前按截图中的实际铸灵数值直接相加。"
-  >
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-      {EQUIPMENT_BASE_ATTRIBUTE_CONFIG[item.slot].map((attribute) => (
-        <EquipmentAttributeValueInput
-          key={attribute}
-          label={`${EQUIPMENT_SLOT_LABELS[item.slot]}铸灵：${EQUIPMENT_ATTRIBUTE_LABELS[attribute]}`}
-          value={item.castingAttributes[attribute] ?? 0}
-          onChange={(value) =>
-            onChange({
-              ...item,
-              castingAttributes: {
-                ...item.castingAttributes,
-                [attribute]: value,
-              },
-            })
-          }
-        />
-      ))}
-    </div>
-  </EquipmentEditorSection>
-);
-
-const EquipmentSupportSection = ({
-  item,
-  onChange,
-}: EquipmentSectionProps) => (
-  <EquipmentEditorSection
-    title="加持"
-    description="加持额外增加一条属性，并计入每件基础装备最多两个特效的限制。"
-  >
-    <EquipmentEffectToggle
-      checked={item.supportAttribute !== null}
-      disabled={!canEnableBaseEquipmentEffect(item, "support")}
-      onChange={(checked) =>
-        onChange({
-          ...item,
-          supportAttribute: checked
-            ? {
-                attribute:
-                  EQUIPMENT_PRIMARY_ATTRIBUTES.find(
-                    (candidate) =>
-                      !item.additionalPrimaryAttributes.some(
-                        (line) => line.attribute === candidate
-                      )
-                  ) ?? "constitution",
-                value: 0,
-              }
-            : null,
-        })
-      }
-    >
-      这件装备拥有加持
-    </EquipmentEffectToggle>
-
-    {item.supportAttribute ? (
-      <div className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(100px,0.7fr)] gap-3">
-        <EquipmentAttributeSelect
-          label={`${EQUIPMENT_SLOT_LABELS[item.slot]}：加持属性`}
-          value={item.supportAttribute.attribute}
-          options={EQUIPMENT_PRIMARY_ATTRIBUTES.map((attribute) => ({
-            attribute,
-            label: EQUIPMENT_ATTRIBUTE_LABELS[attribute],
-            disabled: item.additionalPrimaryAttributes.some(
-              (line) => line.attribute === attribute
-            ),
-          }))}
-          onChange={(attribute) =>
-            onChange({
-              ...item,
-              supportAttribute: {
-                ...item.supportAttribute!,
-                attribute:
-                  attribute as EquipmentPrimaryAttributeLine["attribute"],
-              },
-            })
-          }
-        />
-        <EquipmentAttributeValueInput
-          label={`${EQUIPMENT_SLOT_LABELS[item.slot]}：加持数值`}
-          value={item.supportAttribute.value}
-          onChange={(value) =>
-            onChange({
-              ...item,
-              supportAttribute: { ...item.supportAttribute!, value },
-            })
-          }
-        />
-      </div>
-    ) : null}
-  </EquipmentEditorSection>
-);
-
 const EquipmentEffectsSection = ({
   item,
   onChange,
@@ -297,7 +195,7 @@ const EquipmentEffectsSection = ({
           disabled={!canEnable("blessing")}
           onChange={(checked) => onChange({ ...item, blessing: checked })}
         >
-          祝福 · 属性按 +10 级生成
+          祝福 · 属性已包含在装备面板值中
         </EquipmentEffectToggle>
         <EquipmentEffectToggle
           checked={item.growth}
@@ -460,8 +358,6 @@ export const StandardEquipmentSections = ({
       equipment={equipment}
       characterLevel={characterLevel}
     />
-    <EquipmentCastingSection {...props} />
-    <EquipmentSupportSection {...props} />
     <EquipmentEffectsSection {...props} />
   </>
 );

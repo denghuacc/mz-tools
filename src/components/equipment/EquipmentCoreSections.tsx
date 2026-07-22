@@ -98,12 +98,19 @@ export const EquipmentBaseAttributesSection = ({
     });
   };
 
-  const description =
+  const slotDescription =
     item.slot === "ring"
       ? "戒指第一条固定为气血；第二条按职业选择物攻、法攻或速度。"
       : item.slot === "necklace"
         ? "项链随机生成两条不重复的装备属性，可选气血、物防或法防。"
-        : "专业版的基础属性类型固定；请填写游戏面板显示的最终数值。";
+        : null;
+  const description = (
+    <>
+      请填写游戏面板展示的最终数值，已包含
+      <strong className="font-semibold text-slate-600">铸灵属性</strong>。
+      {slotDescription ? ` ${slotDescription}` : null}
+    </>
+  );
 
   return (
     <EquipmentEditorSection title="装备属性" description={description}>

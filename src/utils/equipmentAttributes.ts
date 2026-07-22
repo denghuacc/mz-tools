@@ -348,7 +348,6 @@ export type EquipmentItem = {
   gem: EquipmentGem | null;
   independentAffix: EquipmentIndependentAffix | null;
   baseAttributes: EquipmentAttributeValues;
-  castingAttributes: EquipmentAttributeValues;
   additionalPrimaryAttributes: readonly EquipmentPrimaryAttributeLine[];
   tempering: EquipmentAttributeLine;
   affixes: readonly EquipmentAttributeLine[];
@@ -576,7 +575,6 @@ const createItem = (
   gem: null,
   independentAffix: null,
   baseAttributes: {},
-  castingAttributes: {},
   additionalPrimaryAttributes: [{ attribute: "constitution", value: 0 }],
   tempering: { attribute: "strength", value: 0 },
   affixes: [],
@@ -600,14 +598,9 @@ const createItem = (
 export const createInitialEquipmentSet = (): EquipmentSet => ({
   weapon: createItem("weapon", {
     baseAttributes: {
-      physicalAttack: 657,
-      magicAttack: 200,
-      healingPower: 161,
-    },
-    castingAttributes: {
-      physicalAttack: 57,
-      magicAttack: 16,
-      healingPower: 28,
+      physicalAttack: 714,
+      magicAttack: 216,
+      healingPower: 189,
     },
     additionalPrimaryAttributes: [
       { attribute: "strength", value: 33 },
@@ -617,33 +610,28 @@ export const createInitialEquipmentSet = (): EquipmentSet => ({
     blessing: true,
   }),
   armor: createItem("armor", {
-    baseAttributes: { health: 379, physicalDefense: 146 },
-    castingAttributes: { health: 184, physicalDefense: 24 },
+    baseAttributes: { health: 563, physicalDefense: 170 },
     tempering: { attribute: "strength", value: 28 },
     supportAttribute: { attribute: "endurance", value: 38 },
   }),
   headgear: createItem("headgear", {
-    baseAttributes: { mana: 1415, physicalDefense: 102 },
-    castingAttributes: { mana: 405, physicalDefense: 31 },
+    baseAttributes: { mana: 1820, physicalDefense: 133 },
     tempering: { attribute: "strength", value: 31 },
     supportAttribute: { attribute: "strength", value: 39 },
   }),
   lowerGarment: createItem("lowerGarment", {
-    baseAttributes: { health: 620, magicDefense: 56 },
-    castingAttributes: { health: 196, magicDefense: 27 },
+    baseAttributes: { health: 816, magicDefense: 83 },
     tempering: { attribute: "strength", value: 27 },
     supportAttribute: { attribute: "agility", value: 33 },
     specialSkill: "四面楚歌",
   }),
   accessory: createItem("accessory", {
-    baseAttributes: { magicAttack: 99, magicDefense: 105 },
-    castingAttributes: { magicAttack: 23, magicDefense: 28 },
+    baseAttributes: { magicAttack: 122, magicDefense: 133 },
     tempering: { attribute: "strength", value: 30 },
     supportAttribute: { attribute: "strength", value: 34 },
   }),
   shoes: createItem("shoes", {
-    baseAttributes: { physicalDefense: 51, speed: 101 },
-    castingAttributes: { physicalDefense: 29, speed: 37 },
+    baseAttributes: { physicalDefense: 80, speed: 138 },
     tempering: { attribute: "strength", value: 31 },
     supportAttribute: { attribute: "strength", value: 40 },
   }),
@@ -705,6 +693,22 @@ const normalizeEquipmentAttributeValues = (
         Number.isFinite(storedValue)
     )
   ) as EquipmentAttributeValues;
+};
+
+const mergeEquipmentAttributeValues = (
+  baseAttributes: EquipmentAttributeValues,
+  additionalAttributes: EquipmentAttributeValues
+): EquipmentAttributeValues => {
+  const mergedAttributes = { ...baseAttributes };
+
+  for (const [attribute, value] of Object.entries(additionalAttributes) as [
+    EquipmentAttribute,
+    number,
+  ][]) {
+    mergedAttributes[attribute] = (mergedAttributes[attribute] ?? 0) + value;
+  }
+
+  return mergedAttributes;
 };
 
 const normalizeEquipmentGem = (
@@ -858,6 +862,15 @@ const normalizeEquipmentItem = (
     value.seasonEffectLevel <= 5
       ? (value.seasonEffectLevel as SeasonEffectLevel)
       : fallback.seasonEffectLevel;
+  const baseAttributes = normalizeEquipmentAttributeValues(
+    value.baseAttributes,
+    fallback.baseAttributes
+  );
+  // 旧缓存曾单独保存铸灵值，读取时合并到游戏面板展示的最终装备属性。
+  const legacyCastingAttributes =
+    !isSeasonEquipmentSlot(slot) && isRecord(value.baseAttributes)
+      ? normalizeEquipmentAttributeValues(value.castingAttributes, {})
+      : {};
 
   return {
     slot,
@@ -875,13 +888,9 @@ const normalizeEquipmentItem = (
       slot,
       fallback.independentAffix
     ),
-    baseAttributes: normalizeEquipmentAttributeValues(
-      value.baseAttributes,
-      fallback.baseAttributes
-    ),
-    castingAttributes: normalizeEquipmentAttributeValues(
-      value.castingAttributes,
-      fallback.castingAttributes
+    baseAttributes: mergeEquipmentAttributeValues(
+      baseAttributes,
+      legacyCastingAttributes
     ),
     additionalPrimaryAttributes: normalizeEquipmentAttributeLines(
       value.additionalPrimaryAttributes,
@@ -1058,10 +1067,6 @@ export const calculateEquipmentItemAttributes = (
     }
   } else {
     addValues(attributes, item.baseAttributes);
-  }
-
-  if (!isSeasonEquipment) {
-    addValues(attributes, item.castingAttributes);
   }
 
   const gemBonus = calculateEquipmentGemBonus(item, characterLevel);

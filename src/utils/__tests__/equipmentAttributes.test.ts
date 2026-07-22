@@ -252,25 +252,43 @@ describe("角色装备属性汇总", () => {
     }
   });
 
-  it("应该正确区分上衣和下装的装备属性", () => {
+  it("应该直接使用包含铸灵的最终装备属性", () => {
     const equipment = createInitialEquipmentSet();
 
     expect(equipment.armor.baseAttributes).toEqual({
-      health: 379,
-      physicalDefense: 146,
-    });
-    expect(equipment.armor.castingAttributes).toEqual({
-      health: 184,
-      physicalDefense: 24,
+      health: 563,
+      physicalDefense: 170,
     });
     expect(equipment.lowerGarment.baseAttributes).toEqual({
-      health: 620,
-      magicDefense: 56,
+      health: 816,
+      magicDefense: 83,
     });
-    expect(equipment.lowerGarment.castingAttributes).toEqual({
-      health: 196,
-      magicDefense: 27,
+  });
+
+  it("应该把旧缓存中的铸灵属性合并到最终装备属性", () => {
+    const state = createInitialEquipmentCalculatorState();
+    const storedState = structuredClone(state) as unknown as {
+      equipment: {
+        armor: Record<string, unknown>;
+      };
+    };
+    storedState.equipment.armor.baseAttributes = {
+      health: 379,
+      physicalDefense: 146,
+    };
+    storedState.equipment.armor.castingAttributes = {
+      health: 184,
+      physicalDefense: 24,
+    };
+
+    const restoredArmor =
+      normalizeEquipmentCalculatorState(storedState)?.equipment.armor;
+
+    expect(restoredArmor?.baseAttributes).toEqual({
+      health: 563,
+      physicalDefense: 170,
     });
+    expect(restoredArmor).not.toHaveProperty("castingAttributes");
   });
 
   it("应该按截图示例汇总八件装备并映射到角色面板", () => {
@@ -318,7 +336,6 @@ describe("角色装备属性汇总", () => {
     const attributes = calculateEquipmentItemAttributes({
       ...item,
       baseAttributes: {},
-      castingAttributes: {},
       additionalPrimaryAttributes: [
         { attribute: "strength", value: 10 },
         { attribute: "strength", value: 20 },
@@ -343,7 +360,6 @@ describe("角色装备属性汇总", () => {
     const attributes = calculateEquipmentItemAttributes({
       ...item,
       baseAttributes: { ...item.baseAttributes, magicAttack: 888 },
-      castingAttributes: { physicalAttack: 100 },
       additionalPrimaryAttributes: [{ attribute: "strength", value: 50 }],
       tempering: { attribute: "strength", value: 15 },
       affixes: [

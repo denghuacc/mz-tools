@@ -170,7 +170,7 @@ describe("EquipmentCalculator", () => {
     expect(gemLevel).toHaveValue("14");
   });
 
-  it("应该将一至两条附加五维与百炼分开编辑和汇总", async () => {
+  it("应该将加持整合为第三条附加五维并与百炼分开校验", async () => {
     const user = userEvent.setup();
     render(<EquipmentCalculatorHarness />);
 
@@ -185,12 +185,19 @@ describe("EquipmentCalculator", () => {
       "武器状态",
       "装备属性",
       "附加五维与百炼",
-      "独立词条",
       "宝石",
-      "铸灵属性",
-      "加持",
       "特效与特技",
+      "独立词条",
     ]);
+    expect(dialog).toHaveTextContent(
+      "请填写游戏面板展示的最终数值，已包含铸灵属性。"
+    );
+    expect(
+      within(dialog).getByRole("spinbutton", { name: "武器：物攻" })
+    ).toHaveValue(714);
+    expect(
+      within(dialog).queryByRole("spinbutton", { name: /武器铸灵/ })
+    ).not.toBeInTheDocument();
     expect(within(dialog).queryByText("其它词条")).not.toBeInTheDocument();
     expect(
       within(dialog).queryByRole("button", { name: "添加词条" })
@@ -244,6 +251,33 @@ describe("EquipmentCalculator", () => {
     expect(
       within(temperingAttribute).getByRole("option", { name: "力" })
     ).toBeEnabled();
+
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: /加持/ })
+    );
+    const thirdPrimaryAttribute = within(dialog).getByRole("combobox", {
+      name: "武器：附加五维 3",
+    });
+
+    expect(thirdPrimaryAttribute).toHaveValue("constitution");
+    expect(
+      within(thirdPrimaryAttribute).getByRole("option", { name: "力" })
+    ).toBeDisabled();
+    expect(
+      within(thirdPrimaryAttribute).getByRole("option", { name: "敏" })
+    ).toBeDisabled();
+    expect(
+      within(thirdPrimaryAttribute).getByRole("option", { name: "体" })
+    ).toBeEnabled();
+    const thirdPrimaryValue = within(dialog).getByRole("spinbutton", {
+      name: "附加五维 3 数值",
+    });
+    await user.type(thirdPrimaryValue, "40");
+
+    const weaponCard = screen.getByRole("heading", { name: "武器" })
+      .closest("article");
+    expect(weaponCard).not.toBeNull();
+    expect(weaponCard).toHaveTextContent("体 +65");
   });
 
   it("应该编辑 1～6 级独立词条并把已收录属性计入面板", async () => {
@@ -284,7 +318,7 @@ describe("EquipmentCalculator", () => {
     expect(screen.getByText("词条 +3")).toBeInTheDocument();
   });
 
-  it("应该限制加持五维不能与普通附加五维重复", async () => {
+  it("应该把已有加持值作为附加五维展示并保持三条互斥", async () => {
     const user = userEvent.setup();
     render(<EquipmentCalculatorHarness />);
 
@@ -293,16 +327,22 @@ describe("EquipmentCalculator", () => {
     expect(
       within(dialog).queryByRole("heading", { name: "独立词条" })
     ).not.toBeInTheDocument();
-    const supportAttribute = within(dialog).getByRole("combobox", {
-      name: "上衣：加持属性",
+    expect(
+      within(dialog).queryByRole("heading", { name: "加持" })
+    ).not.toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("checkbox", { name: /加持/ })
+    ).toBeChecked();
+    const secondPrimaryAttribute = within(dialog).getByRole("combobox", {
+      name: "上衣：附加五维 2",
     });
 
-    expect(supportAttribute).toHaveValue("endurance");
+    expect(secondPrimaryAttribute).toHaveValue("endurance");
     expect(
-      within(supportAttribute).getByRole("option", { name: "体" })
+      within(secondPrimaryAttribute).getByRole("option", { name: "体" })
     ).toBeDisabled();
     expect(
-      within(supportAttribute).queryByRole("option", { name: "物攻" })
+      within(secondPrimaryAttribute).queryByRole("option", { name: "物攻" })
     ).not.toBeInTheDocument();
   });
 
@@ -319,7 +359,7 @@ describe("EquipmentCalculator", () => {
     await user.clear(physicalAttackInput);
     await user.type(physicalAttackInput, "700");
 
-    expect(screen.getByText("+799")).toBeInTheDocument();
+    expect(screen.getByText("+742")).toBeInTheDocument();
   });
 
   it("应该将鞋子疾风作为速度百分比汇总", async () => {
@@ -646,7 +686,7 @@ describe("EquipmentCalculator", () => {
       name: "鞋子：特技",
     });
     const support = within(dialog).getByRole("checkbox", {
-      name: "这件装备拥有加持",
+      name: /加持/,
     });
 
     expect(support).toBeChecked();

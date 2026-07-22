@@ -6,6 +6,7 @@ import {
   EQUIPMENT_PRIMARY_ATTRIBUTES,
   EQUIPMENT_SLOT_LABELS,
   calculateEquipmentIndependentAffixBonus,
+  canEnableBaseEquipmentEffect,
   isSeasonEquipmentSlot,
 } from "../../utils/equipmentAttributes";
 import type {
@@ -21,6 +22,7 @@ import {
   EquipmentAttributeSelect,
   EquipmentAttributeValueInput,
   EquipmentEditorSection,
+  EquipmentEffectToggle,
   EquipmentFieldLabel,
   equipmentEditorInputClassName,
 } from "./EquipmentEditorFields";
@@ -53,49 +55,87 @@ const AdditionalPrimaryAttributesEditor = ({
   item,
   onChange,
 }: EquipmentAttributesSectionProps) => {
+  const displayedAttributes = item.supportAttribute
+    ? [...item.additionalPrimaryAttributes, item.supportAttribute]
+    : [...item.additionalPrimaryAttributes];
   const updateLine = (
     index: number,
     line: EquipmentPrimaryAttributeLine
   ) => {
+    if (index === item.additionalPrimaryAttributes.length) {
+      onChange({ ...item, supportAttribute: line });
+      return;
+    }
+
     const additionalPrimaryAttributes = [...item.additionalPrimaryAttributes];
     additionalPrimaryAttributes[index] = line;
     onChange({ ...item, additionalPrimaryAttributes });
   };
+  const removeLine = (index: number) => {
+    if (index === item.additionalPrimaryAttributes.length) {
+      onChange({ ...item, supportAttribute: null });
+      return;
+    }
+
+    onChange({
+      ...item,
+      additionalPrimaryAttributes: item.additionalPrimaryAttributes.filter(
+        (_, current) => current !== index
+      ),
+    });
+  };
 
   return (
     <div className="space-y-2">
-      {item.additionalPrimaryAttributes.map((line, index) => (
-        <EquipmentAttributeLineEditor
-          key={index}
-          line={line}
-          selectLabel={`${EQUIPMENT_SLOT_LABELS[item.slot]}：附加五维 ${index + 1}`}
-          valueLabel={`附加五维 ${index + 1} 数值`}
-          options={EQUIPMENT_PRIMARY_ATTRIBUTES.map((attribute) => ({
-            attribute,
-            label: EQUIPMENT_ATTRIBUTE_LABELS[attribute],
-            disabled:
-              item.additionalPrimaryAttributes.some(
+      <EquipmentEffectToggle
+        checked={item.supportAttribute !== null}
+        disabled={!canEnableBaseEquipmentEffect(item, "support")}
+        onChange={(checked) => {
+          const attribute = EQUIPMENT_PRIMARY_ATTRIBUTES.find(
+            (candidate) =>
+              !item.additionalPrimaryAttributes.some(
+                (line) => line.attribute === candidate
+              )
+          );
+
+          onChange({
+            ...item,
+            supportAttribute:
+              checked && attribute ? { attribute, value: 0 } : null,
+          });
+        }}
+      >
+        加持 · 新增加1条附加五维
+      </EquipmentEffectToggle>
+
+      <div className="space-y-2 pt-1">
+        {displayedAttributes.map((line, index) => (
+          <EquipmentAttributeLineEditor
+            key={index}
+            line={line}
+            selectLabel={`${EQUIPMENT_SLOT_LABELS[item.slot]}：附加五维 ${index + 1}`}
+            valueLabel={`附加五维 ${index + 1} 数值`}
+            options={EQUIPMENT_PRIMARY_ATTRIBUTES.map((attribute) => ({
+              attribute,
+              label: EQUIPMENT_ATTRIBUTE_LABELS[attribute],
+              disabled: displayedAttributes.some(
                 (candidate, candidateIndex) =>
                   candidateIndex !== index &&
                   candidate.attribute === attribute
-              ) || item.supportAttribute?.attribute === attribute,
-          }))}
-          removeLabel={`删除${EQUIPMENT_SLOT_LABELS[item.slot]}附加五维 ${index + 1}`}
-          removeDisabled={item.additionalPrimaryAttributes.length === 1}
-          onChange={(nextLine) =>
-            updateLine(index, nextLine as EquipmentPrimaryAttributeLine)
-          }
-          onRemove={() =>
-            onChange({
-              ...item,
-              additionalPrimaryAttributes:
-                item.additionalPrimaryAttributes.filter(
-                  (_, current) => current !== index
-                ),
-            })
-          }
-        />
-      ))}
+              ),
+            }))}
+            removeLabel={`删除${EQUIPMENT_SLOT_LABELS[item.slot]}附加五维 ${index + 1}`}
+            removeDisabled={
+              index < item.additionalPrimaryAttributes.length &&
+              item.additionalPrimaryAttributes.length === 1
+            }
+            onChange={(nextLine) =>
+              updateLine(index, nextLine as EquipmentPrimaryAttributeLine)
+            }
+            onRemove={() => removeLine(index)}
+          />
+        ))}
+      </div>
 
       {item.additionalPrimaryAttributes.length < 2 ? (
         <AddAttributeLineButton
@@ -117,7 +157,7 @@ const AdditionalPrimaryAttributesEditor = ({
             });
           }}
         >
-          添加第 2 条附加五维
+          添加第 {displayedAttributes.length + 1} 条附加五维
         </AddAttributeLineButton>
       ) : null}
     </div>
@@ -321,7 +361,7 @@ const EquipmentAttributesSection = ({
       description={
         isSeasonEquipment
           ? "赛年神装随机出现一至三条互不重复的副属性。"
-          : "每件装备有一至两条可重铸的力、灵、体、耐、敏属性，百炼属性单独计算。"
+          : "普通装备最多录入两条互斥的附加五维；拥有加持时最多三条。百炼属性单独计算，不参与互斥。"
       }
     >
       {isSeasonEquipment ? null : (
