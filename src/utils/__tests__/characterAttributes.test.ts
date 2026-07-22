@@ -4,6 +4,7 @@ import {
   calculateSanshengPillBonuses,
   calculateSanshengPillMaximumCount,
   calculatePresetAllocation,
+  calculateStatusAttributeUpgradePoints,
   calculateCharacterAttributes,
   calculateFixedStatusAttributes,
   CHARACTER_ALLOCATION_PRESETS,
@@ -25,7 +26,7 @@ import {
   LEVEL_ZERO_SEAL_HIT,
   normalizeCharacterLevel,
   SEAL_HIT_POINTS_PER_UPGRADE,
-  STATUS_ATTRIBUTE_POINTS_PER_UPGRADE,
+  STATUS_ATTRIBUTE_GROWTH_RULES,
   TOTAL_POTENTIAL_POINTS,
 } from "../characterAttributes";
 
@@ -88,7 +89,7 @@ describe("角色面板计算", () => {
 
     expect(effective.primary.strength).toBe(168);
     expect(effective.primary.endurance).toBe(162);
-    expect(effective.status).toEqual({ health: 1390, mana: 565 });
+    expect(effective.status).toEqual({ health: 2083, mana: 775 });
     expect(effective.derived).toMatchObject({
       physicalAttack: 171,
       physicalDefense: 193,
@@ -354,8 +355,8 @@ describe("角色面板计算", () => {
     expect(getTotalPotentialPoints(89)).toBe(890);
     expect(getTotalPotentialPoints(110)).toBe(1100);
     expect(calculateFixedStatusAttributes(110)).toEqual({
-      health: 1433,
-      mana: 811,
+      health: 3215,
+      mana: 1372,
       trueEnergy: 100,
     });
 
@@ -391,7 +392,7 @@ describe("角色面板计算", () => {
     expect(result.allocatedPoints).toBe(0);
     expect(result.remainingPoints).toBe(690);
     expect(result.derived).toMatchObject({
-      health: 1390,
+      health: 2083,
       physicalAttack: 161,
       physicalDefense: 189,
     });
@@ -409,7 +410,7 @@ describe("角色面板计算", () => {
       agility: 50,
     });
 
-    expect(result.derived.health).toBe(1420);
+    expect(result.derived.health).toBe(2113);
     expect(result.derived.magicAttack).toBeCloseTo(257);
     expect(result.derived.magicDefense).toBeCloseTo(202);
     expect(result.derived.physicalAttack).toBe(176);
@@ -443,14 +444,26 @@ describe("角色面板计算", () => {
     expect(allocatedResult.advanced).toEqual(emptyResult.advanced);
   });
 
-  it("应该让气血和法力随等级成长并保持真气不变", () => {
-    expect(STATUS_ATTRIBUTE_POINTS_PER_UPGRADE).toEqual({
-      health: 11,
-      mana: 6,
+  it("应该让气血和法力的单级增量随等级提高并保持真气不变", () => {
+    expect(STATUS_ATTRIBUTE_GROWTH_RULES).toEqual({
+      health: {
+        basePoints: 11,
+        levelGrowthNumerator: 3,
+        levelGrowthDivisor: 10,
+      },
+      mana: {
+        basePoints: 6,
+        levelGrowthNumerator: 1,
+        levelGrowthDivisor: 10,
+      },
     });
+    expect(calculateStatusAttributeUpgradePoints("health", 2)).toBe(11);
+    expect(calculateStatusAttributeUpgradePoints("health", 69)).toBe(31);
+    expect(calculateStatusAttributeUpgradePoints("mana", 2)).toBe(6);
+    expect(calculateStatusAttributeUpgradePoints("mana", 69)).toBe(12);
     expect(LEVEL_69_FIXED_STATUS_ATTRIBUTES).toEqual({
-      health: 982,
-      mana: 565,
+      health: 1675,
+      mana: 775,
       trueEnergy: 100,
     });
     expect(FIXED_TRUE_ENERGY).toBe(100);

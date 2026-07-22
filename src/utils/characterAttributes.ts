@@ -25,9 +25,6 @@ export const normalizeCharacterLevel = (value: unknown): CharacterLevel => {
 export const getCharacterUpgradeCount = (characterLevel: CharacterLevel) =>
   characterLevel - INITIAL_CHARACTER_LEVEL;
 
-const getKnownPanelUpgradeCount = (characterLevel: CharacterLevel) =>
-  Math.max(0, characterLevel - KNOWN_PANEL_BASE_LEVEL);
-
 export const getTotalPotentialPoints = (characterLevel: CharacterLevel) =>
   getCharacterUpgradeCount(characterLevel) * POTENTIAL_POINTS_PER_LEVEL;
 
@@ -282,38 +279,69 @@ export const LEVEL_ONE_STATUS_ATTRIBUTES = {
   mana: 157,
 } as const;
 
-export const STATUS_ATTRIBUTE_POINTS_PER_UPGRADE = {
-  health: 11,
-  mana: 6,
+export const STATUS_ATTRIBUTE_GROWTH_RULES = {
+  health: {
+    basePoints: 11,
+    levelGrowthNumerator: 3,
+    levelGrowthDivisor: 10,
+  },
+  mana: {
+    basePoints: 6,
+    levelGrowthNumerator: 1,
+    levelGrowthDivisor: 10,
+  },
 } as const;
 
 export const FIXED_TRUE_ENERGY = 100;
 
-export const LEVEL_69_FIXED_STATUS_ATTRIBUTES = {
-  health:
-    LEVEL_ONE_STATUS_ATTRIBUTES.health +
-    getKnownPanelUpgradeCount(CHARACTER_LEVEL) * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.health,
-  mana:
-    LEVEL_ONE_STATUS_ATTRIBUTES.mana +
-    getKnownPanelUpgradeCount(CHARACTER_LEVEL) * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.mana,
-  trueEnergy: FIXED_TRUE_ENERGY,
-} as const;
+export type StatusAttribute = keyof typeof STATUS_ATTRIBUTE_GROWTH_RULES;
+
+/** 高等级升级时会获得更多气血和法力；每一级的递增部分单独向下取整。 */
+export const calculateStatusAttributeUpgradePoints = (
+  attribute: StatusAttribute,
+  targetLevel: number
+): number => {
+  const rule = STATUS_ATTRIBUTE_GROWTH_RULES[attribute];
+
+  return (
+    rule.basePoints +
+    Math.floor(
+      (targetLevel * rule.levelGrowthNumerator) / rule.levelGrowthDivisor
+    )
+  );
+};
+
+const calculateAccumulatedStatusAttributeGrowth = (
+  attribute: StatusAttribute,
+  characterLevel: CharacterLevel
+): number => {
+  let growth = 0;
+
+  for (
+    let targetLevel = KNOWN_PANEL_BASE_LEVEL + 1;
+    targetLevel <= characterLevel;
+    targetLevel += 1
+  ) {
+    growth += calculateStatusAttributeUpgradePoints(attribute, targetLevel);
+  }
+
+  return growth;
+};
 
 export const calculateFixedStatusAttributes = (
   characterLevel: CharacterLevel
-) => {
-  const upgradeCount = getKnownPanelUpgradeCount(characterLevel);
+): { health: number; mana: number; trueEnergy: number } => ({
+  health:
+    LEVEL_ONE_STATUS_ATTRIBUTES.health +
+    calculateAccumulatedStatusAttributeGrowth("health", characterLevel),
+  mana:
+    LEVEL_ONE_STATUS_ATTRIBUTES.mana +
+    calculateAccumulatedStatusAttributeGrowth("mana", characterLevel),
+  trueEnergy: FIXED_TRUE_ENERGY,
+});
 
-  return {
-    health:
-      LEVEL_ONE_STATUS_ATTRIBUTES.health +
-      upgradeCount * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.health,
-    mana:
-      LEVEL_ONE_STATUS_ATTRIBUTES.mana +
-      upgradeCount * STATUS_ATTRIBUTE_POINTS_PER_UPGRADE.mana,
-    trueEnergy: FIXED_TRUE_ENERGY,
-  };
-};
+export const LEVEL_69_FIXED_STATUS_ATTRIBUTES =
+  calculateFixedStatusAttributes(CHARACTER_LEVEL);
 
 export const LEVEL_ONE_DERIVED_ATTRIBUTES = {
   magicAttack: 100,
