@@ -158,7 +158,12 @@ describe("App 组件", () => {
     expect(loadPreferences().activeTool).toBe("equipment");
 
     await user.click(screen.getByRole("tab", { name: "角色面板" }));
-    expect(screen.getByLabelText("装备属性接入状态")).toHaveTextContent("8 / 8 件");
+    expect(
+      screen.queryByRole("region", { name: "装备属性接入状态" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("checkbox", { name: "计入装备值" })
+    ).toBeChecked();
     expect(screen.getByText("装备 +138")).toBeInTheDocument();
   });
 

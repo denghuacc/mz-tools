@@ -763,6 +763,7 @@ type CharacterCalculatorState = {
   selectedPresetId: CharacterAllocationPresetId;
   customAllocationScheme: CustomCharacterAllocationScheme;
   customAllocation: CharacterAllocation;
+  isEquipmentIncluded: boolean;
   skillBonuses: CharacterAttributeBonuses;
   temporaryTalismanStar: TemporaryTalismanStar | null;
   temporaryTalismanAttributes: readonly TemporaryTalismanBonusAttribute[];
@@ -791,6 +792,7 @@ const createDefaultCharacterCalculatorState = (): CharacterCalculatorState => ({
   selectedPresetId: CHARACTER_ALLOCATION_PRESETS[0].id,
   customAllocationScheme: "strength-or-spirit",
   customAllocation: { ...DEFAULT_CUSTOM_CHARACTER_ALLOCATION },
+  isEquipmentIncluded: true,
   skillBonuses: createEmptyCharacterAttributeBonuses(),
   temporaryTalismanStar: null,
   temporaryTalismanAttributes: [],
@@ -1078,6 +1080,7 @@ const normalizeCharacterCalculatorState = (
       value.customAllocation,
       customAllocationScheme
     ),
+    isEquipmentIncluded: value.isEquipmentIncluded !== false,
     skillBonuses: normalizeCharacterBonuses(value.skillBonuses),
     temporaryTalismanStar,
     temporaryTalismanAttributes:
@@ -1153,14 +1156,14 @@ type CharacterAttributeCalculatorProps = {
   characterLevel?: CharacterLevel;
   onCharacterLevelChange?: (characterLevel: CharacterLevel) => void;
   equipmentBonuses?: CharacterAttributeBonuses;
-  equipmentItemCount?: number;
 };
+
+const EMPTY_EQUIPMENT_BONUSES = createEmptyCharacterAttributeBonuses();
 
 const CharacterAttributeCalculator = ({
   characterLevel = CHARACTER_LEVEL,
   onCharacterLevelChange = () => undefined,
-  equipmentBonuses = createEmptyCharacterAttributeBonuses(),
-  equipmentItemCount = 0,
+  equipmentBonuses: availableEquipmentBonuses = EMPTY_EQUIPMENT_BONUSES,
 }: CharacterAttributeCalculatorProps) => {
   const [initialState] = useState(loadCharacterCalculatorState);
   const [allocationMode, setAllocationMode] =
@@ -1177,6 +1180,9 @@ const CharacterAttributeCalculator = ({
   const [activeAttributeTab, setActiveAttributeTab] =
     useState<AttributeTab>("basic");
   const [areBonusDetailsVisible, setAreBonusDetailsVisible] = useState(true);
+  const [isEquipmentIncluded, setIsEquipmentIncluded] = useState(
+    initialState.isEquipmentIncluded
+  );
   const [skillBonuses, setSkillBonuses] = useState<CharacterAttributeBonuses>(
     initialState.skillBonuses
   );
@@ -1238,6 +1244,9 @@ const CharacterAttributeCalculator = ({
   >(initialState.starBlessingAttributes);
   const [starBlessingValue, setStarBlessingValue] =
     useState<StarBlessingBonusValue>(initialState.starBlessingValue);
+  const equipmentBonuses = isEquipmentIncluded
+    ? availableEquipmentBonuses
+    : EMPTY_EQUIPMENT_BONUSES;
   const [activeEditorId, setActiveEditorId] = useState<EditorId | null>(null);
   const [leftAttributePanelHeight, setLeftAttributePanelHeight] = useState(0);
   const leftAttributePanelRef = useRef<HTMLElement>(null);
@@ -1277,6 +1286,7 @@ const CharacterAttributeCalculator = ({
         selectedPresetId,
         customAllocationScheme,
         customAllocation,
+        isEquipmentIncluded,
         skillBonuses,
         temporaryTalismanStar,
         temporaryTalismanAttributes,
@@ -1305,6 +1315,7 @@ const CharacterAttributeCalculator = ({
     selectedPresetId,
     customAllocationScheme,
     customAllocation,
+    isEquipmentIncluded,
     skillBonuses,
     temporaryTalismanStar,
     temporaryTalismanAttributes,
@@ -2054,17 +2065,6 @@ const CharacterAttributeCalculator = ({
 
   return (
     <div className="space-y-5">
-      {equipmentItemCount > 0 && (
-        <section
-          className="flex items-center justify-between gap-4 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs text-blue-900"
-          aria-label="装备属性接入状态"
-        >
-          <span>
-            已将角色装备中的可映射字段计入最终属性，装备词条明细可在“角色装备”中编辑。
-          </span>
-          <strong className="shrink-0 font-semibold">{equipmentItemCount} / 8 件</strong>
-        </section>
-      )}
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(520px,1.2fr)_minmax(360px,0.8fr)]">
         <div
           className="order-1 space-y-4 xl:order-2 xl:max-h-[var(--attribute-panel-height)] xl:overflow-y-auto xl:overscroll-contain xl:pr-1"
@@ -2073,7 +2073,9 @@ const CharacterAttributeCalculator = ({
         >
           <AttributeBonusSummaryPanel
             sources={attributeBonusSources}
+            isEquipmentIncluded={isEquipmentIncluded}
             onEdit={(sourceId) => setActiveEditorId(sourceId)}
+            onEquipmentIncludedChange={setIsEquipmentIncluded}
             onReset={resetAttributeBonuses}
           />
         </div>

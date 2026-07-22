@@ -7,7 +7,10 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CharacterAttributeCalculator from "../CharacterAttributeCalculator";
-import { calculateSanshengPillMaximumCount } from "../../utils/characterAttributes";
+import {
+  calculateSanshengPillMaximumCount,
+  createEmptyCharacterAttributeBonuses,
+} from "../../utils/characterAttributes";
 import {
   CHARACTER_ATTRIBUTES_STORAGE_KEY,
   LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY,
@@ -33,6 +36,47 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(trueEnergyRow!).getByText("100")).toBeInTheDocument();
     expect(screen.getByTestId("mana-value-bar")).toHaveClass("bg-blue-500");
     expect(screen.queryByText("进阶属性与亲和")).not.toBeInTheDocument();
+  });
+
+  it("应该在属性加成区域切换装备值并持久化选择", async () => {
+    const user = userEvent.setup();
+    const equipmentBonuses = {
+      ...createEmptyCharacterAttributeBonuses(),
+      health: 100,
+    };
+    const { unmount } = render(
+      <CharacterAttributeCalculator equipmentBonuses={equipmentBonuses} />
+    );
+
+    const equipmentToggle = screen.getByRole("checkbox", {
+      name: "计入装备值",
+    });
+    expect(equipmentToggle).toBeChecked();
+    expect(
+      screen.queryByRole("region", { name: "装备属性接入状态" })
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("+装备 100")).toBeInTheDocument();
+    expect(screen.getByText("1490")).toBeInTheDocument();
+
+    await user.click(equipmentToggle);
+
+    expect(equipmentToggle).not.toBeChecked();
+    expect(screen.queryByText("+装备 100")).not.toBeInTheDocument();
+    expect(screen.getByText("1390")).toBeInTheDocument();
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+      );
+      expect(stored.isEquipmentIncluded).toBe(false);
+    });
+
+    unmount();
+    render(<CharacterAttributeCalculator equipmentBonuses={equipmentBonuses} />);
+    expect(
+      screen.getByRole("checkbox", { name: "计入装备值" })
+    ).not.toBeChecked();
+    expect(screen.queryByText("+装备 100")).not.toBeInTheDocument();
+    expect(screen.getByText("1390")).toBeInTheDocument();
   });
 
   it("应该为每个属性加成卡片显示编辑图标", () => {
@@ -1607,6 +1651,7 @@ describe("CharacterAttributeCalculator", () => {
           "divineSoulValue",
           "guildTalentOptionIds",
           "isAmberTalismanEnabled",
+          "isEquipmentIncluded",
           "isGuildBlessingEnabled",
           "sanshengPillCounts",
           "satinSelections",

@@ -313,7 +313,6 @@ const CalculatorPage = () => {
             characterLevel={equipmentState.characterLevel}
             onCharacterLevelChange={handleCharacterLevelChange}
             equipmentBonuses={equipmentSummary.characterBonuses}
-            equipmentItemCount={equipmentSummary.activeItemCount}
           />
         ) : isEquipment ? (
           <EquipmentCalculator
