@@ -35,6 +35,12 @@ select {
   font: inherit;
 }
 
+@layer base {
+  button:enabled {
+    cursor: pointer;
+  }
+}
+
 .no-scrollbar {
   scrollbar-width: none;
 }
