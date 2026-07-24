@@ -224,6 +224,7 @@ const CalculatorPage = () => {
 
   const handleSaveCharacterProfile = (slotIndex: number, name: string) => {
     const normalizedName = normalizeCharacterProfileName(name, slotIndex);
+    const isOverwrite = characterProfileSlots[slotIndex] !== null;
 
     setCharacterProfileSlots((currentSlots) =>
       replaceCharacterProfileSlot(currentSlots, slotIndex, {
@@ -233,7 +234,9 @@ const CalculatorPage = () => {
         isActive: true,
       })
     );
-    setCharacterProfileNotice(`已保存“${normalizedName}”的完整角色配置。`);
+    setCharacterProfileNotice(
+      `已${isOverwrite ? "覆盖" : "保存"}“${normalizedName}”的完整角色配置。`
+    );
   };
 
   const handleRestoreCharacterProfile = (slotIndex: number) => {

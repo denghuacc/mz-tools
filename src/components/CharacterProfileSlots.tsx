@@ -118,7 +118,14 @@ const CharacterProfileSlots = ({
           </article>
         ))}
       </div>
-      {notice ? <p className="sr-only" role="status">{notice}</p> : null}
+      {notice ? (
+        <p
+          className="mt-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-medium text-green-700"
+          role="status"
+        >
+          {notice}
+        </p>
+      ) : null}
     </section>
   );
 };

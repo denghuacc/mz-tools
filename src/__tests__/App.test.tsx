@@ -230,6 +230,19 @@ describe("App 组件", () => {
       "aria-current",
       "true"
     );
+    const profileNotice = within(profileRegion).getByRole("status");
+    expect(profileNotice).toHaveTextContent(
+      "已保存“鬼王69”的完整角色配置"
+    );
+    expect(profileNotice).toHaveClass("text-green-700");
+    expect(profileNotice).not.toHaveClass("sr-only");
+
+    await user.click(
+      within(profileRegion).getByRole("button", { name: "覆盖保存存档1" })
+    );
+    expect(profileNotice).toHaveTextContent(
+      "已覆盖“鬼王69”的完整角色配置"
+    );
 
     const skillEditButton = screen.getByRole("button", { name: "编辑技能" });
     await user.click(skillEditButton);
