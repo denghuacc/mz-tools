@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from "react";
 import type { ReactNode } from "react";
+import { trapModalFocus } from "../utils/modalFocus";
 
 type EditorDialogProps = {
   title: string;
@@ -18,6 +19,7 @@ const EditorDialog = ({
   titlePrefix = "编辑",
 }: EditorDialogProps) => {
   const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -30,6 +32,11 @@ const EditorDialog = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !isCloseDisabled) {
         onClose();
+        return;
+      }
+
+      if (dialogRef.current) {
+        trapModalFocus(event, dialogRef.current);
       }
     };
 
@@ -55,6 +62,8 @@ const EditorDialog = ({
       }}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className="flex max-h-[min(88vh,760px)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
         role="dialog"
         aria-modal="true"

@@ -677,7 +677,7 @@ const EQUIPMENT_GEM_TYPE_SET = new Set<string>(
 );
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
 const normalizeEquipmentAttributeValues = (
   value: unknown,
@@ -788,6 +788,30 @@ const normalizeEquipmentAttributeLine = <Attribute extends EquipmentAttribute>(
   };
 };
 
+const normalizeOptionalEquipmentAttributeLine = <
+  Attribute extends EquipmentAttribute,
+>(
+  value: unknown,
+  allowedAttributes: ReadonlySet<string>,
+  fallback: { attribute: Attribute; value: number } | null
+): { attribute: Attribute; value: number } | null => {
+  if (value === null) return null;
+  if (
+    !isRecord(value) ||
+    typeof value.attribute !== "string" ||
+    !allowedAttributes.has(value.attribute) ||
+    typeof value.value !== "number" ||
+    !Number.isFinite(value.value)
+  ) {
+    return fallback;
+  }
+
+  return {
+    attribute: value.attribute as Attribute,
+    value: value.value,
+  };
+};
+
 const normalizeEquipmentAttributeLines = <
   Attribute extends EquipmentAttribute,
 >(
@@ -829,14 +853,11 @@ const normalizeEquipmentItem = (
 ): EquipmentItem => {
   if (!isRecord(value)) return fallback;
 
-  const supportAttribute =
-    value.supportAttribute === null
-      ? null
-      : normalizeEquipmentAttributeLine(
-          value.supportAttribute,
-          STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET,
-          fallback.supportAttribute ?? { attribute: "constitution", value: 0 }
-        );
+  const supportAttribute = normalizeOptionalEquipmentAttributeLine(
+    value.supportAttribute,
+    STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET,
+    fallback.supportAttribute
+  );
   const affinityEffectAttribute =
     value.affinityEffectAttribute === null
       ? null
@@ -844,17 +865,11 @@ const normalizeEquipmentItem = (
           EQUIPMENT_AFFINITY_ATTRIBUTE_SET.has(value.affinityEffectAttribute)
         ? (value.affinityEffectAttribute as EquipmentAffinityEffectAttribute)
         : fallback.affinityEffectAttribute;
-  const specialEffectAttribute =
-    value.specialEffectAttribute === null
-      ? null
-      : normalizeEquipmentAttributeLine(
-          value.specialEffectAttribute,
-          EQUIPMENT_ATTRIBUTE_SET,
-          fallback.specialEffectAttribute ?? {
-            attribute: "physicalAttack",
-            value: 0,
-          }
-        );
+  const specialEffectAttribute = normalizeOptionalEquipmentAttributeLine(
+    value.specialEffectAttribute,
+    EQUIPMENT_ATTRIBUTE_SET,
+    fallback.specialEffectAttribute
+  );
   const seasonEffectLevel =
     typeof value.seasonEffectLevel === "number" &&
     Number.isInteger(value.seasonEffectLevel) &&

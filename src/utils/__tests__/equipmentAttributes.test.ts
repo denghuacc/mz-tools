@@ -7,14 +7,19 @@ import {
   calculateEquipmentIndependentAffixBonus,
   calculateEquipmentItemAttributes,
   calculateEquipmentSummary,
+  createEmptyEquipmentSet,
   createInitialEquipmentCalculatorState,
   createInitialEquipmentSet,
   getGemLevelLimit,
   getEquipmentEffectLabels,
   getSeasonEquipmentResonance,
   normalizeEquipmentCalculatorState,
+  normalizeEquipmentSet,
 } from "../equipmentAttributes";
-import type { EquipmentGemType } from "../equipmentAttributes";
+import type {
+  EquipmentGemType,
+  EquipmentItem,
+} from "../equipmentAttributes";
 
 describe("角色装备属性汇总", () => {
   it("应该按角色等级计算宝石等级上限", () => {
@@ -22,6 +27,7 @@ describe("角色装备属性汇总", () => {
     expect(getGemLevelLimit(104)).toBe(12);
     expect(getGemLevelLimit(105)).toBe(13);
     expect(getGemLevelLimit(109)).toBe(13);
+    expect(getGemLevelLimit(Number.NaN)).toBe(8);
   });
 
   it("应该配置八种宝石的初始属性且每种仅允许两个部位", () => {
@@ -529,5 +535,120 @@ describe("角色装备属性汇总", () => {
 
     expect(attributes.healthPercent).toBe(5);
     expect(summary.characterBonuses.healthPercent).toBe(5);
+  });
+
+  it("应该拒绝损坏的装备根状态并为缺失字段补充默认值", () => {
+    expect(normalizeEquipmentSet(null)).toBeNull();
+    expect(normalizeEquipmentSet([])).toBeNull();
+    expect(normalizeEquipmentCalculatorState(null)).toBeNull();
+    expect(normalizeEquipmentCalculatorState({ equipment: null })).toBeNull();
+
+    const state = createInitialEquipmentCalculatorState();
+    const storedState = structuredClone(state) as unknown as {
+      characterLevel: unknown;
+      equipment: Record<string, unknown>;
+    };
+    storedState.characterLevel = "invalid";
+    storedState.equipment.weapon = {};
+
+    const restored = normalizeEquipmentCalculatorState(storedState);
+
+    expect(restored?.characterLevel).toBe(69);
+    expect(restored?.equipment.weapon).toEqual(
+      createInitialEquipmentSet().weapon
+    );
+  });
+
+  it("应该过滤装备缓存中的非法属性行并限制同类宝石数量", () => {
+    const state = createInitialEquipmentCalculatorState();
+    const storedState = structuredClone(state) as unknown as {
+      equipment: Record<string, Record<string, unknown>>;
+    };
+    storedState.equipment.weapon = {
+      ...storedState.equipment.weapon,
+      additionalPrimaryAttributes: [
+        null,
+        { attribute: "unknown", value: 1 },
+        { attribute: "strength", value: 10 },
+      ],
+      tempering: { attribute: "unknown", value: 10 },
+      supportAttribute: { attribute: "unknown", value: 10 },
+      independentAffix: "invalid",
+      specialEffectAttribute: {},
+      seasonEffectLevel: 99,
+    };
+    storedState.equipment.armor = {
+      ...storedState.equipment.armor,
+      enabled: "yes",
+      level: -1,
+      blessing: "yes",
+      growth: "yes",
+      gale: "yes",
+      vitalityEffect: "yes",
+      affinityEffectAttribute: "unknown",
+      specialEffect: 1,
+      specialSkill: 1,
+    };
+    storedState.equipment.weapon.gem = {
+      type: "diamond",
+      level: 8,
+      breakthrough: false,
+    };
+    storedState.equipment.headgear.gem = {
+      type: "diamond",
+      level: 8,
+      breakthrough: false,
+    };
+    storedState.equipment.armor.gem = {
+      type: "diamond",
+      level: 8,
+      breakthrough: false,
+    };
+
+    const restored = normalizeEquipmentCalculatorState(storedState);
+
+    expect(restored?.equipment.weapon.additionalPrimaryAttributes).toEqual([
+      { attribute: "strength", value: 10 },
+    ]);
+    expect(restored?.equipment.weapon.tempering).toEqual({
+      attribute: "constitution",
+      value: 25,
+    });
+    expect(restored?.equipment.weapon.independentAffix).toBeNull();
+    expect(restored?.equipment.armor.enabled).toBe(true);
+    expect(restored?.equipment.armor.level).toBe(60);
+    expect(restored?.equipment.armor.gem).toBeNull();
+  });
+
+  it("应该忽略不匹配部位的宝石并停止计算第三条普通附加五维", () => {
+    const ringWithGem = {
+      ...createInitialEquipmentSet().ring,
+      gem: { type: "diamond", level: 8, breakthrough: false },
+    } as EquipmentItem;
+    expect(calculateEquipmentGemBonus(ringWithGem)).toBeNull();
+
+    const weapon = {
+      ...createEmptyEquipmentSet().weapon,
+      additionalPrimaryAttributes: [
+        { attribute: "strength", value: 10 },
+        { attribute: "agility", value: 20 },
+        { attribute: "endurance", value: 999 },
+      ],
+    } as EquipmentItem;
+    const attributes = calculateEquipmentItemAttributes(weapon);
+
+    expect(attributes.strength).toBe(10);
+    expect(attributes.agility).toBe(20);
+    expect(attributes.endurance).toBeUndefined();
+  });
+
+  it("应该计算其它属性特效并在缺少名称时显示通用标签", () => {
+    const item = {
+      ...createEmptyEquipmentSet().weapon,
+      specialEffectAttribute: { attribute: "magicAttack", value: 12 },
+    } as EquipmentItem;
+
+    expect(calculateEquipmentItemAttributes(item).magicAttack).toBe(12);
+    expect(getEquipmentEffectLabels(item)).toContain("其它属性特效");
   });
 });

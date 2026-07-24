@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { trapModalFocus } from "../utils/modalFocus";
 
 type ResetButtonProps = {
   confirmationTitle: string;
@@ -16,6 +17,7 @@ const ResetButton = ({
   const titleId = useId();
   const descriptionId = useId();
   const resetButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -29,6 +31,11 @@ const ResetButton = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsConfirmationOpen(false);
+        return;
+      }
+
+      if (dialogRef.current) {
+        trapModalFocus(event, dialogRef.current);
       }
     };
 
@@ -62,6 +69,8 @@ const ResetButton = ({
           }}
         >
           <div
+            ref={dialogRef}
+            tabIndex={-1}
             role="alertdialog"
             aria-modal="true"
             aria-labelledby={titleId}

@@ -1,18 +1,24 @@
 import { useState } from "react";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import EquipmentCalculator from "../EquipmentCalculator";
-import { createInitialEquipmentCalculatorState } from "../../utils/equipmentAttributes";
+import {
+  createEmptyEquipmentSet,
+  createInitialEquipmentCalculatorState,
+} from "../../utils/equipmentAttributes";
 import type { CharacterLevel } from "../../utils/characterAttributes";
 
 const EquipmentCalculatorHarness = ({
+  empty = false,
   initialCharacterLevel = 69,
 }: {
+  empty?: boolean;
   initialCharacterLevel?: CharacterLevel;
 }) => {
   const [state, setState] = useState(() => ({
     ...createInitialEquipmentCalculatorState(),
     characterLevel: initialCharacterLevel,
+    ...(empty ? { equipment: createEmptyEquipmentSet() } : {}),
   }));
 
   return <EquipmentCalculator state={state} onChange={setState} />;
@@ -473,6 +479,7 @@ describe("EquipmentCalculator", () => {
 
     expect(ringDialog).toHaveTextContent("当前提供速度 +50");
     expect(ringCard).toHaveTextContent("速度 +50");
+    await user.selectOptions(ringEffectLevel, "1");
     await user.click(within(ringDialog).getByRole("button", { name: "完成" }));
 
     await user.click(screen.getByRole("button", { name: "编辑项链" }));
@@ -483,18 +490,34 @@ describe("EquipmentCalculator", () => {
       }),
       "疾风神固"
     );
-    await user.selectOptions(
-      within(necklaceDialog).getByRole("combobox", {
-        name: "项链：神装特效等级",
-      }),
-      "3"
-    );
 
     const resonance = screen.getByRole("heading", { name: "神装共鸣" })
       .closest("section");
     expect(resonance).not.toBeNull();
     expect(resonance).toHaveTextContent(
-      "疾风神固等级和 8：已达成 8 级共鸣，下一档 9 级。"
+      "疾风神固等级和 2：尚未达成 4 级共鸣，下一档 4 级。"
+    );
+
+    await user.selectOptions(
+      within(necklaceDialog).getByRole("combobox", {
+        name: "项链：神装特效等级",
+      }),
+      "5"
+    );
+    await user.click(
+      within(necklaceDialog).getByRole("button", { name: "完成" })
+    );
+
+    await user.click(screen.getByRole("button", { name: "编辑戒指" }));
+    await user.selectOptions(
+      within(screen.getByRole("dialog", { name: "编辑戒指" })).getByRole(
+        "combobox",
+        { name: "戒指：神装特效等级" }
+      ),
+      "5"
+    );
+    expect(resonance).toHaveTextContent(
+      "疾风神固等级和 10：已达成 10 级共鸣，已达最高档。"
     );
     expect(resonance).toHaveTextContent("共鸣套装属性待复核");
   });
@@ -650,9 +673,10 @@ describe("EquipmentCalculator", () => {
 
     await user.click(screen.getByRole("button", { name: "编辑上衣" }));
     const dialog = screen.getByRole("dialog", { name: "编辑上衣" });
-    await user.click(
-      within(dialog).getByRole("checkbox", { name: /系别亲和/ })
-    );
+    const affinityEffect = within(dialog).getByRole("checkbox", {
+      name: /系别亲和/,
+    });
+    await user.click(affinityEffect);
     await user.selectOptions(
       within(dialog).getByRole("combobox", { name: "上衣：系别亲和" }),
       "electricAffinity"
@@ -665,6 +689,10 @@ describe("EquipmentCalculator", () => {
     expect(affinitySummary).not.toBeNull();
     expect(within(affinitySummary!).getByText("电系亲和")).toBeInTheDocument();
     expect(within(affinitySummary!).getByText("+3")).toBeInTheDocument();
+
+    await user.click(affinityEffect);
+    expect(affinityEffect).not.toBeChecked();
+    expect(armorCard).not.toHaveTextContent("电系亲和 +3");
   });
 
   it("应该将加持计入基础装备最多两个特效的限制", async () => {
@@ -731,5 +759,152 @@ describe("EquipmentCalculator", () => {
 
     expect(accessoryCard).toHaveTextContent("体魄 · 气血 +5%");
     expect(screen.getAllByText("+5%")).toHaveLength(2);
+  });
+
+  it("应该完整编辑空白普通装备的状态、五维、百炼和自定义特效", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness empty />);
+
+    await user.click(screen.getByRole("button", { name: "编辑武器" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑武器" });
+    const enabled = within(dialog).getByRole("checkbox", {
+      name: "计入总属性",
+    });
+    const level = within(dialog).getByRole("spinbutton", {
+      name: "武器：装备等级",
+    });
+
+    await user.click(enabled);
+    expect(screen.getByText("60 级 · 未计入")).toBeInTheDocument();
+    await user.click(enabled);
+    await user.clear(level);
+    expect(level).toHaveValue(1);
+    fireEvent.change(level, { target: { value: "80" } });
+    expect(screen.getByText("80 级 · 已计入")).toBeInTheDocument();
+
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "添加第 2 条附加五维",
+      })
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", {
+        name: "武器：附加五维 1",
+      }),
+      "strength"
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "附加五维 1 数值",
+      }),
+      { target: { value: "-5" } }
+    );
+    const weaponCard = screen.getByRole("heading", { name: "武器" })
+      .closest("article");
+    expect(weaponCard).toHaveTextContent("力 -5");
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "删除武器附加五维 2",
+      })
+    );
+
+    await user.click(within(dialog).getByRole("checkbox", { name: /加持/ }));
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "删除武器附加五维 2",
+      })
+    );
+    expect(
+      within(dialog).getByRole("checkbox", { name: /加持/ })
+    ).not.toBeChecked();
+    await user.click(within(dialog).getByRole("checkbox", { name: /加持/ }));
+    await user.click(within(dialog).getByRole("checkbox", { name: /加持/ }));
+
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", {
+        name: "武器：百炼属性",
+      }),
+      "agility"
+    );
+    await user.type(
+      within(dialog).getByRole("spinbutton", {
+        name: "武器：百炼数值",
+      }),
+      "9"
+    );
+
+    const customEffect = within(dialog).getByRole("textbox", {
+      name: "武器：其它特效",
+    });
+    const specialSkill = within(dialog).getByRole("textbox", {
+      name: "武器：特技",
+    });
+    await user.type(customEffect, "测试特效");
+    await user.type(specialSkill, "测试特技");
+
+    const customAttributeToggle = within(dialog).getByRole("checkbox", {
+      name: "其它特效提供属性",
+    });
+    await user.click(customAttributeToggle);
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", {
+        name: "武器：特效属性",
+      }),
+      "magicAttack"
+    );
+    await user.type(
+      within(dialog).getByRole("spinbutton", {
+        name: "武器：特效属性数值",
+      }),
+      "12"
+    );
+    const panelSummary = screen.getByRole("heading", {
+      name: "面板属性",
+    }).parentElement;
+    expect(panelSummary).not.toBeNull();
+    expect(within(panelSummary!).getByText("+12")).toBeInTheDocument();
+    await user.click(customAttributeToggle);
+
+    const gemType = within(dialog).getByRole("combobox", {
+      name: "武器：宝石类型",
+    });
+    await user.selectOptions(gemType, "diamond");
+    await user.selectOptions(gemType, "");
+    const gemLevel = within(dialog).getByRole("combobox", {
+      name: "武器：宝石等级",
+    });
+    expect(gemLevel).toBeDisabled();
+    fireEvent.change(gemLevel, { target: { value: "2" } });
+
+    const independentAffix = within(dialog).getByRole("combobox", {
+      name: "武器：独立词条",
+    });
+    await user.selectOptions(independentAffix, "龙吟");
+    await user.selectOptions(independentAffix, "");
+    const independentAffixLevel = within(dialog).getByRole("combobox", {
+      name: "武器：独立词条等级",
+    });
+    expect(independentAffixLevel).toBeDisabled();
+    fireEvent.change(independentAffixLevel, { target: { value: "2" } });
+  });
+
+  it("清空神装特效时应该同步重置特效等级", async () => {
+    const user = userEvent.setup();
+    render(<EquipmentCalculatorHarness empty />);
+
+    await user.click(screen.getByRole("button", { name: "编辑戒指" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑戒指" });
+    const effect = within(dialog).getByRole("combobox", {
+      name: "戒指：神装特效",
+    });
+
+    await user.selectOptions(effect, "疾风神固");
+    await user.selectOptions(effect, "");
+
+    expect(
+      within(dialog).getByRole("combobox", {
+        name: "戒指：神装特效等级",
+      })
+    ).toBeDisabled();
   });
 });

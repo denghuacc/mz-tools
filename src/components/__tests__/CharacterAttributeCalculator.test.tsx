@@ -1788,6 +1788,144 @@ describe("CharacterAttributeCalculator", () => {
     });
   });
 
+  it("应该完整校验并恢复合法的角色缓存分支", async () => {
+    window.localStorage.setItem(
+      CHARACTER_ATTRIBUTES_STORAGE_KEY,
+      JSON.stringify({
+        allocationMode: "custom",
+        selectedPresetId: "8-strength-2-agility",
+        customAllocationScheme: "strength-or-spirit",
+        customAllocation: {
+          constitution: 1,
+          spirit: 0,
+          strength: "invalid",
+          endurance: 1,
+          agility: 0,
+        },
+        temporaryTalismanStar: 6,
+        temporaryTalismanAttributes: [
+          null,
+          "unknown",
+          "health",
+          "physicalAttack",
+        ],
+        tianshuBonusCounts: {
+          unknown: 1,
+          "constitution-20": "1",
+          "spirit-20": 1.5,
+          "strength-20": 0,
+          "agility-20": 2,
+        },
+        tianshuStarSoulOptionIds: [
+          null,
+          "unknown",
+          "health-percent-2",
+          "health-percent-2",
+        ],
+        talismanOptionId: "physical-attack",
+        seasonArtifactAttribute: "strength",
+        seasonArtifactValue: 10,
+        charmAttribute: "agility",
+        charmValue: 25,
+        sanshengPillCounts: {
+          constitution: "invalid",
+          spirit: -1,
+          strength: 999,
+          endurance: 2,
+          agility: 1,
+        },
+        satinSelections: [
+          null,
+          { attribute: 1, value: 1 },
+          { attribute: "unknown", value: 1 },
+          { attribute: "physicalAttack", value: "invalid" },
+          { attribute: "physicalAttack", value: Number.NaN },
+          { attribute: "physicalAttack", value: -1 },
+          { attribute: "physicalAttack", value: 12 },
+          { attribute: "physicalAttack", value: 99 },
+          { attribute: "speed", value: 8 },
+          { attribute: "magicAttack", value: 99 },
+        ],
+        transformationTalismanSelections: [
+          { attribute: "health", value: 100 },
+          { attribute: "speed", value: 10 },
+          { attribute: "magicAttack", value: 99 },
+        ],
+        guildTalentOptionIds: [null, "unknown", "attack", "attack"],
+        starBlessingAttributes: [
+          null,
+          "unknown",
+          "strength",
+          "strength",
+          "agility",
+          "constitution",
+        ],
+        starBlessingValue: 25,
+      })
+    );
+
+    render(<CharacterAttributeCalculator />);
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+      );
+      expect(stored.customAllocation).toEqual({
+        constitution: 0,
+        spirit: 0,
+        strength: 10,
+        endurance: 0,
+        agility: 0,
+      });
+      expect(stored.temporaryTalismanAttributes).toEqual([
+        "health",
+        "physicalAttack",
+      ]);
+      expect(stored.tianshuBonusCounts).toEqual({ "agility-20": 2 });
+      expect(stored.tianshuStarSoulOptionIds).toEqual(["health-percent-2"]);
+      expect(stored.talismanOptionId).toBe("physical-attack");
+      expect(stored.satinSelections).toEqual([
+        { attribute: "physicalAttack", value: 12 },
+        { attribute: "speed", value: 8 },
+      ]);
+      expect(stored.transformationTalismanSelections).toEqual([
+        { attribute: "health", value: 100 },
+        { attribute: "speed", value: 10 },
+      ]);
+      expect(stored.guildTalentOptionIds).toEqual(["attack"]);
+      expect(stored.starBlessingAttributes).toEqual([
+        "strength",
+        "agility",
+        "constitution",
+      ]);
+      expect(stored.starBlessingValue).toBe(25);
+      expect(stored.sanshengPillCounts.strength).toBe(
+        calculateSanshengPillMaximumCount()
+      );
+      expect(stored.sanshengPillCounts.endurance).toBe(0);
+    });
+  });
+
+  it("损坏的当前版本根缓存应该安全回退到旧版配置", () => {
+    window.localStorage.setItem(
+      CHARACTER_ATTRIBUTES_STORAGE_KEY,
+      JSON.stringify([])
+    );
+    window.localStorage.setItem(
+      LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY,
+      JSON.stringify({
+        skillBonuses: { health: 88 },
+        seasonArtifactAttribute: 123,
+        charmAttribute: 123,
+        starBlessingValue: 99,
+      })
+    );
+
+    render(<CharacterAttributeCalculator />);
+
+    expect(screen.getByText("+技能 88")).toBeInTheDocument();
+  });
+
   it("应该迁移旧版角色配置并安全清空自由灵符数值", async () => {
     window.localStorage.setItem(
       LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY,
