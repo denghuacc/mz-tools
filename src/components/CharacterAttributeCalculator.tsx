@@ -543,6 +543,7 @@ const createSeasonArtifactOptions = (characterLevel: CharacterLevel) => [
 ] as const;
 
 const SEASON_ARTIFACT_OPTIONS = createSeasonArtifactOptions(CHARACTER_LEVEL);
+const SEASON_ARTIFACT_MAX_COUNT = 2;
 
 const SEASON_ARTIFACT_SUMMARY_FIELDS = [
   { attribute: "health", label: "气血" },
@@ -1150,7 +1151,7 @@ const normalizeSeasonArtifactCounts = (
       Number.isInteger(count) &&
       count > 0
     ) {
-      counts[optionId] = count;
+      counts[optionId] = Math.min(count, SEASON_ARTIFACT_MAX_COUNT);
     }
   }
 
@@ -2116,9 +2117,14 @@ const CharacterAttributeCalculator = ({
           : undefined,
       items: seasonArtifactSummaryItems,
       renderContent: (title) => (
-        <div className="space-y-3">
+        <div
+          role="group"
+          aria-label="赛季神器配置"
+          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+        >
           <SinglePrimaryAttributeBonusControl
-            title={title}
+            title="增加潜力点"
+            controlLabel={title}
             description="选择一项属性，并填写本次实际潜能点。"
             selectedAttribute={seasonArtifactAttribute}
             value={seasonArtifactValue}
@@ -2128,17 +2134,23 @@ const CharacterAttributeCalculator = ({
               setSeasonArtifactAttribute(null);
               setSeasonArtifactValue(0);
             }}
+            embedded
           />
-          <TianshuBonusControl
-            title="赛季神器等级属性"
-            groupLabel="赛季神器属性选择"
-            options={seasonArtifactOptions}
-            counts={seasonArtifactBonusCounts}
-            onCountChange={updateSeasonArtifactBonusCount}
-            onReset={() => setSeasonArtifactBonusCounts({})}
-            actionLabel="赛季神器"
-            selectionLabel="赛季神器"
-          />
+          <div className="mt-4 border-t border-slate-200 pt-4">
+            <TianshuBonusControl
+              title="赛季神器属性加成"
+              groupLabel="赛季神器属性选择"
+              options={seasonArtifactOptions}
+              counts={seasonArtifactBonusCounts}
+              onCountChange={updateSeasonArtifactBonusCount}
+              onReset={() => setSeasonArtifactBonusCounts({})}
+              actionLabel="赛季神器"
+              selectionLabel="赛季神器"
+              description="每次点击增加一份固定属性，同一选项最多选择 2 次。"
+              maximumCount={SEASON_ARTIFACT_MAX_COUNT}
+              embedded
+            />
+          </div>
         </div>
       ),
     },

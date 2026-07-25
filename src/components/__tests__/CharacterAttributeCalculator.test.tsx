@@ -756,6 +756,14 @@ describe("CharacterAttributeCalculator", () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
     const dialog = await openBonusEditor(user, "赛季神器");
+    const artifactConfiguration = within(dialog).getByRole("group", {
+      name: "赛季神器配置",
+    });
+    expect(
+      within(artifactConfiguration).getByRole("heading", {
+        name: "增加潜力点",
+      })
+    ).toBeInTheDocument();
 
     const optionLabels = [
       "等级 × 1 气血",
@@ -766,7 +774,14 @@ describe("CharacterAttributeCalculator", () => {
       "等级 × 0.1 速度",
     ];
     expect(
-      within(dialog).getByRole("group", { name: "赛季神器属性选择" })
+      within(artifactConfiguration).getByRole("radiogroup", {
+        name: "赛季神器潜能属性",
+      })
+    ).toBeInTheDocument();
+    expect(
+      within(artifactConfiguration).getByRole("group", {
+        name: "赛季神器属性选择",
+      })
     ).toBeInTheDocument();
     expect(
       within(dialog).getAllByRole("button", { name: /^增加赛季神器：/ })
@@ -790,14 +805,14 @@ describe("CharacterAttributeCalculator", () => {
         })
       );
     }
-    await user.click(
-      within(dialog).getByRole("button", {
-        name: "增加赛季神器：等级 × 1 气血",
-      })
-    );
+    const healthIncreaseButton = within(dialog).getByRole("button", {
+      name: "增加赛季神器：等级 × 1 气血",
+    });
+    await user.click(healthIncreaseButton);
     expect(
       within(dialog).getByLabelText("等级 × 1 气血已选次数")
     ).toHaveTextContent("×2");
+    expect(healthIncreaseButton).toBeDisabled();
     expect(within(dialog).getByLabelText("赛季神器已选择 7 次"))
       .toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "完成" }));
@@ -1918,7 +1933,7 @@ describe("CharacterAttributeCalculator", () => {
         seasonArtifactValue: 10,
         seasonArtifactBonusCounts: {
           unknown: 1,
-          "health-level-1": "1",
+          "health-level-1": 3,
           "physical-defense-level-02": 0,
           "magic-defense-level-02": 2,
           "mana-level-15": 1.5,
@@ -1982,6 +1997,7 @@ describe("CharacterAttributeCalculator", () => {
       expect(stored.tianshuBonusCounts).toEqual({ "agility-20": 2 });
       expect(stored.tianshuStarSoulOptionIds).toEqual(["health-percent-2"]);
       expect(stored.seasonArtifactBonusCounts).toEqual({
+        "health-level-1": 2,
         "magic-defense-level-02": 2,
       });
       expect(stored.talismanOptionId).toBe("physical-attack");

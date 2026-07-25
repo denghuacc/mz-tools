@@ -13,6 +13,8 @@ type SinglePrimaryAttributeBonusControlProps = {
   onReset: () => void;
   onValueChange: (value: number) => void;
   maximumValue?: number;
+  embedded?: boolean;
+  controlLabel?: string;
 };
 
 /** 单选五维属性，并录入该属性本次实际增加的潜能点。 */
@@ -25,6 +27,8 @@ const SinglePrimaryAttributeBonusControl = ({
   onReset,
   onValueChange,
   maximumValue,
+  embedded = false,
+  controlLabel = title,
 }: SinglePrimaryAttributeBonusControlProps) => {
   const handleValueChange = (inputValue: string) => {
     if (inputValue === "") {
@@ -43,7 +47,13 @@ const SinglePrimaryAttributeBonusControl = ({
   };
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
+    <div
+      className={
+        embedded
+          ? ""
+          : "rounded-xl border border-slate-200 bg-slate-50/70 p-3.5"
+      }
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
@@ -62,7 +72,7 @@ const SinglePrimaryAttributeBonusControl = ({
       <div
         className="mt-3 grid grid-cols-5 gap-1.5"
         role="radiogroup"
-        aria-label={`${title}潜能属性`}
+        aria-label={`${controlLabel}潜能属性`}
       >
         {PRIMARY_ATTRIBUTE_KEYS.map((attribute) => {
           const isSelected = attribute === selectedAttribute;
@@ -99,7 +109,7 @@ const SinglePrimaryAttributeBonusControl = ({
         >
           <span className="mr-2 text-sm text-slate-400">+</span>
           <input
-            aria-label={`${title}：潜能点`}
+            aria-label={`${controlLabel}：潜能点`}
             type="number"
             min={0}
             max={maximumValue}

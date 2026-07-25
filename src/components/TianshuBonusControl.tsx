@@ -13,6 +13,9 @@ type TianshuBonusControlProps = {
   groupLabel?: string;
   actionLabel?: string;
   selectionLabel?: string;
+  description?: string;
+  maximumCount?: number;
+  embedded?: boolean;
 };
 
 /** 天书固定属性可重复选择，以每个选项的次数作为唯一可编辑状态。 */
@@ -25,6 +28,9 @@ const TianshuBonusControl = ({
   groupLabel = "天书固定加成选项",
   actionLabel = "天书",
   selectionLabel = "天书",
+  description = "每次点击增加一份固定属性，同一选项可以重复选择。",
+  maximumCount,
+  embedded = false,
 }: TianshuBonusControlProps) => {
   const selectedCount = Object.values(counts).reduce(
     (total, count) => total + count,
@@ -32,12 +38,26 @@ const TianshuBonusControl = ({
   );
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <section
+      className={
+        embedded
+          ? ""
+          : "rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+      }
+    >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+          <h2
+            className={
+              embedded
+                ? "text-sm font-semibold text-slate-800"
+                : "text-base font-semibold text-slate-900"
+            }
+          >
+            {title}
+          </h2>
           <p className="mt-1 text-xs leading-5 text-slate-500">
-            每次点击增加一份固定属性，同一选项可以重复选择。
+            {description}
           </p>
         </div>
         <button
@@ -95,7 +115,10 @@ const TianshuBonusControl = ({
                 <button
                   type="button"
                   aria-label={`增加${actionLabel}：${option.title}`}
-                  className="h-7 w-7 rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  disabled={
+                    maximumCount !== undefined && count >= maximumCount
+                  }
+                  className="h-7 w-7 rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-slate-300"
                   onClick={() => onCountChange(option.id, count + 1)}
                 >
                   +
