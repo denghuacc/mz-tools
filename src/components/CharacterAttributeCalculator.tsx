@@ -500,6 +500,60 @@ const TIANSHU_STAR_SOUL_SUMMARY_FIELDS = [
   { attribute: "speed", label: "速度" },
 ] as const;
 
+const createSeasonArtifactOptions = (characterLevel: CharacterLevel) => [
+  {
+    id: "health-level-1",
+    title: "等级 × 1 气血",
+    effectLabel: `+${characterLevel} 气血`,
+    bonuses: { health: characterLevel },
+  },
+  {
+    id: "physical-defense-level-02",
+    title: "等级 × 0.2 物防",
+    effectLabel: `+${characterLevel * 0.2} 物防`,
+    bonuses: { physicalDefense: characterLevel * 0.2 },
+  },
+  {
+    id: "magic-defense-level-02",
+    title: "等级 × 0.2 法防",
+    effectLabel: `+${characterLevel * 0.2} 法防`,
+    bonuses: { magicDefense: characterLevel * 0.2 },
+  },
+  {
+    id: "mana-level-15",
+    title: "等级 × 1.5 法力",
+    effectLabel: `+${characterLevel * 1.5} 法力`,
+    bonuses: { mana: characterLevel * 1.5 },
+  },
+  {
+    id: "attack-level-02",
+    title: "等级 × 0.2 物攻和法攻",
+    effectLabel: `+${characterLevel * 0.2} 物攻 · +${characterLevel * 0.2} 法攻`,
+    bonuses: {
+      physicalAttack: characterLevel * 0.2,
+      magicAttack: characterLevel * 0.2,
+    },
+  },
+  {
+    id: "speed-level-01",
+    title: "等级 × 0.1 速度",
+    effectLabel: `+${characterLevel * 0.1} 速度`,
+    bonuses: { speed: characterLevel * 0.1 },
+  },
+] as const;
+
+const SEASON_ARTIFACT_OPTIONS = createSeasonArtifactOptions(CHARACTER_LEVEL);
+
+const SEASON_ARTIFACT_SUMMARY_FIELDS = [
+  { attribute: "health", label: "气血" },
+  { attribute: "mana", label: "法力" },
+  { attribute: "physicalAttack", label: "物攻" },
+  { attribute: "magicAttack", label: "法攻" },
+  { attribute: "physicalDefense", label: "物防" },
+  { attribute: "magicDefense", label: "法防" },
+  { attribute: "speed", label: "速度" },
+] as const;
+
 const AFFINITY_BACKGROUND_CLASSES = {
   fireAffinity: "bg-[#f6e0e0]",
   iceAffinity: "bg-[#e0f1f6]",
@@ -712,6 +766,26 @@ const createTianshuStarSoulBonuses = (
   );
 };
 
+const createSeasonArtifactFixedBonuses = (
+  counts: Readonly<Record<string, number>>,
+  options: readonly {
+    id: string;
+    bonuses: Partial<CharacterAttributeBonuses>;
+  }[] = SEASON_ARTIFACT_OPTIONS
+) => {
+  const bonuses = createEmptyCharacterAttributeBonuses();
+
+  for (const option of options) {
+    const count = counts[option.id] ?? 0;
+
+    for (const attribute of CHARACTER_BONUS_ATTRIBUTE_KEYS) {
+      bonuses[attribute] += (option.bonuses[attribute] ?? 0) * count;
+    }
+  }
+
+  return bonuses;
+};
+
 const createDivineSoulBonuses = (value: number) => {
   const bonuses = createEmptyCharacterAttributeBonuses();
 
@@ -783,6 +857,7 @@ type CharacterCalculatorState = {
   isAmberTalismanEnabled: boolean;
   seasonArtifactAttribute: PrimaryAttribute | null;
   seasonArtifactValue: number;
+  seasonArtifactBonusCounts: Readonly<Record<string, number>>;
   charmAttribute: PrimaryAttribute | null;
   charmValue: number;
   sanshengPillCounts: CharacterAllocation;
@@ -812,6 +887,7 @@ const createDefaultCharacterCalculatorState = (): CharacterCalculatorState => ({
   isAmberTalismanEnabled: false,
   seasonArtifactAttribute: null,
   seasonArtifactValue: 0,
+  seasonArtifactBonusCounts: {},
   charmAttribute: null,
   charmValue: 0,
   sanshengPillCounts: { ...EMPTY_CHARACTER_ALLOCATION },
@@ -855,6 +931,9 @@ const TIANSHU_OPTION_ID_SET = new Set<string>(
 );
 const TIANSHU_STAR_SOUL_OPTION_ID_SET = new Set<string>(
   TIANSHU_STAR_SOUL_OPTIONS.map(({ id }) => id)
+);
+const SEASON_ARTIFACT_OPTION_ID_SET = new Set<string>(
+  SEASON_ARTIFACT_OPTIONS.map(({ id }) => id)
 );
 const SATIN_ATTRIBUTE_SET = new Set<string>(
   Object.keys(SATIN_ATTRIBUTE_SHORT_LABELS)
@@ -1058,6 +1137,26 @@ const normalizeTianshuStarSoulOptionIds = (
   );
 };
 
+const normalizeSeasonArtifactCounts = (
+  value: unknown
+): Readonly<Record<string, number>> => {
+  if (!isRecord(value)) return {};
+
+  const counts: Record<string, number> = {};
+  for (const [optionId, count] of Object.entries(value)) {
+    if (
+      SEASON_ARTIFACT_OPTION_ID_SET.has(optionId) &&
+      typeof count === "number" &&
+      Number.isInteger(count) &&
+      count > 0
+    ) {
+      counts[optionId] = count;
+    }
+  }
+
+  return counts;
+};
+
 const normalizeCharacterCalculatorState = (
   value: unknown
 ): CharacterCalculatorState | null => {
@@ -1109,6 +1208,9 @@ const normalizeCharacterCalculatorState = (
       ? value.seasonArtifactAttribute
       : null,
     seasonArtifactValue: normalizeNonNegativeNumber(value.seasonArtifactValue),
+    seasonArtifactBonusCounts: normalizeSeasonArtifactCounts(
+      value.seasonArtifactBonusCounts
+    ),
     charmAttribute: isPrimaryAttribute(value.charmAttribute)
       ? value.charmAttribute
       : null,
@@ -1223,6 +1325,9 @@ const CharacterAttributeCalculator = ({
   const [seasonArtifactValue, setSeasonArtifactValue] = useState(
     initialState.seasonArtifactValue
   );
+  const [seasonArtifactBonusCounts, setSeasonArtifactBonusCounts] = useState<
+    Readonly<Record<string, number>>
+  >(initialState.seasonArtifactBonusCounts);
   const [charmAttribute, setCharmAttribute] =
     useState<PrimaryAttribute | null>(initialState.charmAttribute);
   const [charmValue, setCharmValue] = useState(initialState.charmValue);
@@ -1273,6 +1378,10 @@ const CharacterAttributeCalculator = ({
     () => createTianshuStarSoulOptions(characterLevel),
     [characterLevel]
   );
+  const seasonArtifactOptions = useMemo(
+    () => createSeasonArtifactOptions(characterLevel),
+    [characterLevel]
+  );
   const transformationTalismanBonuses = useMemo(
     () => createSelectedAttributeBonuses(transformationTalismanSelections),
     [transformationTalismanSelections]
@@ -1306,6 +1415,7 @@ const CharacterAttributeCalculator = ({
         isAmberTalismanEnabled,
         seasonArtifactAttribute,
         seasonArtifactValue,
+        seasonArtifactBonusCounts,
         charmAttribute,
         charmValue,
         sanshengPillCounts,
@@ -1335,6 +1445,7 @@ const CharacterAttributeCalculator = ({
     isAmberTalismanEnabled,
     seasonArtifactAttribute,
     seasonArtifactValue,
+    seasonArtifactBonusCounts,
     charmAttribute,
     charmValue,
     sanshengPillCounts,
@@ -1374,13 +1485,29 @@ const CharacterAttributeCalculator = ({
 
     return () => resizeObserver.disconnect();
   }, []);
-  const seasonArtifactBonuses = useMemo(
+  const seasonArtifactPotentialBonuses = useMemo(
     () =>
       createSinglePrimaryAttributeBonuses(
         seasonArtifactAttribute,
         seasonArtifactValue
       ),
     [seasonArtifactAttribute, seasonArtifactValue]
+  );
+  const seasonArtifactFixedBonuses = useMemo(
+    () =>
+      createSeasonArtifactFixedBonuses(
+        seasonArtifactBonusCounts,
+        seasonArtifactOptions
+      ),
+    [seasonArtifactBonusCounts, seasonArtifactOptions]
+  );
+  const seasonArtifactBonuses = useMemo(
+    () =>
+      combineCharacterAttributeBonuses(
+        seasonArtifactPotentialBonuses,
+        seasonArtifactFixedBonuses
+      ),
+    [seasonArtifactFixedBonuses, seasonArtifactPotentialBonuses]
   );
   const divineSoulBonuses = useMemo(
     () => createDivineSoulBonuses(divineSoulValue),
@@ -1602,15 +1729,20 @@ const CharacterAttributeCalculator = ({
   const primaryTalismanSourceLabel = selectedTalismanOption
     ? `法宝（${selectedTalismanOption.name}）`
     : "法宝";
-  const seasonArtifactSummaryItems =
-    seasonArtifactAttribute && seasonArtifactValue !== 0
+  const seasonArtifactSummaryItems = [
+    ...(seasonArtifactAttribute && seasonArtifactValue !== 0
       ? [
           {
             label: PRIMARY_ATTRIBUTE_SHORT_LABELS[seasonArtifactAttribute],
             value: seasonArtifactValue,
           },
         ]
-      : [];
+      : []),
+    ...createBonusSummaryItems(
+      SEASON_ARTIFACT_SUMMARY_FIELDS,
+      seasonArtifactFixedBonuses
+    ),
+  ];
   const charmSummaryItems =
     charmAttribute && charmValue !== 0
       ? [
@@ -1692,6 +1824,9 @@ const CharacterAttributeCalculator = ({
     starBlessingAttributes.length !== STAR_BLESSING_ATTRIBUTE_COUNT
       ? `星运祈福必须选择 ${STAR_BLESSING_ATTRIBUTE_COUNT} 项属性后才计入结果。`
       : null;
+  const seasonArtifactSelectedCount = Object.values(
+    seasonArtifactBonusCounts
+  ).reduce((total, count) => total + count, 0);
   const rightRailStyle =
     leftAttributePanelHeight > 0
       ? ({
@@ -1727,6 +1862,23 @@ const CharacterAttributeCalculator = ({
     });
   };
 
+  const updateSeasonArtifactBonusCount = (
+    optionId: string,
+    count: number
+  ) => {
+    setSeasonArtifactBonusCounts((current) => {
+      const nextCounts = { ...current };
+
+      if (count > 0) {
+        nextCounts[optionId] = count;
+      } else {
+        delete nextCounts[optionId];
+      }
+
+      return nextCounts;
+    });
+  };
+
   const resetAttributeBonuses = () => {
     const defaults = createDefaultCharacterCalculatorState();
 
@@ -1741,6 +1893,7 @@ const CharacterAttributeCalculator = ({
     setIsAmberTalismanEnabled(defaults.isAmberTalismanEnabled);
     setSeasonArtifactAttribute(defaults.seasonArtifactAttribute);
     setSeasonArtifactValue(defaults.seasonArtifactValue);
+    setSeasonArtifactBonusCounts(defaults.seasonArtifactBonusCounts);
     setCharmAttribute(defaults.charmAttribute);
     setCharmValue(defaults.charmValue);
     setSanshengPillCounts(defaults.sanshengPillCounts);
@@ -1957,20 +2110,36 @@ const CharacterAttributeCalculator = ({
     {
       id: "seasonArtifact",
       title: "赛季神器",
+      badge:
+        seasonArtifactSelectedCount > 0
+          ? `已选 ${seasonArtifactSelectedCount} 次`
+          : undefined,
       items: seasonArtifactSummaryItems,
       renderContent: (title) => (
-        <SinglePrimaryAttributeBonusControl
-          title={title}
-          description="选择一项属性，并填写本次实际潜能点。"
-          selectedAttribute={seasonArtifactAttribute}
-          value={seasonArtifactValue}
-          onSelect={setSeasonArtifactAttribute}
-          onValueChange={setSeasonArtifactValue}
-          onReset={() => {
-            setSeasonArtifactAttribute(null);
-            setSeasonArtifactValue(0);
-          }}
-        />
+        <div className="space-y-3">
+          <SinglePrimaryAttributeBonusControl
+            title={title}
+            description="选择一项属性，并填写本次实际潜能点。"
+            selectedAttribute={seasonArtifactAttribute}
+            value={seasonArtifactValue}
+            onSelect={setSeasonArtifactAttribute}
+            onValueChange={setSeasonArtifactValue}
+            onReset={() => {
+              setSeasonArtifactAttribute(null);
+              setSeasonArtifactValue(0);
+            }}
+          />
+          <TianshuBonusControl
+            title="赛季神器等级属性"
+            groupLabel="赛季神器属性选择"
+            options={seasonArtifactOptions}
+            counts={seasonArtifactBonusCounts}
+            onCountChange={updateSeasonArtifactBonusCount}
+            onReset={() => setSeasonArtifactBonusCounts({})}
+            actionLabel="赛季神器"
+            selectionLabel="赛季神器"
+          />
+        </div>
       ),
     },
     {
@@ -2184,6 +2353,11 @@ const CharacterAttributeCalculator = ({
                               天书星魂 {formatBonus(tianshuStarSoulBonuses.healthPercent)}%
                             </span>
                           )}
+                          {seasonArtifactFixedBonuses.health > 0 && (
+                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-violet-600">
+                              +赛季神器 {formatAttribute(seasonArtifactFixedBonuses.health)}
+                            </span>
+                          )}
                           {primaryTalismanBonuses.health > 0 && (
                             <span className="ml-2 inline-block whitespace-nowrap text-xs text-indigo-600">
                               +{primaryTalismanSourceLabel} {formatAttribute(primaryTalismanBonuses.health)}
@@ -2242,6 +2416,11 @@ const CharacterAttributeCalculator = ({
                             {equipmentBonuses.mana > 0 && (
                               <span className="ml-2 inline-block whitespace-nowrap text-xs text-blue-700">
                                 +装备 {formatAttribute(equipmentBonuses.mana)}
+                              </span>
+                            )}
+                            {seasonArtifactFixedBonuses.mana > 0 && (
+                              <span className="ml-2 inline-block whitespace-nowrap text-xs text-violet-600">
+                                +赛季神器 {formatAttribute(seasonArtifactFixedBonuses.mana)}
                               </span>
                             )}
                             {temporaryTalismanBonuses.mana > 0 && (
@@ -2430,6 +2609,11 @@ const CharacterAttributeCalculator = ({
                                 {amberTalismanBonuses[attribute] > 0 && (
                                   <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-indigo-600">
                                     法宝（琥珀朱绫） {formatBonus(amberTalismanBonuses[attribute])}
+                                  </span>
+                                )}
+                                {seasonArtifactFixedBonuses[attribute] > 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-violet-600">
+                                    赛季神器 {formatBonus(seasonArtifactFixedBonuses[attribute])}
                                   </span>
                                 )}
                                 {attribute === "physicalDefense" &&

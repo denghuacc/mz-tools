@@ -10,6 +10,9 @@ type TianshuBonusControlProps = {
   counts: Readonly<Record<string, number>>;
   onCountChange: (optionId: string, count: number) => void;
   onReset: () => void;
+  groupLabel?: string;
+  actionLabel?: string;
+  selectionLabel?: string;
 };
 
 /** 天书固定属性可重复选择，以每个选项的次数作为唯一可编辑状态。 */
@@ -19,6 +22,9 @@ const TianshuBonusControl = ({
   counts,
   onCountChange,
   onReset,
+  groupLabel = "天书固定加成选项",
+  actionLabel = "天书",
+  selectionLabel = "天书",
 }: TianshuBonusControlProps) => {
   const selectedCount = Object.values(counts).reduce(
     (total, count) => total + count,
@@ -44,7 +50,11 @@ const TianshuBonusControl = ({
         </button>
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2" role="group" aria-label="天书固定加成选项">
+      <div
+        className="mt-4 grid gap-2 sm:grid-cols-2"
+        role="group"
+        aria-label={groupLabel}
+      >
         {options.map((option) => {
           const count = counts[option.id] ?? 0;
 
@@ -69,7 +79,7 @@ const TianshuBonusControl = ({
               <div className="flex shrink-0 items-center gap-1.5">
                 <button
                   type="button"
-                  aria-label={`减少天书：${option.title}`}
+                  aria-label={`减少${actionLabel}：${option.title}`}
                   disabled={count === 0}
                   className="h-7 w-7 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-500 transition hover:border-blue-200 hover:text-blue-600 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-300"
                   onClick={() => onCountChange(option.id, count - 1)}
@@ -84,7 +94,7 @@ const TianshuBonusControl = ({
                 </output>
                 <button
                   type="button"
-                  aria-label={`增加天书：${option.title}`}
+                  aria-label={`增加${actionLabel}：${option.title}`}
                   className="h-7 w-7 rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
                   onClick={() => onCountChange(option.id, count + 1)}
                 >
@@ -97,7 +107,7 @@ const TianshuBonusControl = ({
       </div>
 
       <p
-        aria-label={`天书已选择 ${selectedCount} 次`}
+        aria-label={`${selectionLabel}已选择 ${selectedCount} 次`}
         aria-live="polite"
         className="mt-3 text-right text-xs text-slate-500"
       >

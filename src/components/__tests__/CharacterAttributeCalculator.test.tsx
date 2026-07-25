@@ -752,6 +752,82 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(potentialColumn).getAllByText("神器 +12")).toHaveLength(1);
   });
 
+  it("应该重复选择赛季神器等级属性并按次数叠加", async () => {
+    const user = userEvent.setup();
+    render(<CharacterAttributeCalculator />);
+    const dialog = await openBonusEditor(user, "赛季神器");
+
+    const optionLabels = [
+      "等级 × 1 气血",
+      "等级 × 0.2 物防",
+      "等级 × 0.2 法防",
+      "等级 × 1.5 法力",
+      "等级 × 0.2 物攻和法攻",
+      "等级 × 0.1 速度",
+    ];
+    expect(
+      within(dialog).getByRole("group", { name: "赛季神器属性选择" })
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getAllByRole("button", { name: /^增加赛季神器：/ })
+    ).toHaveLength(6);
+    for (const effectLabel of [
+      "+69 气血",
+      "+13.8 物防",
+      "+13.8 法防",
+      "+103.5 法力",
+      "+13.8 物攻 · +13.8 法攻",
+      "+6.9 速度",
+    ]) {
+      expect(within(dialog).getByText(`${effectLabel} / 次`))
+        .toBeInTheDocument();
+    }
+
+    for (const title of optionLabels) {
+      await user.click(
+        within(dialog).getByRole("button", {
+          name: `增加赛季神器：${title}`,
+        })
+      );
+    }
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "增加赛季神器：等级 × 1 气血",
+      })
+    );
+    expect(
+      within(dialog).getByLabelText("等级 × 1 气血已选次数")
+    ).toHaveTextContent("×2");
+    expect(within(dialog).getByLabelText("赛季神器已选择 7 次"))
+      .toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "完成" }));
+
+    const summaryCard = screen
+      .getByRole("heading", { name: "赛季神器" })
+      .closest("article");
+    expect(summaryCard).not.toBeNull();
+    for (const summary of [
+      "气血 +138",
+      "法力 +103.5",
+      "物攻 +13.8",
+      "法攻 +13.8",
+      "物防 +13.8",
+      "法防 +13.8",
+      "速度 +6.9",
+    ]) {
+      expect(within(summaryCard!).getByText(summary)).toBeInTheDocument();
+    }
+    expect(within(summaryCard!).getByText("已选 7 次")).toBeInTheDocument();
+    expect(screen.getByText("+赛季神器 138")).toBeInTheDocument();
+    expect(screen.getByText("+赛季神器 103.5")).toBeInTheDocument();
+
+    const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
+    expect(within(derivedColumn).getAllByText("赛季神器 +13.8"))
+      .toHaveLength(4);
+    expect(within(derivedColumn).getByText("赛季神器 +6.9"))
+      .toBeInTheDocument();
+  });
+
   it("应该单选魅灵属性并限制实际潜能点最高为 120", async () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
@@ -1624,6 +1700,16 @@ describe("CharacterAttributeCalculator", () => {
       within(starSoulDialog).getByRole("button", { name: "完成" })
     );
 
+    const seasonArtifactDialog = await openBonusEditor(user, "赛季神器");
+    await user.click(
+      within(seasonArtifactDialog).getByRole("button", {
+        name: "增加赛季神器：等级 × 1 气血",
+      })
+    );
+    await user.click(
+      within(seasonArtifactDialog).getByRole("button", { name: "完成" })
+    );
+
     const amberTalismanDialog = await openBonusEditor(user, "法宝");
     await user.click(
       within(amberTalismanDialog).getByRole("checkbox", {
@@ -1670,6 +1756,9 @@ describe("CharacterAttributeCalculator", () => {
       expect(stored.temporaryTalismanAttributes).toEqual(["health"]);
       expect(stored.guildTalentOptionIds).toEqual(["attack", "critical"]);
       expect(stored.tianshuStarSoulOptionIds).toEqual(["health-percent-2"]);
+      expect(stored.seasonArtifactBonusCounts).toEqual({
+        "health-level-1": 1,
+      });
       expect(stored.isAmberTalismanEnabled).toBe(true);
       expect(stored.characterTrainingLevels).toEqual({
         attack: { level: 12, breakthrough: true },
@@ -1708,6 +1797,7 @@ describe("CharacterAttributeCalculator", () => {
           "sanshengPillCounts",
           "satinSelections",
           "seasonArtifactAttribute",
+          "seasonArtifactBonusCounts",
           "seasonArtifactValue",
           "selectedPresetId",
           "skillBonuses",
@@ -1731,6 +1821,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("+灵符 309")).toBeInTheDocument();
     expect(screen.getByText("天书星魂 +2%"))
       .toBeInTheDocument();
+    expect(screen.getByText("+赛季神器 69")).toBeInTheDocument();
     expect(screen.getByText("三生造化丹 +4")).toBeInTheDocument();
     const restoredTalismanDialog = await openBonusEditor(user, "法宝");
     expect(
@@ -1825,6 +1916,13 @@ describe("CharacterAttributeCalculator", () => {
         talismanOptionId: "physical-attack",
         seasonArtifactAttribute: "strength",
         seasonArtifactValue: 10,
+        seasonArtifactBonusCounts: {
+          unknown: 1,
+          "health-level-1": "1",
+          "physical-defense-level-02": 0,
+          "magic-defense-level-02": 2,
+          "mana-level-15": 1.5,
+        },
         charmAttribute: "agility",
         charmValue: 25,
         sanshengPillCounts: {
@@ -1883,6 +1981,9 @@ describe("CharacterAttributeCalculator", () => {
       ]);
       expect(stored.tianshuBonusCounts).toEqual({ "agility-20": 2 });
       expect(stored.tianshuStarSoulOptionIds).toEqual(["health-percent-2"]);
+      expect(stored.seasonArtifactBonusCounts).toEqual({
+        "magic-defense-level-02": 2,
+      });
       expect(stored.talismanOptionId).toBe("physical-attack");
       expect(stored.satinSelections).toEqual([
         { attribute: "physicalAttack", value: 12 },
