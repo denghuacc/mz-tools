@@ -45,6 +45,7 @@ const SettingsPage = ({
         <p className="mt-4 text-sm leading-6 text-slate-500">
           页面会展示原文链接和发布日期。遇到版本调整时，以游戏内实际内容和最新官方公告为准。
         </p>
+        <p className="mt-3 text-xs text-slate-300">FR69服明天</p>
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

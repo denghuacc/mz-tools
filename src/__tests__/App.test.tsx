@@ -456,6 +456,7 @@ describe("App 组件", () => {
       within(navigation).getByRole("button", { name: "设置" })
     );
     expect(screen.getByRole("heading", { name: "设置" })).toBeInTheDocument();
+    expect(screen.getByText("FR69服明天")).toBeInTheDocument();
     expect(screen.getByText(/当前收藏 0 项/)).toBeInTheDocument();
     expect(screen.getByText(/角色面板和八件装备输入会保存在当前浏览器/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "清空收藏" })).toBeDisabled();
