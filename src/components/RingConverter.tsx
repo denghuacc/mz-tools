@@ -33,10 +33,10 @@ const getChangeClassName = (change: number) => {
 const RingConverter = () => {
   const [initialPreferences] = useState(loadPreferences);
   const [currentSect, setCurrentSect] = useState<Sect>(
-    initialPreferences.ringCurrentSect
+    initialPreferences.ringCurrentSect,
   );
   const [targetSect, setTargetSect] = useState<Sect>(
-    initialPreferences.ringTargetSect
+    initialPreferences.ringTargetSect,
   );
   const [health, setHealth] = useState<number | null>(null);
   const [secondary, setSecondary] = useState<number | null>(null);
@@ -53,7 +53,7 @@ const RingConverter = () => {
 
   const handleNumberChange = (
     value: string,
-    setter: (value: number | null) => void
+    setter: (value: number | null) => void,
   ) => {
     setter(value === "" ? null : Number(value));
     resetFeedback();
@@ -87,7 +87,7 @@ const RingConverter = () => {
         after: convertRingSecondaryAttribute(
           secondary,
           currentSect,
-          targetSect
+          targetSect,
         ),
       },
     });
@@ -115,7 +115,9 @@ const RingConverter = () => {
     <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="space-y-5 p-4 sm:p-6">
         <section className="rounded-xl bg-slate-50/80 p-4 ring-1 ring-inset ring-slate-200/70">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">转换设置</h2>
+          <h2 className="mb-4 text-sm font-semibold text-slate-900">
+            转换设置
+          </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label
@@ -155,7 +157,6 @@ const RingConverter = () => {
               </select>
             </div>
           </div>
-
         </section>
 
         <section className="rounded-xl bg-slate-50/80 p-4 ring-1 ring-inset ring-slate-200/70">
@@ -247,7 +248,9 @@ const RingConverter = () => {
         {result ? (
           <section className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
             <div className="border-b border-blue-100 bg-blue-50/70 px-4 py-3">
-              <h2 className="text-base font-semibold text-slate-900">转换结果</h2>
+              <h2 className="text-base font-semibold text-slate-900">
+                转换结果
+              </h2>
               <p className="mt-0.5 text-xs text-slate-500">
                 {currentSect} → {targetSect}
               </p>
@@ -262,7 +265,9 @@ const RingConverter = () => {
                 </div>
                 <div className="space-y-2">
                   <div className="grid grid-cols-[1fr_1.5fr_auto] items-center gap-3 rounded-lg bg-slate-50 px-3 py-3">
-                    <span className="text-sm font-medium text-slate-700">气血</span>
+                    <span className="text-sm font-medium text-slate-700">
+                      气血
+                    </span>
                     <div className="flex min-w-0 items-center justify-center gap-2 text-sm">
                       <span className="text-slate-500">
                         {result.health.before}
@@ -296,7 +301,7 @@ const RingConverter = () => {
                     </div>
                     <span
                       className={`min-w-12 rounded-full bg-white px-2 py-1 text-right text-xs font-semibold ${getChangeClassName(
-                        result.secondary.after - result.secondary.before
+                        result.secondary.after - result.secondary.before,
                       )}`}
                     >
                       {result.secondary.after - result.secondary.before > 0

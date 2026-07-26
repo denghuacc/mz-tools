@@ -72,7 +72,7 @@ const WeaponConverter = () => {
     };
 
   const handleOriginalFormChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
+    event: React.ChangeEvent<HTMLSelectElement>,
   ) => {
     const value = event.target.value;
     setOriginalForm(value === "无" ? null : (value as WeaponType));
@@ -89,8 +89,7 @@ const WeaponConverter = () => {
       case "seal-rule":
         return {
           title: "属性保持不变",
-          description:
-            "本次转换涉及封印造型，按转换规则不调整武器属性。",
+          description: "本次转换涉及封印造型，按转换规则不调整武器属性。",
         };
       case "same-attribute-type":
         return {
@@ -113,7 +112,9 @@ const WeaponConverter = () => {
     <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="space-y-5 p-4 sm:p-6">
         <section className="rounded-xl bg-slate-50/80 p-4 ring-1 ring-inset ring-slate-200/70">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">转换设置</h2>
+          <h2 className="mb-4 text-sm font-semibold text-slate-900">
+            转换设置
+          </h2>
           <div>
             <label
               htmlFor="weapon-level"
@@ -127,7 +128,7 @@ const WeaponConverter = () => {
               value={String(weaponLevel)}
               onChange={(event) =>
                 setWeaponLevelAndMaxValues(
-                  WEAPON_LEVEL_OPTIONS[event.target.selectedIndex].id
+                  WEAPON_LEVEL_OPTIONS[event.target.selectedIndex].id,
                 )
               }
             >
@@ -192,7 +193,6 @@ const WeaponConverter = () => {
               </select>
             </div>
           </div>
-
         </section>
 
         <section className="rounded-xl bg-slate-50/80 p-4 ring-1 ring-inset ring-slate-200/70">
@@ -308,7 +308,9 @@ const WeaponConverter = () => {
           <section className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
             <div className="flex flex-col gap-3 border-b border-blue-100 bg-blue-50/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-base font-semibold text-slate-900">转换结果</h2>
+                <h2 className="text-base font-semibold text-slate-900">
+                  转换结果
+                </h2>
                 <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-600">
                   <p>
                     <span className="mr-1.5 text-slate-400">门派</span>
@@ -369,7 +371,10 @@ const WeaponConverter = () => {
                     <>
                       <span className="text-center">当前值</span>
                       <span className="text-center">
-                        原造型值<span className="hidden sm:inline">（{originalForm}）</span>
+                        原造型值
+                        <span className="hidden sm:inline">
+                          （{originalForm}）
+                        </span>
                       </span>
                       <span className="text-center">转换后</span>
                     </>
@@ -425,7 +430,7 @@ const WeaponConverter = () => {
                         )}
                         <span
                           className={`min-w-12 rounded-md px-2 py-1 text-right text-xs font-semibold tabular-nums ${getChangeClassName(
-                            change
+                            change,
                           )}`}
                           aria-label={change === 0 ? "无变化" : undefined}
                         >

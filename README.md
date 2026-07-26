@@ -34,10 +34,14 @@ pnpm test -- --run
 # 运行 CI 使用的覆盖率门禁
 pnpm test:coverage -- --run
 
-# 静态检查与生产构建
+# Vite+ 静态检查与生产构建
+pnpm check
 pnpm lint
 pnpm build
 ```
+
+项目使用 beta 阶段的 Vite+ 统一 Vite、Vitest、Oxlint、Oxfmt 与 Git staged 检查配置。
+工具配置集中在 `vite.config.ts`；TypeScript 项目边界和提交信息规则仍使用各自配置文件。
 
 ## 贡献与维护
 

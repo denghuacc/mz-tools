@@ -109,7 +109,9 @@ const HomePage = ({
 
       <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <p className="text-xs font-medium text-blue-600">官网资料</p>
-        <h2 className="mt-2 text-lg font-semibold text-slate-900">游戏资料查询</h2>
+        <h2 className="mt-2 text-lg font-semibold text-slate-900">
+          游戏资料查询
+        </h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
           查询门派、装备、灵兽与坐骑资料，并查看官网出处。
         </p>
@@ -124,7 +126,9 @@ const HomePage = ({
 
       <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <p className="text-xs font-medium text-blue-600">官方内容</p>
-        <h2 className="mt-2 text-lg font-semibold text-slate-900">攻略与版本资料</h2>
+        <h2 className="mt-2 text-lg font-semibold text-slate-900">
+          攻略与版本资料
+        </h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
           按主题浏览官方攻略、门派说明和近期版本公告。
         </p>
@@ -144,7 +148,7 @@ const loadEquipmentCalculatorState = (): EquipmentCalculatorState => {
   const currentState = loadCalculatorState<EquipmentCalculatorState | null>(
     EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
     null,
-    normalizeEquipmentCalculatorState
+    normalizeEquipmentCalculatorState,
   );
   if (currentState) return currentState;
 
@@ -154,19 +158,19 @@ const loadEquipmentCalculatorState = (): EquipmentCalculatorState => {
     equipment: loadCalculatorState(
       LEGACY_EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
       createInitialEquipmentSet(),
-      normalizeEquipmentSet
+      normalizeEquipmentSet,
     ),
   };
 };
 
 const CalculatorPage = () => {
   const [activeTool, setActiveTool] = useState<CalculatorTool>(
-    () => loadPreferences().activeTool
+    () => loadPreferences().activeTool,
   );
   const [equipmentState, setEquipmentState] =
     useState<EquipmentCalculatorState>(loadEquipmentCalculatorState);
   const [characterProfileSlots, setCharacterProfileSlots] = useState(
-    loadCharacterProfileSlots
+    loadCharacterProfileSlots,
   );
   const [characterCalculatorKey, setCharacterCalculatorKey] = useState(0);
   const [characterProfileNotice, setCharacterProfileNotice] = useState("");
@@ -177,9 +181,9 @@ const CalculatorPage = () => {
     () =>
       calculateEquipmentSummary(
         equipmentState.equipment,
-        equipmentState.characterLevel
+        equipmentState.characterLevel,
       ),
-    [equipmentState]
+    [equipmentState],
   );
 
   useEffect(() => {
@@ -196,19 +200,19 @@ const CalculatorPage = () => {
         description: "录入八件装备，汇总装备属性并同步到角色面板。",
       }
     : isCharacter
-    ? {
-        title: "角色面板计算器",
-        description: "按角色等级分配潜力点，查看装备和其它加成后的属性。",
-      }
-    : isWeapon
       ? {
-          title: "武器属性转换器",
-          description: "设置转换路径，并填写当前武器的三项属性。",
+          title: "角色面板计算器",
+          description: "按角色等级分配潜力点，查看装备和其它加成后的属性。",
         }
-      : {
-          title: "戒指属性转换器",
-          description: "选择当前与目标门派，并填写戒指的两项主属性。",
-        };
+      : isWeapon
+        ? {
+            title: "武器属性转换器",
+            description: "设置转换路径，并填写当前武器的三项属性。",
+          }
+        : {
+            title: "戒指属性转换器",
+            description: "选择当前与目标门派，并填写戒指的两项主属性。",
+          };
 
   const handleToolChange = (tool: CalculatorTool) => {
     setActiveTool(tool);
@@ -232,10 +236,10 @@ const CalculatorPage = () => {
         characterState: loadCurrentCharacterStateSnapshot(),
         equipmentState,
         isActive: true,
-      })
+      }),
     );
     setCharacterProfileNotice(
-      `已${isOverwrite ? "覆盖" : "保存"}“${normalizedName}”的完整角色配置。`
+      `已${isOverwrite ? "覆盖" : "保存"}“${normalizedName}”的完整角色配置。`,
     );
   };
 
@@ -245,7 +249,7 @@ const CalculatorPage = () => {
 
     restoreCharacterStateSnapshot(profile.characterState);
     setCharacterProfileSlots((currentSlots) =>
-      activateCharacterProfileSlot(currentSlots, slotIndex)
+      activateCharacterProfileSlot(currentSlots, slotIndex),
     );
     setEquipmentState(profile.equipmentState);
     setCharacterCalculatorKey((currentKey) => currentKey + 1);
@@ -328,53 +332,65 @@ const CalculatorPage = () => {
           <RingConverter />
         )}
 
-        {!isCharacter && !isEquipment && <aside className="space-y-4 xl:sticky xl:top-24">
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-5 hidden border-b border-slate-100 pb-5 xl:block">
-              <h2 className="text-xl font-semibold tracking-tight text-slate-900">
-                {toolMeta.title}
+        {!isCharacter && !isEquipment && (
+          <aside className="space-y-4 xl:sticky xl:top-24">
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="mb-5 hidden border-b border-slate-100 pb-5 xl:block">
+                <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+                  {toolMeta.title}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  {toolMeta.description}
+                </p>
+              </div>
+              <h2 className="text-base font-semibold text-slate-900">
+                工具说明
               </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                {toolMeta.description}
-              </p>
-            </div>
-            <h2 className="text-base font-semibold text-slate-900">工具说明</h2>
-            <div className="mt-4 space-y-3 text-sm leading-6 text-slate-500">
-              {isCharacter ? (
-                <>
-                  <p>支持 69、89、110 级，并按等级计算五维固定成长和潜力点。</p>
-                  <p>本期只做状态与 10 项基础属性，进阶属性后续补充。</p>
-                </>
-              ) : isWeapon ? (
-                <>
-                  <p>选择武器等级、当前门派与目标门派，再填写三项武器属性。</p>
-                  <p>如武器经过原造型转换，可选择原造型以计算完整转换路径。</p>
-                </>
-              ) : (
-                <>
-                  <p>戒指第一条主属性固定为气血，转换后数值保持不变。</p>
-                  <p>戒指为全等级装备，属性值会随角色等级自动成长。</p>
-                  <p>第二条主属性按门派职业类型的对应比例转换。</p>
-                </>
-              )}
-              <p>计算结果可能与游戏内实际数值存在轻微差异，仅供参考。</p>
-            </div>
-          </section>
+              <div className="mt-4 space-y-3 text-sm leading-6 text-slate-500">
+                {isCharacter ? (
+                  <>
+                    <p>
+                      支持 69、89、110 级，并按等级计算五维固定成长和潜力点。
+                    </p>
+                    <p>本期只做状态与 10 项基础属性，进阶属性后续补充。</p>
+                  </>
+                ) : isWeapon ? (
+                  <>
+                    <p>
+                      选择武器等级、当前门派与目标门派，再填写三项武器属性。
+                    </p>
+                    <p>
+                      如武器经过原造型转换，可选择原造型以计算完整转换路径。
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>戒指第一条主属性固定为气血，转换后数值保持不变。</p>
+                    <p>戒指为全等级装备，属性值会随角色等级自动成长。</p>
+                    <p>第二条主属性按门派职业类型的对应比例转换。</p>
+                  </>
+                )}
+                <p>计算结果可能与游戏内实际数值存在轻微差异，仅供参考。</p>
+              </div>
+            </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-base font-semibold text-slate-900">后续计划</h2>
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-500">
-                逐步更新
-              </span>
-            </div>
-            <ul className="mt-4 space-y-2 text-sm text-slate-500">
-              <li>规则数据持续核验</li>
-              <li>装备与灵兽资料持续更新</li>
-              <li>官方攻略索引持续更新</li>
-            </ul>
-          </section>
-        </aside>}
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-base font-semibold text-slate-900">
+                  后续计划
+                </h2>
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-500">
+                  逐步更新
+                </span>
+              </div>
+              <ul className="mt-4 space-y-2 text-sm text-slate-500">
+                <li>规则数据持续核验</li>
+                <li>装备与灵兽资料持续更新</li>
+                <li>官方攻略索引持续更新</li>
+              </ul>
+            </section>
+          </aside>
+        )}
       </div>
     </div>
   );
@@ -455,7 +471,9 @@ function App() {
             <div className="hidden min-w-0 flex-1 items-center justify-between gap-6 px-7 md:flex">
               <p className="truncate text-sm text-slate-500">
                 工具箱&nbsp;&nbsp;/&nbsp;&nbsp;
-                <span className="font-medium text-slate-800">{activeItem.label}</span>
+                <span className="font-medium text-slate-800">
+                  {activeItem.label}
+                </span>
               </p>
               <span className="shrink-0 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
                 持续更新中

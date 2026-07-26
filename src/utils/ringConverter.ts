@@ -43,20 +43,18 @@ const RING_SECONDARY_ATTRIBUTE_BY_PROFESSION: Record<
 };
 
 export const getRingSecondaryAttributeConfig = (
-  sect: Sect
+  sect: Sect,
 ): RingSecondaryAttributeConfig =>
   RING_SECONDARY_ATTRIBUTE_BY_PROFESSION[SECT_TO_PROFESSION[sect]];
 
 export const convertRingSecondaryAttribute = (
   current: number,
   fromSect: Sect,
-  toSect: Sect
+  toSect: Sect,
 ): number => {
   const source = getRingSecondaryAttributeConfig(fromSect);
   const target = getRingSecondaryAttributeConfig(toSect);
 
   // 戒指属性会随角色等级成长，这里的基准值只用于换算职业属性比例。
-  return Math.round(
-    (current / source.conversionBase) * target.conversionBase
-  );
+  return Math.round((current / source.conversionBase) * target.conversionBase);
 };

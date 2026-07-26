@@ -1,8 +1,5 @@
-import { vi } from "vitest";
-import {
-  loadCalculatorState,
-  saveCalculatorState,
-} from "../calculatorStorage";
+import { vi } from "vite-plus/test";
+import { loadCalculatorState, saveCalculatorState } from "../calculatorStorage";
 
 const STORAGE_KEY = "test.calculator-state.v1";
 
@@ -17,8 +14,8 @@ describe("计算器本地状态存储", () => {
         "value" in stored &&
         typeof stored.value === "number"
           ? { value: stored.value }
-          : null
-      )
+          : null,
+      ),
     ).toEqual({ value: 42 });
   });
 

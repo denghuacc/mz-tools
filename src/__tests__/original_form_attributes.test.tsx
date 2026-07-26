@@ -37,7 +37,7 @@ describe("原造型属性值显示功能", () => {
 
   const setupConversion = async (
     user: UserEvent,
-    weaponData: { physical: number; magic: number; healing: number }
+    weaponData: { physical: number; magic: number; healing: number },
   ) => {
     // 设置武器数据
     const inputs = screen.getAllByRole("spinbutton");
@@ -68,13 +68,13 @@ describe("原造型属性值显示功能", () => {
     healing: number;
   }) => {
     expect(screen.getByTestId("original-form-physical")).toHaveTextContent(
-      `（${expected.physical}）`
+      `（${expected.physical}）`,
     );
     expect(screen.getByTestId("original-form-magic")).toHaveTextContent(
-      `（${expected.magic}）`
+      `（${expected.magic}）`,
     );
     expect(screen.getByTestId("original-form-healing")).toHaveTextContent(
-      `（${expected.healing}）`
+      `（${expected.healing}）`,
     );
   };
 
@@ -121,7 +121,7 @@ describe("原造型属性值显示功能", () => {
     // 验证原造型值列被隐藏
     await waitFor(() => {
       expect(
-        screen.queryByTestId("original-form-physical")
+        screen.queryByTestId("original-form-physical"),
       ).not.toBeInTheDocument();
     });
   });
@@ -148,7 +148,7 @@ describe("原造型属性值显示功能", () => {
 
     // 验证查看原造型值按钮不存在
     expect(
-      screen.queryByRole("button", { name: "查看原造型值" })
+      screen.queryByRole("button", { name: "查看原造型值" }),
     ).not.toBeInTheDocument();
   });
 
@@ -479,7 +479,7 @@ describe("原造型属性值显示功能", () => {
 
               await waitFor(() => {
                 expect(
-                  screen.getByTestId("original-form-physical")
+                  screen.getByTestId("original-form-physical"),
                 ).toBeInTheDocument();
               });
 
@@ -487,7 +487,7 @@ describe("原造型属性值显示功能", () => {
               const expectedData = expected[key as keyof typeof expected];
               expectOriginalFormValues(expectedData);
             });
-          }
+          },
         );
       });
     });

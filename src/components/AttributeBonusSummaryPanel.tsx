@@ -28,7 +28,7 @@ const AttributeBonusSummaryPanel = <SourceId extends string>({
   onReset,
 }: AttributeBonusSummaryPanelProps<SourceId>) => {
   const configuredSourceCount = sources.filter(
-    ({ items }) => items.length > 0
+    ({ items }) => items.length > 0,
   ).length;
 
   return (

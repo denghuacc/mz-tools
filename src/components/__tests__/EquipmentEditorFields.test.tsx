@@ -6,11 +6,12 @@ describe("EquipmentEditorFields", () => {
     render(
       <EquipmentEditorSection title="测试分区">
         <span>测试内容</span>
-      </EquipmentEditorSection>
+      </EquipmentEditorSection>,
     );
 
-    expect(screen.getByRole("heading", { name: "测试分区" }))
-      .toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "测试分区" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("测试内容")).toBeInTheDocument();
   });
 });

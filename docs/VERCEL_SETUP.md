@@ -105,7 +105,7 @@ Value: [从 .vercel/project.json 获取的 projectId]
 
 - **CI 流程** (`.github/workflows/ci.yml`)
 
-  - 代码检查 (ESLint)
+  - 代码检查 (Vite+ Oxlint)
   - 单元测试 (Vitest)
   - 测试覆盖率
   - 生产构建

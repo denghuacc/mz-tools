@@ -34,7 +34,7 @@ const GuidePage = ({
       category === "全部"
         ? GUIDE_ENTRIES
         : GUIDE_ENTRIES.filter((entry) => entry.category === category),
-    [category]
+    [category],
   );
 
   return (

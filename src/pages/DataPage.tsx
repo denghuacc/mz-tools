@@ -7,16 +7,10 @@ import {
   EQUIPMENT_ENTRIES,
   SECT_PROFILES,
 } from "../data/content";
-import type {
-  CompanionKind,
-  EquipmentCategory,
-} from "../data/content";
+import type { CompanionKind, EquipmentCategory } from "../data/content";
 import type { Profession } from "../types";
 import { ProfessionEnum } from "../types";
-import type {
-  FavoriteKind,
-  FavoritesState,
-} from "../utils/favorites";
+import type { FavoriteKind, FavoritesState } from "../utils/favorites";
 import { isFavorite } from "../utils/favorites";
 
 type DataCategory = "sect" | "equipment" | "companion";
@@ -107,14 +101,12 @@ const DataPage = ({
   favorites: FavoritesState;
   onToggleFavorite: (kind: DataFavoriteKind, id: string) => void;
 }) => {
-  const [activeCategory, setActiveCategory] =
-    useState<DataCategory>("sect");
+  const [activeCategory, setActiveCategory] = useState<DataCategory>("sect");
   const [query, setQuery] = useState("");
   const [profession, setProfession] = useState<ProfessionFilter>("全部");
   const [equipmentCategory, setEquipmentCategory] =
     useState<EquipmentFilter>("全部");
-  const [companionKind, setCompanionKind] =
-    useState<CompanionFilter>("全部");
+  const [companionKind, setCompanionKind] = useState<CompanionFilter>("全部");
 
   const keyword = query.trim().toLocaleLowerCase("zh-CN");
 
@@ -126,29 +118,28 @@ const DataPage = ({
         const matchesQuery =
           keyword === "" ||
           [profile.id, profile.positioning, profile.summary].some((value) =>
-            value.toLocaleLowerCase("zh-CN").includes(keyword)
+            value.toLocaleLowerCase("zh-CN").includes(keyword),
           );
 
         return matchesProfession && matchesQuery;
       }),
-    [keyword, profession]
+    [keyword, profession],
   );
 
   const equipmentEntries = useMemo(
     () =>
       EQUIPMENT_ENTRIES.filter((entry) => {
         const matchesCategory =
-          equipmentCategory === "全部" ||
-          entry.category === equipmentCategory;
+          equipmentCategory === "全部" || entry.category === equipmentCategory;
         const matchesQuery =
           keyword === "" ||
           [entry.title, entry.category, entry.availability, entry.summary].some(
-            (value) => value.toLocaleLowerCase("zh-CN").includes(keyword)
+            (value) => value.toLocaleLowerCase("zh-CN").includes(keyword),
           );
 
         return matchesCategory && matchesQuery;
       }),
-    [equipmentCategory, keyword]
+    [equipmentCategory, keyword],
   );
 
   const companionEntries = useMemo(
@@ -164,13 +155,11 @@ const DataPage = ({
             entry.positioning,
             entry.availability,
             entry.summary,
-          ].some((value) =>
-            value.toLocaleLowerCase("zh-CN").includes(keyword)
-          );
+          ].some((value) => value.toLocaleLowerCase("zh-CN").includes(keyword));
 
         return matchesKind && matchesQuery;
       }),
-    [companionKind, keyword]
+    [companionKind, keyword],
   );
 
   const resultCount =
@@ -199,7 +188,8 @@ const DataPage = ({
           收录门派定位、装备机制以及灵兽与坐骑资料。内容优先来自《梦幻新诛仙》官网，旧公告中的限时获取方式不代表当前仍然开放。
         </p>
         <p className="mt-2 text-xs text-slate-400">
-          数据快照核验日期：{CONTENT_VERIFIED_AT} · 具体技能和数值以当前游戏版本为准
+          数据快照核验日期：{CONTENT_VERIFIED_AT} ·
+          具体技能和数值以当前游戏版本为准
         </p>
       </section>
 

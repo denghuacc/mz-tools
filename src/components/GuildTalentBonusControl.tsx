@@ -20,7 +20,7 @@ const GuildTalentBonusControl = <OptionId extends string>({
     onChange(
       selectedOptionIds.includes(optionId)
         ? selectedOptionIds.filter((candidate) => candidate !== optionId)
-        : [...selectedOptionIds, optionId]
+        : [...selectedOptionIds, optionId],
     );
   };
 
@@ -29,9 +29,7 @@ const GuildTalentBonusControl = <OptionId extends string>({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-base font-semibold text-slate-900">{title}</h2>
-          <p className="mt-1 text-xs leading-5 text-slate-500">
-            {description}
-          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
         </div>
         <button
           type="button"
@@ -83,8 +81,12 @@ const GuildTalentBonusControl = <OptionId extends string>({
       </div>
 
       <p className="mt-3 text-right text-xs text-slate-500">
-        已选 <span className="font-medium text-orange-600">{selectedOptionIds.length}</span>
-        {" / "}{options.length} 项
+        已选{" "}
+        <span className="font-medium text-orange-600">
+          {selectedOptionIds.length}
+        </span>
+        {" / "}
+        {options.length} 项
       </p>
     </section>
   );

@@ -26,7 +26,7 @@ const StarBlessingBonusControl = ({
   const toggleAttribute = (attribute: PrimaryAttribute) => {
     if (selectedAttributes.includes(attribute)) {
       onSelectedAttributesChange(
-        selectedAttributes.filter((selected) => selected !== attribute)
+        selectedAttributes.filter((selected) => selected !== attribute),
       );
       return;
     }

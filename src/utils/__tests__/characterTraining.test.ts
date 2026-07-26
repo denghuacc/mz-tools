@@ -7,7 +7,7 @@ import {
 describe("characterTraining", () => {
   it("应该让默认 1 级修炼按每级基础值计入属性", () => {
     const bonuses = calculateCharacterTrainingBonuses(
-      createDefaultCharacterTrainingLevels()
+      createDefaultCharacterTrainingLevels(),
     );
 
     expect(bonuses.healingPower).toBe(5);
@@ -33,7 +33,7 @@ describe("characterTraining", () => {
         attack: { level: 12, breakthrough: true },
         physicalDefense: { level: 11, breakthrough: true },
         magicDefense: { level: 13, breakthrough: true },
-      })
+      }),
     ).toEqual({
       attack: { level: 12, breakthrough: true },
       physicalDefense: { level: 11, breakthrough: false },

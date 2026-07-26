@@ -25,13 +25,13 @@
 
 ## 当前存储键
 
-| 用途 | localStorage key |
-| --- | --- |
-| 角色面板配置 | `mz-tools.character-attributes.v2` |
+| 用途                       | localStorage key                   |
+| -------------------------- | ---------------------------------- |
+| 角色面板配置               | `mz-tools.character-attributes.v2` |
 | 共享角色等级与八件装备配置 | `mz-tools.equipment-attributes.v2` |
-| 三个角色存档位 | `mz-tools.character-profiles.v1` |
-| 计算器选择偏好 | `mz-tools.preferences.v1` |
-| 本地收藏 | `mz-tools.favorites.v1` |
+| 三个角色存档位             | `mz-tools.character-profiles.v1`   |
+| 计算器选择偏好             | `mz-tools.preferences.v1`          |
+| 本地收藏                   | `mz-tools.favorites.v1`            |
 
 版本号是数据结构的一部分。存在不兼容变更时，应升级 key 的版本，并明确选择迁移旧数据或安全回退默认值。
 

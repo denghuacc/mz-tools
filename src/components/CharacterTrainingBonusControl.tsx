@@ -47,7 +47,7 @@ const CharacterTrainingBonusControl = ({
 
   const updateLevel = (
     type: CharacterTrainingType,
-    config: CharacterTrainingLevelConfig
+    config: CharacterTrainingLevelConfig,
   ) => {
     onChange({ ...levels, [type]: config });
   };
@@ -115,7 +115,7 @@ const CharacterTrainingBonusControl = ({
                 >
                   {Array.from(
                     { length: CHARACTER_TRAINING_LEVEL_LIMIT },
-                    (_, index) => index + 1
+                    (_, index) => index + 1,
                   ).map((level) => (
                     <option key={level} value={level}>
                       {level} 级

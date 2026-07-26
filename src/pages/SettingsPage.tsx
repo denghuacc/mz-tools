@@ -35,11 +35,15 @@ const SettingsPage = ({
         <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-slate-400">来源优先级</dt>
-            <dd className="mt-1 font-medium text-slate-700">游戏官网与官方公告优先</dd>
+            <dd className="mt-1 font-medium text-slate-700">
+              游戏官网与官方公告优先
+            </dd>
           </div>
           <div>
             <dt className="text-slate-400">资料快照核验日期</dt>
-            <dd className="mt-1 font-medium text-slate-700">{CONTENT_VERIFIED_AT}</dd>
+            <dd className="mt-1 font-medium text-slate-700">
+              {CONTENT_VERIFIED_AT}
+            </dd>
           </div>
         </dl>
         <p className="mt-4 text-sm leading-6 text-slate-500">
@@ -51,7 +55,8 @@ const SettingsPage = ({
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-base font-semibold text-slate-900">本地数据</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          当前收藏 {favoriteCount} 项。角色面板和八件装备输入会保存在当前浏览器；错误信息和计算结果不会持久化。
+          当前收藏 {favoriteCount}{" "}
+          项。角色面板和八件装备输入会保存在当前浏览器；错误信息和计算结果不会持久化。
         </p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <button

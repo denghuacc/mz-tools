@@ -24,8 +24,9 @@ const CharacterProfileSlots = ({
 }: CharacterProfileSlotsProps) => {
   const [names, setNames] = useState(() =>
     slots.map(
-      (slot, slotIndex) => slot?.name ?? getDefaultCharacterProfileName(slotIndex)
-    )
+      (slot, slotIndex) =>
+        slot?.name ?? getDefaultCharacterProfileName(slotIndex),
+    ),
   );
 
   return (
@@ -80,8 +81,8 @@ const CharacterProfileSlots = ({
                 const nextName = event.target.value;
                 setNames((currentNames) =>
                   currentNames.map((name, index) =>
-                    index === slotIndex ? nextName : name
-                  )
+                    index === slotIndex ? nextName : name,
+                  ),
                 );
               }}
             />
@@ -94,12 +95,12 @@ const CharacterProfileSlots = ({
               onClick={() => {
                 const normalizedName = normalizeCharacterProfileName(
                   names[slotIndex],
-                  slotIndex
+                  slotIndex,
                 );
                 setNames((currentNames) =>
                   currentNames.map((name, index) =>
-                    index === slotIndex ? normalizedName : name
-                  )
+                    index === slotIndex ? normalizedName : name,
+                  ),
                 );
                 onSave(slotIndex, normalizedName);
               }}

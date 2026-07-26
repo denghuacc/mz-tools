@@ -82,20 +82,17 @@ const formatValue = (value: number, attribute: EquipmentAttribute) =>
     attribute.endsWith("Percent") || attribute === "dodgeRate" ? "%" : ""
   }`;
 
-const EquipmentCalculator = ({
-  state,
-  onChange,
-}: EquipmentCalculatorProps) => {
+const EquipmentCalculator = ({ state, onChange }: EquipmentCalculatorProps) => {
   const { characterLevel, equipment } = state;
   const [activeSlot, setActiveSlot] = useState<EquipmentSlot | null>(null);
   const closeEditor = useCallback(() => setActiveSlot(null), []);
   const summary = useMemo(
     () => calculateEquipmentSummary(equipment, characterLevel),
-    [characterLevel, equipment]
+    [characterLevel, equipment],
   );
   const seasonResonance = useMemo(
     () => getSeasonEquipmentResonance(equipment),
-    [equipment]
+    [equipment],
   );
   const activeItem = activeSlot ? equipment[activeSlot] : null;
   const updateItem = (item: EquipmentItem) => {
@@ -111,7 +108,9 @@ const EquipmentCalculator = ({
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-base font-semibold text-slate-900">装备总属性</h2>
+                <h2 className="text-base font-semibold text-slate-900">
+                  装备总属性
+                </h2>
                 <p className="mt-1 text-xs leading-5 text-slate-500">
                   已直接接入角色面板计算器的可映射字段。
                 </p>
@@ -138,7 +137,7 @@ const EquipmentCalculator = ({
             <div className="mt-4 space-y-4">
               {SUMMARY_GROUPS.map((group) => {
                 const attributes = group.attributes.filter(
-                  (attribute) => (summary.allAttributes[attribute] ?? 0) !== 0
+                  (attribute) => (summary.allAttributes[attribute] ?? 0) !== 0,
                 );
 
                 return (
@@ -149,7 +148,8 @@ const EquipmentCalculator = ({
                     {attributes.length > 0 ? (
                       <div className="mt-2 grid grid-cols-2 gap-2">
                         {attributes.map((attribute) => {
-                          const gemValue = summary.gemAttributes[attribute] ?? 0;
+                          const gemValue =
+                            summary.gemAttributes[attribute] ?? 0;
                           const independentAffixValue =
                             summary.independentAffixAttributes[attribute] ?? 0;
 
@@ -159,7 +159,8 @@ const EquipmentCalculator = ({
                               className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2"
                             >
                               <span className="shrink-0 text-xs text-slate-600">
-                                {EQUIPMENT_ATTRIBUTE_LABELS[attribute] ?? "速度"}
+                                {EQUIPMENT_ATTRIBUTE_LABELS[attribute] ??
+                                  "速度"}
                               </span>
                               <span className="flex min-w-0 flex-1 flex-wrap items-baseline justify-end gap-x-2 gap-y-0.5 text-right">
                                 {gemValue !== 0 ? (
@@ -169,13 +170,17 @@ const EquipmentCalculator = ({
                                 ) : null}
                                 {independentAffixValue !== 0 ? (
                                   <span className="whitespace-nowrap text-[10px] text-amber-600">
-                                    词条 {formatValue(independentAffixValue, attribute)}
+                                    词条{" "}
+                                    {formatValue(
+                                      independentAffixValue,
+                                      attribute,
+                                    )}
                                   </span>
                                 ) : null}
                                 <strong className="shrink-0 whitespace-nowrap text-xs font-semibold text-slate-900">
                                   {formatValue(
                                     summary.allAttributes[attribute] ?? 0,
-                                    attribute
+                                    attribute,
                                   )}
                                 </strong>
                               </span>
@@ -220,7 +225,9 @@ const EquipmentCalculator = ({
         <section>
           <div className="mb-3 flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-base font-semibold text-slate-900">八件装备</h2>
+              <h2 className="text-base font-semibold text-slate-900">
+                八件装备
+              </h2>
               <p className="mt-1 text-xs leading-5 text-slate-500">
                 顺序为武器、上衣、发冠、下装、饰品、鞋子、戒指、项链。
               </p>
@@ -241,10 +248,10 @@ const EquipmentCalculator = ({
               const isSeasonEquipment = isSeasonEquipmentSlot(slot);
               const itemAttributes = calculateEquipmentItemAttributes(
                 item,
-                characterLevel
+                characterLevel,
               );
               const visibleAttributes = Object.entries(itemAttributes).filter(
-                ([, value]) => value !== 0
+                ([, value]) => value !== 0,
               ) as [EquipmentAttribute, number][];
               const effects = getEquipmentEffectLabels(item);
               const gemBonus = calculateEquipmentGemBonus(item, characterLevel);
@@ -302,7 +309,8 @@ const EquipmentCalculator = ({
                       <>
                         {gemBonus ? (
                           <span className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-medium text-blue-700">
-                            {EQUIPMENT_GEM_CONFIG[gemBonus.type].label} · {gemBonus.breakthrough
+                            {EQUIPMENT_GEM_CONFIG[gemBonus.type].label} ·{" "}
+                            {gemBonus.breakthrough
                               ? `${gemBonus.levelLimit}+1`
                               : gemBonus.level}
                             级

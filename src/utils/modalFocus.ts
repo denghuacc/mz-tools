@@ -8,13 +8,17 @@ const FOCUSABLE_ELEMENT_SELECTOR = [
 ].join(",");
 
 const getFocusableElements = (container: HTMLElement): HTMLElement[] =>
-  Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_ELEMENT_SELECTOR))
-    .filter((element) => !element.hidden && element.getAttribute("aria-hidden") !== "true");
+  Array.from(
+    container.querySelectorAll<HTMLElement>(FOCUSABLE_ELEMENT_SELECTOR),
+  ).filter(
+    (element) =>
+      !element.hidden && element.getAttribute("aria-hidden") !== "true",
+  );
 
 /** Keep Tab navigation inside an open modal, including empty modal fallbacks. */
 export const trapModalFocus = (
   event: KeyboardEvent,
-  container: HTMLElement
+  container: HTMLElement,
 ): void => {
   if (event.key !== "Tab") return;
 

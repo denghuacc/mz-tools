@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { vi } from "vitest";
+import { vi } from "vite-plus/test";
 import AttributeBonusCard from "../AttributeBonusCard";
 import { createEmptyCharacterAttributeBonuses } from "../../utils/characterAttributes";
 
@@ -15,7 +15,7 @@ describe("AttributeBonusCard", () => {
         values={createEmptyCharacterAttributeBonuses()}
         onChange={onChange}
         onReset={vi.fn()}
-      />
+      />,
     );
 
     const input = screen.getByRole("spinbutton", {
@@ -43,11 +43,13 @@ describe("AttributeBonusCard", () => {
         values={createEmptyCharacterAttributeBonuses()}
         onChange={onChange}
         onReset={vi.fn()}
-      />
+      />,
     );
 
     expect(
-      screen.getAllByRole("spinbutton").map((input) => input.getAttribute("aria-label"))
+      screen
+        .getAllByRole("spinbutton")
+        .map((input) => input.getAttribute("aria-label")),
     ).toEqual(["多属性加成：气血", "多属性加成：速度", "多属性加成：敏捷"]);
 
     const speedInput = screen.getByRole("spinbutton", {

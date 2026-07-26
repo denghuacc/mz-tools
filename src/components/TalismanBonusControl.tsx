@@ -44,7 +44,11 @@ const TalismanBonusControl = ({
       </button>
     </div>
 
-    <div className="mt-4 grid gap-2" role="radiogroup" aria-label="法宝加成选择">
+    <div
+      className="mt-4 grid gap-2"
+      role="radiogroup"
+      aria-label="法宝加成选择"
+    >
       {options.map((option) => {
         const isSelected = option.id === selectedOptionId;
 

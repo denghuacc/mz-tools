@@ -69,7 +69,9 @@ const normalizePreferences = (value: unknown): UserPreferences => {
 export const loadPreferences = (): UserPreferences => {
   try {
     const stored = window.localStorage.getItem(PREFERENCES_STORAGE_KEY);
-    return stored ? normalizePreferences(JSON.parse(stored)) : DEFAULT_PREFERENCES;
+    return stored
+      ? normalizePreferences(JSON.parse(stored))
+      : DEFAULT_PREFERENCES;
   } catch {
     // 隐私模式或禁用存储不应阻止计算器使用。
     return DEFAULT_PREFERENCES;
@@ -78,14 +80,14 @@ export const loadPreferences = (): UserPreferences => {
 
 /** 合并最小偏好字段，不保存属性输入、错误或计算结果。 */
 export const updatePreferences = (
-  changes: Partial<UserPreferences>
+  changes: Partial<UserPreferences>,
 ): UserPreferences => {
   const preferences = { ...loadPreferences(), ...changes };
 
   try {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
-      JSON.stringify(preferences)
+      JSON.stringify(preferences),
     );
   } catch {
     // 偏好持久化失败不影响当前页面内的交互。

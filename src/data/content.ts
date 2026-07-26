@@ -315,8 +315,7 @@ export const COMPANION_ENTRIES: readonly CompanionEntry[] = [
     title: "踏云骓",
     positioning: "复活与恢复",
     availability: "原活动已结束，当前获取方式以游戏内为准",
-    summary:
-      "心情技能「单骑救主」具备复活及恢复能力，适合在关键回合提供容错。",
+    summary: "心情技能「单骑救主」具备复活及恢复能力，适合在关键回合提供容错。",
     source: {
       title: "侠客行版本与坐骑·踏云骓公告",
       url: "https://mhxzx.wanmei.com/news/gamenews/20230330/242983.shtml",

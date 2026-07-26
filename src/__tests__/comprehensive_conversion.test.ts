@@ -59,7 +59,7 @@ describe("完整职业转换测试 - 24种组合", () => {
     weaponData: Attributes,
     from: string,
     via: string,
-    to: string
+    to: string,
   ) => {
     const { result } = renderHook(() => useWeaponConverter());
 
@@ -276,7 +276,7 @@ describe("完整职业转换测试 - 24种组合", () => {
         weaponData1,
         "healing",
         "seal",
-        "magic"
+        "magic",
       );
 
       // 具体数值验证 - 应该保持原始值不变
@@ -290,7 +290,7 @@ describe("完整职业转换测试 - 24种组合", () => {
         weaponData1,
         "physical",
         "seal",
-        "magic"
+        "magic",
       );
 
       // 具体数值验证 - 应该保持原始值不变
@@ -304,7 +304,7 @@ describe("完整职业转换测试 - 24种组合", () => {
         weaponData1,
         "magic",
         "seal",
-        "healing"
+        "healing",
       );
 
       // 具体数值验证 - 应该保持原始值不变
@@ -320,7 +320,7 @@ describe("完整职业转换测试 - 24种组合", () => {
         weaponData1,
         "healing",
         "physical",
-        "magic"
+        "magic",
       );
 
       // 具体数值验证
@@ -334,7 +334,7 @@ describe("完整职业转换测试 - 24种组合", () => {
         weaponData1,
         "physical",
         "healing",
-        "magic"
+        "magic",
       );
 
       // 具体数值验证
@@ -348,7 +348,7 @@ describe("完整职业转换测试 - 24种组合", () => {
         weaponData1,
         "magic",
         "physical",
-        "healing"
+        "healing",
       );
 
       // 具体数值验证

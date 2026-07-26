@@ -16,10 +16,7 @@ import {
   normalizeEquipmentCalculatorState,
   normalizeEquipmentSet,
 } from "../equipmentAttributes";
-import type {
-  EquipmentGemType,
-  EquipmentItem,
-} from "../equipmentAttributes";
+import type { EquipmentGemType, EquipmentItem } from "../equipmentAttributes";
 
 describe("角色装备属性汇总", () => {
   it("应该按角色等级计算宝石等级上限", () => {
@@ -57,10 +54,10 @@ describe("角色装备属性汇总", () => {
     });
 
     for (const gemType of Object.keys(
-      EQUIPMENT_GEM_CONFIG
+      EQUIPMENT_GEM_CONFIG,
     ) as EquipmentGemType[]) {
       const allowedSlots = EQUIPMENT_SLOTS.filter((slot) =>
-        EQUIPMENT_GEM_SLOT_CONFIG[slot].includes(gemType)
+        EQUIPMENT_GEM_SLOT_CONFIG[slot].includes(gemType),
       );
       expect(allowedSlots).toHaveLength(2);
     }
@@ -117,7 +114,7 @@ describe("角色装备属性汇总", () => {
         attribute,
         value,
       });
-    }
+    },
   );
 
   it("应该只让已收录且部位匹配的独立词条计入汇总", () => {
@@ -154,8 +151,12 @@ describe("角色装备属性汇总", () => {
       gem: { type: "diamond", level: 13, breakthrough: false },
     };
 
-    expect(calculateEquipmentGemBonus(state.equipment.weapon, 89)?.level).toBe(10);
-    expect(normalizeEquipmentCalculatorState(state)?.equipment.weapon.gem).toEqual({
+    expect(calculateEquipmentGemBonus(state.equipment.weapon, 89)?.level).toBe(
+      10,
+    );
+    expect(
+      normalizeEquipmentCalculatorState(state)?.equipment.weapon.gem,
+    ).toEqual({
       type: "diamond",
       level: 10,
       breakthrough: false,
@@ -165,7 +166,9 @@ describe("角色装备属性汇总", () => {
       ...state.equipment.weapon,
       gem: { type: "pearl", level: 8, breakthrough: false },
     };
-    expect(normalizeEquipmentCalculatorState(state)?.equipment.weapon.gem).toBeNull();
+    expect(
+      normalizeEquipmentCalculatorState(state)?.equipment.weapon.gem,
+    ).toBeNull();
   });
 
   it("角色等级提高后应该把已覆盖的突破等级转为普通等级", () => {
@@ -176,7 +179,9 @@ describe("角色装备属性汇总", () => {
       gem: { type: "diamond", level: 8, breakthrough: true },
     };
 
-    expect(normalizeEquipmentCalculatorState(state)?.equipment.weapon.gem).toEqual({
+    expect(
+      normalizeEquipmentCalculatorState(state)?.equipment.weapon.gem,
+    ).toEqual({
       type: "diamond",
       level: 9,
       breakthrough: false,
@@ -197,7 +202,7 @@ describe("角色装备属性汇总", () => {
     };
 
     expect(
-      normalizeEquipmentCalculatorState(storedState)?.equipment.weapon.gem
+      normalizeEquipmentCalculatorState(storedState)?.equipment.weapon.gem,
     ).toEqual({ type: "diamond", level: 8, breakthrough: false });
   });
 
@@ -232,17 +237,20 @@ describe("角色装备属性汇总", () => {
         };
       };
     };
-    storedState.equipment.weapon.independentAffix = { name: " 龙吟 ", level: 6 };
+    storedState.equipment.weapon.independentAffix = {
+      name: " 龙吟 ",
+      level: 6,
+    };
     storedState.equipment.weapon.affixes = [
       { attribute: "physicalAttack", value: 999 },
     ];
 
     expect(
       normalizeEquipmentCalculatorState(storedState)?.equipment.weapon
-        .independentAffix
+        .independentAffix,
     ).toEqual({ name: "龙吟", level: 6 });
     expect(
-      normalizeEquipmentCalculatorState(storedState)?.equipment.weapon.affixes
+      normalizeEquipmentCalculatorState(storedState)?.equipment.weapon.affixes,
     ).toEqual([]);
 
     for (const independentAffix of [
@@ -253,7 +261,7 @@ describe("角色装备属性汇总", () => {
       storedState.equipment.weapon.independentAffix = independentAffix;
       expect(
         normalizeEquipmentCalculatorState(storedState)?.equipment.weapon
-          .independentAffix
+          .independentAffix,
       ).toBeNull();
     }
   });
@@ -477,7 +485,7 @@ describe("角色装备属性汇总", () => {
         reachedThreshold,
         nextThreshold,
       });
-    }
+    },
   );
 
   it("项链应该只计算气血、物防、法防中的两条装备属性", () => {
@@ -555,7 +563,7 @@ describe("角色装备属性汇总", () => {
 
     expect(restored?.characterLevel).toBe(69);
     expect(restored?.equipment.weapon).toEqual(
-      createInitialEquipmentSet().weapon
+      createInitialEquipmentSet().weapon,
     );
   });
 

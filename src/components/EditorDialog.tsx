@@ -71,7 +71,8 @@ const EditorDialog = ({
       >
         <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3.5 sm:px-5">
           <h2 id={titleId} className="text-base font-semibold text-slate-900">
-            {titlePrefix}{title}
+            {titlePrefix}
+            {title}
           </h2>
           <button
             ref={closeButtonRef}

@@ -6,10 +6,7 @@ import type {
   WeaponLevel,
   WeaponType,
 } from "../types";
-import {
-  ATTRIBUTE_FIELDS,
-  WEAPON_LEVEL_CONFIGS,
-} from "../types/constants";
+import { ATTRIBUTE_FIELDS, WEAPON_LEVEL_CONFIGS } from "../types/constants";
 import { loadPreferences, updatePreferences } from "../utils/preferences";
 import {
   performAttributeConversion,
@@ -33,7 +30,7 @@ const createEmptyAttributes = (level: WeaponLevel): AttributeInputs => {
 };
 
 const toCompleteAttributes = (
-  attributes: AttributeInputs
+  attributes: AttributeInputs,
 ): Attributes | null => {
   const { physical, magic, healing } = attributes;
 
@@ -55,17 +52,17 @@ const toCompleteAttributes = (
 export const useWeaponConverter = () => {
   const [initialPreferences] = useState(loadPreferences);
   const [weaponLevel, setWeaponLevel] = useState<WeaponLevel>(
-    initialPreferences.weaponLevel
+    initialPreferences.weaponLevel,
   );
   const [currentSect, setCurrentSect] = useState<Sect>(
-    initialPreferences.weaponCurrentSect
+    initialPreferences.weaponCurrentSect,
   );
   const [targetSect, setTargetSect] = useState<Sect>(
-    initialPreferences.weaponTargetSect
+    initialPreferences.weaponTargetSect,
   );
   const [originalForm, setOriginalForm] = useState<WeaponType | null>(null);
   const [attributes, setAttributes] = useState<AttributeInputs>(() =>
-    createEmptyAttributes(initialPreferences.weaponLevel)
+    createEmptyAttributes(initialPreferences.weaponLevel),
   );
   const [result, setResult] = useState<Attributes | null>(null);
   const [conversionOutcome, setConversionOutcome] =
@@ -117,14 +114,14 @@ export const useWeaponConverter = () => {
     (
       newAttributes:
         | AttributeInputs
-        | ((prev: AttributeInputs) => AttributeInputs)
+        | ((prev: AttributeInputs) => AttributeInputs),
     ) => {
       setAttributes(newAttributes);
       setResult(null);
       setConversionOutcome(null);
       setError(null);
     },
-    []
+    [],
   );
 
   const convertAttributes = useCallback(() => {
@@ -135,7 +132,7 @@ export const useWeaponConverter = () => {
     const completeAttributes = toCompleteAttributes(attributes);
     if (!completeAttributes) {
       const missingAttributes = ATTRIBUTE_FIELDS.filter(
-        ({ type }) => attributes[type].current === null
+        ({ type }) => attributes[type].current === null,
       ).map(({ label }) => label);
       setError(`请完整输入${missingAttributes.join("、")}数值`);
       return;
@@ -168,7 +165,7 @@ export const useWeaponConverter = () => {
       const step = performAttributeConversionStep(
         finalAttributes,
         fromSect,
-        toSect
+        toSect,
       );
       finalAttributes = step.attributes;
       stepStatuses.push(step.status);
@@ -189,7 +186,7 @@ export const useWeaponConverter = () => {
 
     setResult(finalAttributes);
     setConversionOutcome(
-      getConversionOutcome(completeAttributes, finalAttributes, stepStatuses)
+      getConversionOutcome(completeAttributes, finalAttributes, stepStatuses),
     );
   }, [attributes, currentSect, targetSect, originalForm]);
 
@@ -199,7 +196,7 @@ export const useWeaponConverter = () => {
       ? performAttributeConversion(
           completeAttributes,
           currentSect,
-          getSectByWeaponType(originalForm)
+          getSectByWeaponType(originalForm),
         )
       : null;
 

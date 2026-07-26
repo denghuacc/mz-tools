@@ -34,7 +34,7 @@ const TianshuBonusControl = ({
 }: TianshuBonusControlProps) => {
   const selectedCount = Object.values(counts).reduce(
     (total, count) => total + count,
-    0
+    0,
   );
 
   return (
@@ -56,9 +56,7 @@ const TianshuBonusControl = ({
           >
             {title}
           </h2>
-          <p className="mt-1 text-xs leading-5 text-slate-500">
-            {description}
-          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
         </div>
         <button
           type="button"
@@ -115,9 +113,7 @@ const TianshuBonusControl = ({
                 <button
                   type="button"
                   aria-label={`增加${actionLabel}：${option.title}`}
-                  disabled={
-                    maximumCount !== undefined && count >= maximumCount
-                  }
+                  disabled={maximumCount !== undefined && count >= maximumCount}
                   className="h-7 w-7 rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-slate-300"
                   onClick={() => onCountChange(option.id, count + 1)}
                 >
@@ -134,7 +130,8 @@ const TianshuBonusControl = ({
         aria-live="polite"
         className="mt-3 text-right text-xs text-slate-500"
       >
-        已选择 <span className="font-medium text-blue-600">{selectedCount}</span> 次
+        已选择{" "}
+        <span className="font-medium text-blue-600">{selectedCount}</span> 次
       </p>
     </section>
   );

@@ -58,11 +58,13 @@ describe("characterProfiles", () => {
 
     saveCharacterProfileSlots(populatedSlots);
     expect(loadCharacterProfileSlots()).toEqual(populatedSlots);
-    expect(window.localStorage.getItem(CHARACTER_PROFILES_STORAGE_KEY)).not.toBeNull();
+    expect(
+      window.localStorage.getItem(CHARACTER_PROFILES_STORAGE_KEY),
+    ).not.toBeNull();
 
     restoreCharacterStateSnapshot(populatedSlots[0].characterState);
     expect(loadCurrentCharacterStateSnapshot()).toEqual(
-      populatedSlots[0].characterState
+      populatedSlots[0].characterState,
     );
 
     window.localStorage.setItem(CHARACTER_ATTRIBUTES_STORAGE_KEY, "损坏数据");
@@ -80,7 +82,7 @@ describe("characterProfiles", () => {
           characterState: {},
           equipmentState: {},
         },
-      ])
+      ]),
     ).toEqual([null, null, null]);
     expect(normalizeCharacterProfileName(null, 1)).toBe("角色2");
     expect(normalizeCharacterProfileName("   ", 2)).toBe("角色3");
@@ -116,7 +118,7 @@ describe("characterProfiles", () => {
     const first = replaceCharacterProfileSlot(
       createEmptyCharacterProfileSlots(),
       0,
-      profile
+      profile,
     );
     const second = replaceCharacterProfileSlot(first, 1, profile);
     const third = replaceCharacterProfileSlot(second, 2, profile);
@@ -139,20 +141,20 @@ describe("characterProfiles", () => {
 
     expect(
       activateCharacterProfileSlot(third, 0).map(
-        (slot) => slot?.isActive ?? null
-      )
+        (slot) => slot?.isActive ?? null,
+      ),
     ).toEqual([true, false, false]);
     expect(
       activateCharacterProfileSlot([null, third[1], null], 1).map(
-        (slot) => slot?.isActive ?? null
-      )
+        (slot) => slot?.isActive ?? null,
+      ),
     ).toEqual([null, true, null]);
   });
 
   it("当前版本没有快照时应该读取合法的旧版角色配置", () => {
     window.localStorage.setItem(
       LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY,
-      JSON.stringify({ skillBonuses: { health: 88 } })
+      JSON.stringify({ skillBonuses: { health: 88 } }),
     );
 
     expect(loadCurrentCharacterStateSnapshot()).toEqual({

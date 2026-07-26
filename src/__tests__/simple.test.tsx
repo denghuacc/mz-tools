@@ -9,7 +9,7 @@ describe("简单测试", () => {
 
   it("应该渲染转换器标题", () => {
     expect(
-      screen.getByRole("heading", { name: "武器属性转换器" })
+      screen.getByRole("heading", { name: "武器属性转换器" }),
     ).toBeInTheDocument();
   });
 

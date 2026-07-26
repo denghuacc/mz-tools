@@ -10,7 +10,7 @@ describe("武器转换器端到端测试", () => {
     it("应该渲染主要组件", () => {
       // 验证标题
       expect(
-        screen.getByRole("heading", { name: "武器属性转换器" })
+        screen.getByRole("heading", { name: "武器属性转换器" }),
       ).toBeInTheDocument();
 
       // 验证基本元素存在

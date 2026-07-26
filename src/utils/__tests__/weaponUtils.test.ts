@@ -155,9 +155,9 @@ describe("武器工具函数测试", () => {
     });
 
     it("应该在配置不一致时尽早报错", () => {
-      expect(() =>
-        getSectByWeaponType("不存在的武器" as WeaponType)
-      ).toThrow("未知武器类型：不存在的武器");
+      expect(() => getSectByWeaponType("不存在的武器" as WeaponType)).toThrow(
+        "未知武器类型：不存在的武器",
+      );
     });
   });
 
@@ -168,7 +168,7 @@ describe("武器工具函数测试", () => {
 
       const [newSource, newTarget] = convertAttributeValues(
         sourceAttr,
-        targetAttr
+        targetAttr,
       );
 
       expect(typeof newSource.current).toBe("number");
@@ -272,7 +272,7 @@ describe("武器工具函数测试", () => {
 
       const [newSource, newTarget] = convertAttributeValues(
         sourceAttr,
-        targetAttr
+        targetAttr,
       );
 
       expect(newSource.current).toBe(1);
@@ -293,7 +293,7 @@ describe("武器工具函数测试", () => {
 
       const [newSource, newTarget] = convertAttributeValues(
         sourceAttr,
-        targetAttr
+        targetAttr,
       );
 
       expect(typeof newSource.current).toBe("number");

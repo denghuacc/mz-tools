@@ -4,11 +4,11 @@ import { render, type RenderOptions } from "@testing-library/react";
 // 自定义渲染函数，可以在这里添加全局的 providers
 const customRender = (
   ui: ReactElement,
-  options?: Omit<RenderOptions, "wrapper">
+  options?: Omit<RenderOptions, "wrapper">,
 ): ReturnType<typeof render> => render(ui, { ...options });
 
 // 重新导出所有测试工具
-// eslint-disable-next-line react-refresh/only-export-components
+// oxlint-disable-next-line react-refresh/only-export-components
 export * from "@testing-library/react";
 export { customRender as render };
 
@@ -74,7 +74,7 @@ export const fillAttributeInputs = async (
     clear: (element: Element) => Promise<void>;
     type: (element: Element, text: string) => Promise<void>;
   },
-  values: { physical?: number; magic?: number; healing?: number }
+  values: { physical?: number; magic?: number; healing?: number },
 ) => {
   const inputs = document.querySelectorAll('input[type="number"]');
 

@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { vi } from "vite-plus/test";
 import {
   DEFAULT_PREFERENCES,
   loadPreferences,
@@ -22,7 +22,7 @@ describe("用户偏好存储", () => {
         weaponTargetSect: "天音寺",
         ringCurrentSect: "合欢门",
         ringTargetSect: "万灵宫",
-      })
+      }),
     );
 
     expect(loadPreferences()).toEqual({
@@ -45,7 +45,7 @@ describe("用户偏好存储", () => {
         weaponTargetSect: null,
         ringCurrentSect: 1,
         ringTargetSect: {},
-      })
+      }),
     );
 
     expect(loadPreferences()).toEqual(DEFAULT_PREFERENCES);
@@ -63,13 +63,13 @@ describe("用户偏好存储", () => {
       weaponLevel: 110,
     });
     const stored = JSON.parse(
-      window.localStorage.getItem(PREFERENCES_STORAGE_KEY) ?? "{}"
+      window.localStorage.getItem(PREFERENCES_STORAGE_KEY) ?? "{}",
     );
 
     expect(updated.activeTool).toBe("ring");
     expect(updated.weaponLevel).toBe(110);
     expect(Object.keys(stored).sort()).toEqual(
-      Object.keys(DEFAULT_PREFERENCES).sort()
+      Object.keys(DEFAULT_PREFERENCES).sort(),
     );
     expect(stored).not.toHaveProperty("attributes");
     expect(stored).not.toHaveProperty("result");

@@ -24,7 +24,7 @@ type SelectableAttributeBonusControlProps<
   fields: readonly SelectableBonusField<Attribute>[];
   selections: readonly SelectableBonusSelection<Attribute>[];
   onChange: (
-    selections: readonly SelectableBonusSelection<Attribute>[]
+    selections: readonly SelectableBonusSelection<Attribute>[],
   ) => void;
   maximumSelectionCount?: number;
 };
@@ -43,12 +43,12 @@ const SelectableAttributeBonusControl = <
 }: SelectableAttributeBonusControlProps<Attribute>) => {
   const toggleAttribute = (attribute: Attribute) => {
     const isSelected = selections.some(
-      (selection) => selection.attribute === attribute
+      (selection) => selection.attribute === attribute,
     );
 
     if (isSelected) {
       onChange(
-        selections.filter((selection) => selection.attribute !== attribute)
+        selections.filter((selection) => selection.attribute !== attribute),
       );
       return;
     }
@@ -69,8 +69,8 @@ const SelectableAttributeBonusControl = <
       selections.map((selection) =>
         selection.attribute === attribute
           ? { ...selection, value: nextValue }
-          : selection
-      )
+          : selection,
+      ),
     );
   };
 
@@ -98,7 +98,7 @@ const SelectableAttributeBonusControl = <
       >
         {fields.map(({ attribute, label }) => {
           const isSelected = selections.some(
-            (selection) => selection.attribute === attribute
+            (selection) => selection.attribute === attribute,
           );
           const isDisabled =
             !isSelected && selections.length >= maximumSelectionCount;
@@ -141,7 +141,7 @@ const SelectableAttributeBonusControl = <
         <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
           {selections.map((selection) => {
             const field = fields.find(
-              ({ attribute }) => attribute === selection.attribute
+              ({ attribute }) => attribute === selection.attribute,
             );
 
             if (!field) {

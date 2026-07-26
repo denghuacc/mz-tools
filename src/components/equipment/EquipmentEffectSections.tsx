@@ -54,7 +54,7 @@ const EquipmentGemSection = ({
   const allowedGemTypes = EQUIPMENT_GEM_SLOT_CONFIG[item.slot];
   const getOtherEquipmentUseCount = (gemType: EquipmentGemType) =>
     EQUIPMENT_SLOTS.filter(
-      (slot) => slot !== item.slot && equipment[slot].gem?.type === gemType
+      (slot) => slot !== item.slot && equipment[slot].gem?.type === gemType,
     ).length;
 
   return (
@@ -88,12 +88,12 @@ const EquipmentGemSection = ({
               const config = EQUIPMENT_GEM_CONFIG[gemType];
               const disabled =
                 item.gem?.type !== gemType &&
-                getOtherEquipmentUseCount(gemType) >=
-                  MAX_GEM_EQUIPMENT_COUNT;
+                getOtherEquipmentUseCount(gemType) >= MAX_GEM_EQUIPMENT_COUNT;
 
               return (
                 <option key={gemType} value={gemType} disabled={disabled}>
-                  {config.label} · {EQUIPMENT_ATTRIBUTE_LABELS[config.attribute]} +
+                  {config.label} ·{" "}
+                  {EQUIPMENT_ATTRIBUTE_LABELS[config.attribute]} +
                   {config.baseValue}/级
                 </option>
               );
@@ -126,7 +126,7 @@ const EquipmentGemSection = ({
                 <option key={level} value={level}>
                   {level} 级
                 </option>
-              )
+              ),
             )}
           </select>
         </label>
@@ -169,10 +169,7 @@ const EquipmentGemSection = ({
   );
 };
 
-const EquipmentEffectsSection = ({
-  item,
-  onChange,
-}: EquipmentSectionProps) => {
+const EquipmentEffectsSection = ({ item, onChange }: EquipmentSectionProps) => {
   const configuredEffects = getBaseEquipmentEffectIds(item);
   const canEnable = (effect: BaseEquipmentEffectId) =>
     canEnableBaseEquipmentEffect(item, effect);
@@ -409,7 +406,7 @@ export const SeasonEquipmentEffectSection = ({
               onChange({
                 ...item,
                 seasonEffectLevel: Number(
-                  event.target.value
+                  event.target.value,
                 ) as SeasonEffectLevel,
               })
             }
@@ -427,8 +424,8 @@ export const SeasonEquipmentEffectSection = ({
       </div>
       {selectedEffect && item.seasonEffectLevel > 0 ? (
         <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs leading-5 text-blue-800">
-          当前提供速度 +
-          {selectedEffect.valuePerLevel * item.seasonEffectLevel}。
+          当前提供速度 +{selectedEffect.valuePerLevel * item.seasonEffectLevel}
+          。
         </p>
       ) : null}
       <p className="mt-3 rounded-lg border border-amber-100 bg-amber-50/60 px-3 py-2 text-xs leading-5 text-amber-800">

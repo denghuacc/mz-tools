@@ -271,7 +271,7 @@ describe("工具函数测试", () => {
       const result = performAttributeConversion(
         testAttributes,
         "鬼王宗",
-        "天道府"
+        "天道府",
       );
 
       expect(result.physical.current).toBe(500);
@@ -283,7 +283,7 @@ describe("工具函数测试", () => {
       const result = performAttributeConversion(
         testAttributes,
         "鬼王宗",
-        "合欢门"
+        "合欢门",
       );
 
       // 游戏武器规则：封系与其他系别互转时三项属性保持不变。
@@ -330,26 +330,30 @@ describe("常量测试", () => {
     expect(
       allSects.filter(
         (sect) =>
-          SECT_TO_PROFESSION[sect as keyof typeof SECT_TO_PROFESSION] === "物理"
-      )
+          SECT_TO_PROFESSION[sect as keyof typeof SECT_TO_PROFESSION] ===
+          "物理",
+      ),
     ).toHaveLength(4);
     expect(
       allSects.filter(
         (sect) =>
-          SECT_TO_PROFESSION[sect as keyof typeof SECT_TO_PROFESSION] === "法师"
-      )
+          SECT_TO_PROFESSION[sect as keyof typeof SECT_TO_PROFESSION] ===
+          "法师",
+      ),
     ).toHaveLength(4);
     expect(
       allSects.filter(
         (sect) =>
-          SECT_TO_PROFESSION[sect as keyof typeof SECT_TO_PROFESSION] === "治疗"
-      )
+          SECT_TO_PROFESSION[sect as keyof typeof SECT_TO_PROFESSION] ===
+          "治疗",
+      ),
     ).toHaveLength(3);
     expect(
       allSects.filter(
         (sect) =>
-          SECT_TO_PROFESSION[sect as keyof typeof SECT_TO_PROFESSION] === "封印"
-      )
+          SECT_TO_PROFESSION[sect as keyof typeof SECT_TO_PROFESSION] ===
+          "封印",
+      ),
     ).toHaveLength(2);
   });
 });

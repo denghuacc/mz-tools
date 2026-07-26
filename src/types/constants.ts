@@ -113,7 +113,7 @@ export const WEAPON_LEVEL_CONFIGS: Record<WeaponLevel, WeaponLevelConfig> = {
 };
 
 export const WEAPON_LEVEL_OPTIONS = ([60, "60-standard", 80, 110] as const).map(
-  (level) => WEAPON_LEVEL_CONFIGS[level]
+  (level) => WEAPON_LEVEL_CONFIGS[level],
 );
 
 // 保留原有数值映射接口，值仍由 WeaponLevelConfig 派生。

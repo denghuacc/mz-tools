@@ -22,37 +22,39 @@ describe("CharacterAttributeCalculator", () => {
     render(<CharacterAttributeCalculator />);
 
     expect(
-      screen.getByText(/当前计算仅在现有样本范围内有效/)
+      screen.getByText(/当前计算仅在现有样本范围内有效/),
     ).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     await user.click(
-      screen.getByRole("button", { name: "查看当前计算口径详情" })
+      screen.getByRole("button", { name: "查看当前计算口径详情" }),
     );
 
     const dialog = screen.getByRole("dialog", {
       name: "当前计算口径说明",
     });
     expect(dialog).toHaveTextContent(
-      "五维转换公式来自第三方博主测试， 官方未发布对应公式"
+      "五维转换公式来自第三方博主测试， 官方未发布对应公式",
     );
     expect(dialog).toHaveTextContent("所有结果仅供参考， 以实际游戏数据为准");
     expect(dialog).toHaveTextContent("0 级五维：体、灵、力、耐、敏均为 20 点");
     expect(dialog).toHaveTextContent(
-      "五维各固定增加 2 点，另获得 10 点可分配潜力"
+      "五维各固定增加 2 点，另获得 10 点可分配潜力",
     );
     expect(dialog).toHaveTextContent(
-      /当前 69 级从 0 级起共升级 69 次；\s*未分配潜力前五维各为 158 点，可分配潜力共 690 点/
+      /当前 69 级从 0 级起共升级 69 次；\s*未分配潜力前五维各为 158 点，可分配潜力共 690 点/,
     );
 
     const conversionTable = within(dialog).getByRole("table", {
       name: "五维属性转换规则",
     });
     expect(
-      within(conversionTable).getByRole("row", { name: "体力 +3 — +0.1 — +0.1 +0.1" })
+      within(conversionTable).getByRole("row", {
+        name: "体力 +3 — +0.1 — +0.1 +0.1",
+      }),
     ).toBeInTheDocument();
     expect(
-      within(conversionTable).getByRole("row", { name: "敏捷 — — — — — +0.5" })
+      within(conversionTable).getByRole("row", { name: "敏捷 — — — — — +0.5" }),
     ).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "完成" }));
@@ -63,7 +65,7 @@ describe("CharacterAttributeCalculator", () => {
     render(<CharacterAttributeCalculator />);
 
     expect(
-      screen.queryByRole("heading", { name: "69 级裸属性" })
+      screen.queryByRole("heading", { name: "69 级裸属性" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("潜力点总计")).not.toBeInTheDocument();
     expect(screen.getByText("基础属性 · 10 项")).toBeInTheDocument();
@@ -87,7 +89,7 @@ describe("CharacterAttributeCalculator", () => {
       health: 100,
     };
     const { unmount } = render(
-      <CharacterAttributeCalculator equipmentBonuses={equipmentBonuses} />
+      <CharacterAttributeCalculator equipmentBonuses={equipmentBonuses} />,
     );
 
     const equipmentToggle = screen.getByRole("checkbox", {
@@ -95,7 +97,7 @@ describe("CharacterAttributeCalculator", () => {
     });
     expect(equipmentToggle).toBeChecked();
     expect(
-      screen.queryByRole("region", { name: "装备属性接入状态" })
+      screen.queryByRole("region", { name: "装备属性接入状态" }),
     ).not.toBeInTheDocument();
     expect(screen.getByText("+装备 100")).toBeInTheDocument();
     expect(screen.getByText("2183")).toBeInTheDocument();
@@ -107,15 +109,17 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("2083")).toBeInTheDocument();
     await waitFor(() => {
       const stored = JSON.parse(
-        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}",
       );
       expect(stored.isEquipmentIncluded).toBe(false);
     });
 
     unmount();
-    render(<CharacterAttributeCalculator equipmentBonuses={equipmentBonuses} />);
+    render(
+      <CharacterAttributeCalculator equipmentBonuses={equipmentBonuses} />,
+    );
     expect(
-      screen.getByRole("checkbox", { name: "计入装备值" })
+      screen.getByRole("checkbox", { name: "计入装备值" }),
     ).not.toBeChecked();
     expect(screen.queryByText("+装备 100")).not.toBeInTheDocument();
     expect(screen.getByText("2083")).toBeInTheDocument();
@@ -127,14 +131,19 @@ describe("CharacterAttributeCalculator", () => {
     const allocationEditButton = screen.getByRole("button", {
       name: "编辑潜力点分配",
     });
-    expect(within(allocationEditButton).queryByText("编辑")).not.toBeInTheDocument();
+    expect(
+      within(allocationEditButton).queryByText("编辑"),
+    ).not.toBeInTheDocument();
     expect(allocationEditButton.querySelector("svg")).not.toBeNull();
 
-    const editButtons = within(screen.getByTestId("attribute-bonus-rail"))
-      .getAllByRole("button", { name: /^编辑/ });
+    const editButtons = within(
+      screen.getByTestId("attribute-bonus-rail"),
+    ).getAllByRole("button", { name: /^编辑/ });
 
     expect(editButtons).toHaveLength(16);
-    expect(editButtons.map((button) => button.getAttribute("aria-label"))).toEqual([
+    expect(
+      editButtons.map((button) => button.getAttribute("aria-label")),
+    ).toEqual([
       "编辑技能",
       "编辑人物修炼",
       "编辑神魂",
@@ -172,12 +181,16 @@ describe("CharacterAttributeCalculator", () => {
     const supportOption = within(talismanDialog).getByRole("radio", {
       name: /辅助 \/ 封印法宝：鹤云幡/,
     });
-    expect(within(talismanDialog).getByText("等级 × 0.6 物攻")).toBeInTheDocument();
-    expect(within(talismanDialog).getByText("等级 × 0.6 法攻")).toBeInTheDocument();
+    expect(
+      within(talismanDialog).getByText("等级 × 0.6 物攻"),
+    ).toBeInTheDocument();
+    expect(
+      within(talismanDialog).getByText("等级 × 0.6 法攻"),
+    ).toBeInTheDocument();
     expect(
       within(talismanDialog).getByText(
-        "等级 × 0.4 物攻 · 血炼 +5% 物防 · +5% 法防"
-      )
+        "等级 × 0.4 物攻 · 血炼 +5% 物防 · +5% 法防",
+      ),
     ).toBeInTheDocument();
 
     await user.click(physicalAttackOption);
@@ -204,27 +217,27 @@ describe("CharacterAttributeCalculator", () => {
 
     const transformationDialog = await openBonusEditor(user, "幻形符");
     await user.click(
-      within(transformationDialog).getByRole("button", { name: "气血" })
+      within(transformationDialog).getByRole("button", { name: "气血" }),
     );
     await user.click(
       within(transformationDialog).getByRole("button", {
         name: "物理暴击率",
-      })
+      }),
     );
     await user.type(
       within(transformationDialog).getByRole("spinbutton", {
         name: "幻形符：气血",
       }),
-      "100"
+      "100",
     );
     await user.type(
       within(transformationDialog).getByRole("spinbutton", {
         name: "幻形符：物理暴击率",
       }),
-      "3.5"
+      "3.5",
     );
     await user.click(
-      within(transformationDialog).getByRole("button", { name: "完成" })
+      within(transformationDialog).getByRole("button", { name: "完成" }),
     );
 
     const talismanDialog = await openBonusEditor(user, "法宝");
@@ -235,40 +248,38 @@ describe("CharacterAttributeCalculator", () => {
       name: /法宝：琥珀朱绫/,
     });
     expect(
-      within(talismanDialog).getByText("当前幻形符属性 × 50%")
+      within(talismanDialog).getByText("当前幻形符属性 × 50%"),
     ).toBeInTheDocument();
     await user.click(physicalAttackOption);
     await user.click(amberOption);
     expect(physicalAttackOption).toHaveAttribute("aria-checked", "true");
     expect(amberOption).toBeChecked();
     await user.click(
-      within(talismanDialog).getByRole("button", { name: "完成" })
+      within(talismanDialog).getByRole("button", { name: "完成" }),
     );
 
-    const summaryCard = screen.getByRole("heading", { name: "法宝" })
+    const summaryCard = screen
+      .getByRole("heading", { name: "法宝" })
       .closest("article");
     expect(summaryCard).not.toBeNull();
     expect(
-      within(summaryCard!).getByText("天魔幡 · 物攻 +41.4")
+      within(summaryCard!).getByText("天魔幡 · 物攻 +41.4"),
     ).toBeInTheDocument();
     expect(
-      within(summaryCard!).getByText("琥珀朱绫 · 气血 +50")
+      within(summaryCard!).getByText("琥珀朱绫 · 气血 +50"),
     ).toBeInTheDocument();
     expect(
-      within(summaryCard!).getByText("物理暴击率 +1.75%")
+      within(summaryCard!).getByText("物理暴击率 +1.75%"),
     ).toBeInTheDocument();
     expect(screen.getByText("+法宝（琥珀朱绫） 50")).toBeInTheDocument();
     expect(screen.getByText("2233")).toBeInTheDocument();
-    expect(screen.getByText("法宝（天魔幡） +41.4"))
-      .toBeInTheDocument();
+    expect(screen.getByText("法宝（天魔幡） +41.4")).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
-    expect(screen.getByText("法宝（琥珀朱绫） +1.75%"))
-      .toBeInTheDocument();
+    expect(screen.getByText("法宝（琥珀朱绫） +1.75%")).toBeInTheDocument();
     const physicalCriticalRow = screen.getByText("物理暴击").closest("div");
     expect(physicalCriticalRow).not.toBeNull();
-    expect(within(physicalCriticalRow!).getByText("7%"))
-      .toBeInTheDocument();
+    expect(within(physicalCriticalRow!).getByText("7%")).toBeInTheDocument();
   });
 
   it("应该按当前年份限制三生造化丹颗数并换算五维属性", async () => {
@@ -279,25 +290,21 @@ describe("CharacterAttributeCalculator", () => {
     const maximumCount = calculateSanshengPillMaximumCount(currentYear);
 
     expect(
-      within(dialog).getByLabelText(
-        `三生造化丹已服用 0 / ${maximumCount} 颗`
-      )
+      within(dialog).getByLabelText(`三生造化丹已服用 0 / ${maximumCount} 颗`),
     ).toBeInTheDocument();
 
     await user.click(
-      within(dialog).getByRole("button", { name: "增加三生造化丹：力量" })
+      within(dialog).getByRole("button", { name: "增加三生造化丹：力量" }),
     );
     await user.click(
-      within(dialog).getByRole("button", { name: "增加三生造化丹：力量" })
+      within(dialog).getByRole("button", { name: "增加三生造化丹：力量" }),
     );
     await user.click(
-      within(dialog).getByRole("button", { name: "增加三生造化丹：体力" })
+      within(dialog).getByRole("button", { name: "增加三生造化丹：体力" }),
     );
 
     expect(
-      within(dialog).getByLabelText(
-        `三生造化丹已服用 3 / ${maximumCount} 颗`
-      )
+      within(dialog).getByLabelText(`三生造化丹已服用 3 / ${maximumCount} 颗`),
     ).toBeInTheDocument();
     const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
       .getByRole("heading", { name: "三生造化丹" })
@@ -306,7 +313,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).getByText("力 +4")).toBeInTheDocument();
     expect(within(summaryCard!).getByText("体 +2")).toBeInTheDocument();
     expect(
-      within(summaryCard!).getByText(`已服 3 / ${maximumCount} 颗`)
+      within(summaryCard!).getByText(`已服 3 / ${maximumCount} 颗`),
     ).toBeInTheDocument();
     expect(screen.getByText("三生造化丹 +4")).toBeInTheDocument();
 
@@ -330,7 +337,7 @@ describe("CharacterAttributeCalculator", () => {
       within(skillDialog).getByRole("spinbutton", {
         name: "技能：气血",
       }),
-      "100"
+      "100",
     );
     await user.click(within(skillDialog).getByRole("button", { name: "完成" }));
 
@@ -386,7 +393,7 @@ describe("CharacterAttributeCalculator", () => {
 
     expect(mixedPreset).toHaveAttribute("aria-checked", "true");
     expect(
-      within(allocationSummary).getByText("体 +138 · 耐 +138 · 敏 +414")
+      within(allocationSummary).getByText("体 +138 · 耐 +138 · 敏 +414"),
     ).toBeInTheDocument();
     expect(screen.getByText("2497")).toBeInTheDocument();
   });
@@ -395,31 +402,29 @@ describe("CharacterAttributeCalculator", () => {
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
 
+    expect(screen.getByRole("heading", { name: "技能" })).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "技能" })
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("spinbutton", { name: "技能：气血" })
+      screen.queryByRole("spinbutton", { name: "技能：气血" }),
     ).not.toBeInTheDocument();
 
     const skillDialog = await openBonusEditor(user, "技能");
     expect(
       SKILL_INPUT_LABELS.map((label) =>
-        within(skillDialog).getByRole("spinbutton", { name: label })
-      )
+        within(skillDialog).getByRole("spinbutton", { name: label }),
+      ),
     ).toHaveLength(8);
 
     await user.type(
       within(skillDialog).getByRole("spinbutton", {
         name: "技能：气血",
       }),
-      "100"
+      "100",
     );
     await user.type(
       within(skillDialog).getByRole("spinbutton", {
         name: "技能：物攻",
       }),
-      "25"
+      "25",
     );
 
     expect(screen.getByText("2183")).toBeInTheDocument();
@@ -437,16 +442,14 @@ describe("CharacterAttributeCalculator", () => {
     expect(
       within(skillDialog).getByRole("spinbutton", {
         name: "技能：气血",
-      })
+      }),
     ).toHaveValue(null);
   });
 
   it("应该允许技能减少速度并正确更新最终速度", () => {
     render(<CharacterAttributeCalculator />);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "编辑技能" })
-    );
+    fireEvent.click(screen.getByRole("button", { name: "编辑技能" }));
     const skillDialog = screen.getByRole("dialog", {
       name: "编辑技能",
     });
@@ -464,7 +467,7 @@ describe("CharacterAttributeCalculator", () => {
       .closest("section");
     expect(skillCard).not.toBeNull();
     expect(
-      within(skillCard!).getByRole("button", { name: "清空" })
+      within(skillCard!).getByRole("button", { name: "清空" }),
     ).toBeEnabled();
   });
 
@@ -475,7 +478,7 @@ describe("CharacterAttributeCalculator", () => {
 
     await user.type(
       within(skillDialog).getByRole("spinbutton", { name: "技能：抗封" }),
-      "3"
+      "3",
     );
 
     const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
@@ -486,13 +489,9 @@ describe("CharacterAttributeCalculator", () => {
 
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
     const resultPanel = within(screen.getByTestId("attribute-result-panel"));
-    const sealResistanceRow = resultPanel
-      .getByText("封印抵抗")
-      .closest("div");
+    const sealResistanceRow = resultPanel.getByText("封印抵抗").closest("div");
     expect(sealResistanceRow).not.toBeNull();
-    expect(
-      within(sealResistanceRow!).getByText("技能 +3")
-    ).toBeInTheDocument();
+    expect(within(sealResistanceRow!).getByText("技能 +3")).toBeInTheDocument();
     expect(within(sealResistanceRow!).getByText("7")).toBeInTheDocument();
   });
 
@@ -501,21 +500,12 @@ describe("CharacterAttributeCalculator", () => {
     render(<CharacterAttributeCalculator />);
     await openBonusEditor(user, "魂器");
 
-    await user.type(
-      screen.getByRole("spinbutton", { name: "魂器：力" }),
-      "10"
-    );
-    await user.type(
-      screen.getByRole("spinbutton", { name: "魂器：灵" }),
-      "-8"
-    );
-    await user.type(
-      screen.getByRole("spinbutton", { name: "魂器：体" }),
-      "-2"
-    );
+    await user.type(screen.getByRole("spinbutton", { name: "魂器：力" }), "10");
+    await user.type(screen.getByRole("spinbutton", { name: "魂器：灵" }), "-8");
+    await user.type(screen.getByRole("spinbutton", { name: "魂器：体" }), "-2");
     await user.type(
       screen.getByRole("spinbutton", { name: "魂器：物攻" }),
-      "20"
+      "20",
     );
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -533,25 +523,18 @@ describe("CharacterAttributeCalculator", () => {
     render(<CharacterAttributeCalculator />);
     await openBonusEditor(user, "魂器");
 
-    await user.type(
-      screen.getByRole("spinbutton", { name: "魂器：力" }),
-      "10"
-    );
-    await user.type(
-      screen.getByRole("spinbutton", { name: "魂器：灵" }),
-      "-7"
-    );
-    await user.type(
-      screen.getByRole("spinbutton", { name: "魂器：体" }),
-      "-2"
-    );
+    await user.type(screen.getByRole("spinbutton", { name: "魂器：力" }), "10");
+    await user.type(screen.getByRole("spinbutton", { name: "魂器：灵" }), "-7");
+    await user.type(screen.getByRole("spinbutton", { name: "魂器：体" }), "-2");
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "增减合计必须为 0，当前合计为 +1；本组属性暂未计入结果"
+      "增减合计必须为 0，当前合计为 +1；本组属性暂未计入结果",
     );
     const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
     expect(within(potentialColumn).getByText("848")).toBeInTheDocument();
-    expect(within(potentialColumn).queryByText("魂器 +10")).not.toBeInTheDocument();
+    expect(
+      within(potentialColumn).queryByText("魂器 +10"),
+    ).not.toBeInTheDocument();
   });
 
   it("应该为神魂五项属性应用同一个加成值", async () => {
@@ -570,7 +553,9 @@ describe("CharacterAttributeCalculator", () => {
       .closest("article");
     expect(summaryCard).not.toBeNull();
     for (const label of ["物攻", "法攻", "物防", "法防", "气血"]) {
-      expect(within(summaryCard!).getByText(`${label} +30`)).toBeInTheDocument();
+      expect(
+        within(summaryCard!).getByText(`${label} +30`),
+      ).toBeInTheDocument();
     }
 
     const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
@@ -584,7 +569,7 @@ describe("CharacterAttributeCalculator", () => {
     const tianshuDialog = await openBonusEditor(user, "天书");
 
     expect(
-      within(tianshuDialog).getAllByRole("button", { name: /^增加天书：/ })
+      within(tianshuDialog).getAllByRole("button", { name: /^增加天书：/ }),
     ).toHaveLength(22);
 
     for (const optionTitle of [
@@ -605,15 +590,15 @@ describe("CharacterAttributeCalculator", () => {
       await user.click(
         within(tianshuDialog).getByRole("button", {
           name: `增加天书：${optionTitle}`,
-        })
+        }),
       );
     }
 
     expect(
-      within(tianshuDialog).getByLabelText("20体已选次数")
+      within(tianshuDialog).getByLabelText("20体已选次数"),
     ).toHaveTextContent("×2");
     expect(
-      within(tianshuDialog).getByLabelText("天书已选择 13 次")
+      within(tianshuDialog).getByLabelText("天书已选择 13 次"),
     ).toBeInTheDocument();
 
     const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
@@ -648,10 +633,12 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(sealResistanceRow!).getByText("天书 +5")).toBeInTheDocument();
     expect(within(sealResistanceRow!).getByText("9")).toBeInTheDocument();
     expect(screen.getAllByText("天书 +2%")).toHaveLength(2);
-    expect(within(screen.getByText("物理暴击").closest("div")!).getByText("4%"))
-      .toBeInTheDocument();
-    expect(within(screen.getByText("法术暴击").closest("div")!).getByText("3%"))
-      .toBeInTheDocument();
+    expect(
+      within(screen.getByText("物理暴击").closest("div")!).getByText("4%"),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByText("法术暴击").closest("div")!).getByText("3%"),
+    ).toBeInTheDocument();
     expect(within(fireAffinityCard!).getByText("天书 +4")).toBeInTheDocument();
     expect(within(fireAffinityCard!).getByText("4")).toBeInTheDocument();
   });
@@ -683,16 +670,16 @@ describe("CharacterAttributeCalculator", () => {
       expect(within(dialog).getByText(effectLabel)).toBeInTheDocument();
     }
     for (const label of optionLabels) {
-      await user.click(
-        within(dialog).getByRole("checkbox", { name: label })
-      );
+      await user.click(within(dialog).getByRole("checkbox", { name: label }));
     }
     expect(dialog).toHaveTextContent("已选 8 / 8 项");
     await user.click(within(dialog).getByRole("button", { name: "完成" }));
 
-    const summaryCard = screen.getByRole("heading", {
-      name: "天书星魂",
-    }).closest("article");
+    const summaryCard = screen
+      .getByRole("heading", {
+        name: "天书星魂",
+      })
+      .closest("article");
     expect(summaryCard).not.toBeNull();
     for (const summary of [
       "气血 +3%",
@@ -702,17 +689,17 @@ describe("CharacterAttributeCalculator", () => {
     ]) {
       expect(within(summaryCard!).getByText(summary)).toBeInTheDocument();
     }
-    expect(within(summaryCard!).getByText("已选 8 / 8"))
-      .toBeInTheDocument();
-    expect(screen.getByText("天书星魂 +3%"))
-      .toBeInTheDocument();
+    expect(within(summaryCard!).getByText("已选 8 / 8")).toBeInTheDocument();
+    expect(screen.getByText("天书星魂 +3%")).toBeInTheDocument();
     expect(screen.getByText("2145")).toBeInTheDocument();
 
     const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
-    expect(within(derivedColumn).getAllByText("天书星魂 +20.7"))
-      .toHaveLength(2);
-    expect(within(derivedColumn).getByText("天书星魂 +10.35"))
-      .toBeInTheDocument();
+    expect(within(derivedColumn).getAllByText("天书星魂 +20.7")).toHaveLength(
+      2,
+    );
+    expect(
+      within(derivedColumn).getByText("天书星魂 +10.35"),
+    ).toBeInTheDocument();
   });
 
   it("应该单选赛季神器属性并填写本次实际潜能点", async () => {
@@ -734,7 +721,7 @@ describe("CharacterAttributeCalculator", () => {
     await user.click(strengthOption);
     await user.type(
       screen.getByRole("spinbutton", { name: "赛季神器：潜能点" }),
-      "12"
+      "12",
     );
 
     const potentialColumn = screen.getByRole("group", { name: "潜力属性列" });
@@ -762,7 +749,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(
       within(artifactConfiguration).getByRole("heading", {
         name: "增加潜力点",
-      })
+      }),
     ).toBeInTheDocument();
 
     const optionLabels = [
@@ -776,15 +763,15 @@ describe("CharacterAttributeCalculator", () => {
     expect(
       within(artifactConfiguration).getByRole("radiogroup", {
         name: "赛季神器潜能属性",
-      })
+      }),
     ).toBeInTheDocument();
     expect(
       within(artifactConfiguration).getByRole("group", {
         name: "赛季神器属性选择",
-      })
+      }),
     ).toBeInTheDocument();
     expect(
-      within(dialog).getAllByRole("button", { name: /^增加赛季神器：/ })
+      within(dialog).getAllByRole("button", { name: /^增加赛季神器：/ }),
     ).toHaveLength(6);
     for (const effectLabel of [
       "+69 气血",
@@ -794,15 +781,16 @@ describe("CharacterAttributeCalculator", () => {
       "+13.8 物攻 · +13.8 法攻",
       "+6.9 速度",
     ]) {
-      expect(within(dialog).getByText(`${effectLabel} / 次`))
-        .toBeInTheDocument();
+      expect(
+        within(dialog).getByText(`${effectLabel} / 次`),
+      ).toBeInTheDocument();
     }
 
     for (const title of optionLabels) {
       await user.click(
         within(dialog).getByRole("button", {
           name: `增加赛季神器：${title}`,
-        })
+        }),
       );
     }
     const healthIncreaseButton = within(dialog).getByRole("button", {
@@ -810,11 +798,12 @@ describe("CharacterAttributeCalculator", () => {
     });
     await user.click(healthIncreaseButton);
     expect(
-      within(dialog).getByLabelText("等级 × 1 气血已选次数")
+      within(dialog).getByLabelText("等级 × 1 气血已选次数"),
     ).toHaveTextContent("×2");
     expect(healthIncreaseButton).toBeDisabled();
-    expect(within(dialog).getByLabelText("赛季神器已选择 7 次"))
-      .toBeInTheDocument();
+    expect(
+      within(dialog).getByLabelText("赛季神器已选择 7 次"),
+    ).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "完成" }));
 
     const summaryCard = screen
@@ -837,10 +826,12 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByText("+赛季神器 103.5")).toBeInTheDocument();
 
     const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
-    expect(within(derivedColumn).getAllByText("赛季神器 +13.8"))
-      .toHaveLength(4);
-    expect(within(derivedColumn).getByText("赛季神器 +6.9"))
-      .toBeInTheDocument();
+    expect(within(derivedColumn).getAllByText("赛季神器 +13.8")).toHaveLength(
+      4,
+    );
+    expect(
+      within(derivedColumn).getByText("赛季神器 +6.9"),
+    ).toBeInTheDocument();
   });
 
   it("应该单选魅灵属性并限制实际潜能点最高为 120", async () => {
@@ -909,11 +900,11 @@ describe("CharacterAttributeCalculator", () => {
 
     await user.type(
       screen.getByRole("spinbutton", { name: "缎纹：物攻" }),
-      "30"
+      "30",
     );
     await user.type(
       screen.getByRole("spinbutton", { name: "缎纹：速度" }),
-      "15"
+      "15",
     );
 
     const derivedColumn = screen.getByRole("group", { name: "派生属性列" });
@@ -924,7 +915,7 @@ describe("CharacterAttributeCalculator", () => {
 
     await user.click(physicalAttackOption);
     expect(
-      screen.queryByRole("spinbutton", { name: "缎纹：物攻" })
+      screen.queryByRole("spinbutton", { name: "缎纹：物攻" }),
     ).not.toBeInTheDocument();
     expect(magicAttackOption).toBeEnabled();
     expect(within(derivedColumn).getByText("506")).toBeInTheDocument();
@@ -959,13 +950,13 @@ describe("CharacterAttributeCalculator", () => {
 
     await user.type(
       within(dialog).getByRole("spinbutton", { name: "幻形符：气血" }),
-      "100"
+      "100",
     );
     await user.type(
       within(dialog).getByRole("spinbutton", {
         name: "幻形符：物理暴击率",
       }),
-      "3.5"
+      "3.5",
     );
     await user.click(within(dialog).getByRole("button", { name: "完成" }));
 
@@ -976,7 +967,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(summaryCard).not.toBeNull();
     expect(within(summaryCard!).getByText("气血 +100")).toBeInTheDocument();
     expect(
-      within(summaryCard!).getByText("物理暴击率 +3.5%")
+      within(summaryCard!).getByText("物理暴击率 +3.5%"),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: "进阶属性" }));
@@ -1001,7 +992,7 @@ describe("CharacterAttributeCalculator", () => {
     await user.click(enableButton);
 
     expect(
-      within(guildDialog).getByRole("button", { name: "已启用" })
+      within(guildDialog).getByRole("button", { name: "已启用" }),
     ).toHaveAttribute("aria-pressed", "true");
     const summaryCard = within(screen.getByTestId("attribute-bonus-rail"))
       .getByRole("heading", { name: "帮派祝福" })
@@ -1022,11 +1013,13 @@ describe("CharacterAttributeCalculator", () => {
       .getByText("物攻")
       .closest("div");
     expect(physicalAttackRow).not.toBeNull();
-    const physicalAttackBonus = within(physicalAttackRow!).getByText("帮派 +20");
+    const physicalAttackBonus = within(physicalAttackRow!).getByText(
+      "帮派 +20",
+    );
     const physicalAttackValue = within(physicalAttackRow!).getByText("526");
     expect(
       physicalAttackBonus.compareDocumentPosition(physicalAttackValue) &
-        Node.DOCUMENT_POSITION_FOLLOWING
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(physicalAttackValue).toHaveClass("shrink-0");
   });
@@ -1067,7 +1060,7 @@ describe("CharacterAttributeCalculator", () => {
 
     for (const label of optionLabels) {
       await user.click(
-        within(talentDialog).getByRole("checkbox", { name: label })
+        within(talentDialog).getByRole("checkbox", { name: label }),
       );
     }
     expect(talentDialog).toHaveTextContent("已选 6 / 6 项");
@@ -1077,9 +1070,7 @@ describe("CharacterAttributeCalculator", () => {
       .closest("article");
     expect(within(summaryCard!).getByText("速度 +4")).toBeInTheDocument();
     expect(within(summaryCard!).getByText("速度 +2%")).toBeInTheDocument();
-    expect(
-      within(summaryCard!).getByText("物理暴击 +3%")
-    ).toBeInTheDocument();
+    expect(within(summaryCard!).getByText("物理暴击 +3%")).toBeInTheDocument();
     expect(within(summaryCard!).getByText("命中率 +2%")).toBeInTheDocument();
     expect(within(summaryCard!).getByText("封印命中 +1%")).toBeInTheDocument();
 
@@ -1128,7 +1119,7 @@ describe("CharacterAttributeCalculator", () => {
       expect(breakthrough).toBeEnabled();
       await user.click(breakthrough);
       expect(
-        within(trainingDialog).getByLabelText(`${label}当前等级`)
+        within(trainingDialog).getByLabelText(`${label}当前等级`),
       ).toHaveTextContent("12+1 / 12");
     }
 
@@ -1141,14 +1132,13 @@ describe("CharacterAttributeCalculator", () => {
     });
     expect(trainingHeading).not.toHaveClass("truncate");
     expect(trainingHeading).toHaveClass("whitespace-nowrap");
-    const trainingDetails =
-      "攻击修炼 12+1 · 物防修炼 12+1 · 法防修炼 12+1";
+    const trainingDetails = "攻击修炼 12+1 · 物防修炼 12+1 · 法防修炼 12+1";
     const detailsButton = within(summaryCard!).getByRole("button", {
       name: "查看人物修炼详情",
     });
     expect(detailsButton).not.toHaveAttribute("title");
     expect(
-      within(summaryCard!).getByRole("tooltip", { hidden: true })
+      within(summaryCard!).getByRole("tooltip", { hidden: true }),
     ).toHaveTextContent(trainingDetails);
     expect(within(summaryCard!).getByText("治疗强度 +65")).toBeInTheDocument();
     expect(within(summaryCard!).getByText("封印命中 +26%")).toBeInTheDocument();
@@ -1158,9 +1148,7 @@ describe("CharacterAttributeCalculator", () => {
     const resultPanel = within(screen.getByTestId("attribute-result-panel"));
     const healingRow = resultPanel.getByText("治疗强度").closest("div");
     const sealHitRow = resultPanel.getByText("封印命中").closest("div");
-    const sealResistanceRow = resultPanel
-      .getByText("封印抵抗")
-      .closest("div");
+    const sealResistanceRow = resultPanel.getByText("封印抵抗").closest("div");
     expect(healingRow).not.toBeNull();
     expect(sealHitRow).not.toBeNull();
     expect(sealResistanceRow).not.toBeNull();
@@ -1169,7 +1157,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(sealHitRow!).getByText("修炼 +26%")).toBeInTheDocument();
     expect(within(sealHitRow!).getByText("174")).toBeInTheDocument();
     expect(
-      within(sealResistanceRow!).getByText("修炼 +26%")
+      within(sealResistanceRow!).getByText("修炼 +26%"),
     ).toBeInTheDocument();
     expect(within(sealResistanceRow!).getByText("28")).toBeInTheDocument();
   });
@@ -1246,7 +1234,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(advancedTab).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("heading", { name: "数值条" })).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "进阶属性 · 9 项" })
+      screen.getByRole("heading", { name: "进阶属性 · 9 项" }),
     ).toBeInTheDocument();
     expect(screen.getByText("物理暴击")).toBeInTheDocument();
     expect(screen.getByText("100%")).toBeInTheDocument();
@@ -1255,7 +1243,7 @@ describe("CharacterAttributeCalculator", () => {
     expect(screen.getByRole("heading", { name: "亲和" })).toBeInTheDocument();
     expect(screen.queryByText("进战怒气")).not.toBeInTheDocument();
     expect(
-      screen.getAllByText(/系亲和$/).map((element) => element.textContent)
+      screen.getAllByText(/系亲和$/).map((element) => element.textContent),
     ).toEqual([
       "火系亲和",
       "冰系亲和",
@@ -1273,11 +1261,11 @@ describe("CharacterAttributeCalculator", () => {
       ["风系亲和", "bg-[#e0f5f4]"],
     ] as const) {
       expect(screen.getByText(label).closest("div")).toHaveClass(
-        backgroundClass
+        backgroundClass,
       );
     }
     expect(
-      screen.queryByRole("heading", { name: "基础属性 · 10 项" })
+      screen.queryByRole("heading", { name: "基础属性 · 10 项" }),
     ).not.toBeInTheDocument();
   });
 
@@ -1292,9 +1280,9 @@ describe("CharacterAttributeCalculator", () => {
     });
     const attributeOptions = within(talismanDialog).getAllByRole("checkbox");
     expect(attributeOptions).toHaveLength(13);
-    expect(attributeOptions.every((option) => option.hasAttribute("disabled"))).toBe(
-      true
-    );
+    expect(
+      attributeOptions.every((option) => option.hasAttribute("disabled")),
+    ).toBe(true);
 
     await user.click(sixStarOption);
     expect(sixStarOption).toHaveAttribute("aria-checked", "true");
@@ -1308,7 +1296,7 @@ describe("CharacterAttributeCalculator", () => {
       "进战怒气 +17",
     ]) {
       await user.click(
-        within(talismanDialog).getByRole("checkbox", { name: optionName })
+        within(talismanDialog).getByRole("checkbox", { name: optionName }),
       );
     }
 
@@ -1345,22 +1333,22 @@ describe("CharacterAttributeCalculator", () => {
 
     const allocationModeGroup = within(allocationDialog).getByRole(
       "radiogroup",
-      { name: "潜力点分配方式" }
+      { name: "潜力点分配方式" },
     );
     expect(
       within(allocationModeGroup)
         .getAllByRole("radio")
-        .map((option) => option.textContent)
+        .map((option) => option.textContent),
     ).toEqual(["常见方案", "自由加点"]);
 
     expect(
       within(
         within(allocationDialog).getByRole("radiogroup", {
           name: "潜力点加点方案",
-        })
+        }),
       )
         .getAllByRole("radio")
-        .map((option) => option.textContent)
+        .map((option) => option.textContent),
     ).toEqual([
       "10力",
       "10灵",
@@ -1377,15 +1365,15 @@ describe("CharacterAttributeCalculator", () => {
       "6敏2体2耐",
     ]);
     await user.click(
-      within(allocationModeGroup).getByRole("radio", { name: "自由加点" })
+      within(allocationModeGroup).getByRole("radio", { name: "自由加点" }),
     );
     expect(
       within(allocationDialog).getByRole("radiogroup", {
         name: "自由加点规则",
-      })
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "重置加点" })
+      screen.queryByRole("button", { name: "重置加点" }),
     ).not.toBeInTheDocument();
   });
 
@@ -1395,7 +1383,7 @@ describe("CharacterAttributeCalculator", () => {
     const allocationDialog = await openBonusEditor(user, "潜力点分配");
 
     await user.click(
-      within(allocationDialog).getByRole("radio", { name: "自由加点" })
+      within(allocationDialog).getByRole("radio", { name: "自由加点" }),
     );
     const strengthInput = within(allocationDialog).getByRole("spinbutton", {
       name: "自由加点：力量",
@@ -1411,14 +1399,16 @@ describe("CharacterAttributeCalculator", () => {
 
     fireEvent.change(strengthInput, { target: { value: "8" } });
     expect(within(allocationDialog).getByRole("alert")).toHaveTextContent(
-      "当前还需分配 2 点"
+      "当前还需分配 2 点",
     );
     expect(
-      within(allocationDialog).getByRole("button", { name: "完成" })
+      within(allocationDialog).getByRole("button", { name: "完成" }),
     ).toBeDisabled();
 
     fireEvent.change(agilityInput, { target: { value: "2" } });
-    expect(within(allocationDialog).queryByRole("alert")).not.toBeInTheDocument();
+    expect(
+      within(allocationDialog).queryByRole("alert"),
+    ).not.toBeInTheDocument();
     const completeButton = within(allocationDialog).getByRole("button", {
       name: "完成",
     });
@@ -1431,22 +1421,22 @@ describe("CharacterAttributeCalculator", () => {
     expect(allocationSummary).toHaveClass("sm:w-64");
     expect(within(allocationSummary).getByText("8力2敏")).toBeInTheDocument();
     expect(
-      within(allocationSummary).getByText("力 +552 · 敏 +138")
+      within(allocationSummary).getByText("力 +552 · 敏 +138"),
     ).toBeInTheDocument();
 
     const reopenedDialog = await openBonusEditor(user, "潜力点分配");
     await user.click(
-      within(reopenedDialog).getByRole("radio", { name: "灵力" })
+      within(reopenedDialog).getByRole("radio", { name: "灵力" }),
     );
     expect(
       within(reopenedDialog).getByRole("spinbutton", {
         name: "自由加点：力量",
-      })
+      }),
     ).toBeDisabled();
     expect(
       within(reopenedDialog).getByRole("spinbutton", {
         name: "自由加点：灵力",
-      })
+      }),
     ).toHaveValue(8);
   });
 
@@ -1456,10 +1446,10 @@ describe("CharacterAttributeCalculator", () => {
     const allocationDialog = await openBonusEditor(user, "潜力点分配");
 
     await user.click(
-      within(allocationDialog).getByRole("radio", { name: "自由加点" })
+      within(allocationDialog).getByRole("radio", { name: "自由加点" }),
     );
     await user.click(
-      within(allocationDialog).getByRole("radio", { name: "敏主属性" })
+      within(allocationDialog).getByRole("radio", { name: "敏主属性" }),
     );
     const agilityInput = within(allocationDialog).getByRole("spinbutton", {
       name: "自由加点：敏捷",
@@ -1473,38 +1463,40 @@ describe("CharacterAttributeCalculator", () => {
     expect(
       within(allocationDialog).getByRole("spinbutton", {
         name: "自由加点：力量",
-      })
+      }),
     ).toBeDisabled();
     expect(
       within(allocationDialog).getByRole("spinbutton", {
         name: "自由加点：灵力",
-      })
+      }),
     ).toBeDisabled();
 
     fireEvent.change(agilityInput, { target: { value: "5" } });
     fireEvent.change(constitutionInput, { target: { value: "3" } });
     expect(within(allocationDialog).getByRole("alert")).toHaveTextContent(
-      "当前还需分配 2 点"
+      "当前还需分配 2 点",
     );
     fireEvent.change(enduranceInput, { target: { value: "2" } });
-    expect(within(allocationDialog).queryByRole("alert")).not.toBeInTheDocument();
+    expect(
+      within(allocationDialog).queryByRole("alert"),
+    ).not.toBeInTheDocument();
     await user.click(
-      within(allocationDialog).getByRole("button", { name: "完成" })
+      within(allocationDialog).getByRole("button", { name: "完成" }),
     );
 
     const allocationSummary = screen.getByRole("region", {
       name: "潜力点分配摘要",
     });
     expect(
-      within(allocationSummary).getByText("5敏3体2耐")
+      within(allocationSummary).getByText("5敏3体2耐"),
     ).toBeInTheDocument();
     expect(
-      within(allocationSummary).getByText("敏 +345 · 体 +207 · 耐 +138")
+      within(allocationSummary).getByText("敏 +345 · 体 +207 · 耐 +138"),
     ).toBeInTheDocument();
 
     await waitFor(() => {
       const stored = JSON.parse(
-        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}",
       );
       expect(stored.allocationMode).toBe("custom");
       expect(stored.customAllocationScheme).toBe("agility");
@@ -1524,7 +1516,7 @@ describe("CharacterAttributeCalculator", () => {
     });
     expect(within(restoredSummary).getByText("5敏3体2耐")).toBeInTheDocument();
     expect(
-      within(restoredSummary).getByText("敏 +345 · 体 +207 · 耐 +138")
+      within(restoredSummary).getByText("敏 +345 · 体 +207 · 耐 +138"),
     ).toBeInTheDocument();
   });
 
@@ -1541,7 +1533,7 @@ describe("CharacterAttributeCalculator", () => {
           endurance: 0,
           agility: 0,
         },
-      })
+      }),
     );
 
     render(<CharacterAttributeCalculator />);
@@ -1562,19 +1554,19 @@ describe("CharacterAttributeCalculator", () => {
       within(skillDialog).getByRole("spinbutton", {
         name: "技能：气血",
       }),
-      "100"
+      "100",
     );
     await user.type(
       within(skillDialog).getByRole("spinbutton", {
         name: "技能：速度",
       }),
-      "-30"
+      "-30",
     );
     await user.type(
       within(skillDialog).getByRole("spinbutton", {
         name: "技能：物攻",
       }),
-      "122"
+      "122",
     );
     await user.click(within(skillDialog).getByRole("button", { name: "完成" }));
 
@@ -1586,7 +1578,9 @@ describe("CharacterAttributeCalculator", () => {
     expect(within(summaryCard!).getByText("气血 +100")).toBeInTheDocument();
     expect(within(summaryCard!).getByText("速度 -30")).toBeInTheDocument();
     expect(within(summaryCard!).getByText("物攻 +122")).toBeInTheDocument();
-    expect(within(summaryCard!).queryByText("3 项变更")).not.toBeInTheDocument();
+    expect(
+      within(summaryCard!).queryByText("3 项变更"),
+    ).not.toBeInTheDocument();
     expect(within(summaryCard!).queryByText("另 1 项")).not.toBeInTheDocument();
     expect(screen.getByText("已配置 2 / 16")).toBeInTheDocument();
   });
@@ -1597,34 +1591,33 @@ describe("CharacterAttributeCalculator", () => {
 
     const allocationDialog = await openBonusEditor(user, "潜力点分配");
     await user.click(
-      within(allocationDialog).getByRole("radio", { name: "8力2敏" })
+      within(allocationDialog).getByRole("radio", { name: "8力2敏" }),
     );
     await user.click(
-      within(allocationDialog).getByRole("button", { name: "完成" })
+      within(allocationDialog).getByRole("button", { name: "完成" }),
     );
 
     const skillDialog = await openBonusEditor(user, "技能");
     await user.type(
       within(skillDialog).getByRole("spinbutton", { name: "技能：气血" }),
-      "100"
+      "100",
     );
-    await user.click(
-      within(skillDialog).getByRole("button", { name: "完成" })
-    );
+    await user.click(within(skillDialog).getByRole("button", { name: "完成" }));
 
     const trainingDialog = await openBonusEditor(user, "人物修炼");
     await user.selectOptions(
       within(trainingDialog).getByRole("combobox", { name: "攻击修炼等级" }),
-      "12"
+      "12",
     );
     await user.click(
-      within(trainingDialog).getByRole("checkbox", { name: "攻击修炼突破" })
+      within(trainingDialog).getByRole("checkbox", { name: "攻击修炼突破" }),
     );
     await user.click(
-      within(trainingDialog).getByRole("button", { name: "完成" })
+      within(trainingDialog).getByRole("button", { name: "完成" }),
     );
 
-    const skillCard = screen.getByRole("heading", { name: "技能" })
+    const skillCard = screen
+      .getByRole("heading", { name: "技能" })
       .closest("article");
     expect(skillCard).not.toBeNull();
     expect(skillCard).toHaveTextContent("气血 +100");
@@ -1634,7 +1627,7 @@ describe("CharacterAttributeCalculator", () => {
       name: "确认重置属性加成？",
     });
     await user.click(
-      within(firstConfirmation).getByRole("button", { name: "取消" })
+      within(firstConfirmation).getByRole("button", { name: "取消" }),
     );
 
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
@@ -1643,22 +1636,22 @@ describe("CharacterAttributeCalculator", () => {
     await user.click(screen.getByRole("button", { name: "重置" }));
     await user.click(
       within(
-        screen.getByRole("alertdialog", { name: "确认重置属性加成？" })
-      ).getByRole("button", { name: "确认重置" })
+        screen.getByRole("alertdialog", { name: "确认重置属性加成？" }),
+      ).getByRole("button", { name: "确认重置" }),
     );
 
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(skillCard).not.toHaveTextContent("气血 +100");
     expect(screen.getByText("已配置 1 / 16")).toBeInTheDocument();
     expect(
-      within(
-        screen.getByRole("region", { name: "潜力点分配摘要" })
-      ).getByText("8力2敏")
+      within(screen.getByRole("region", { name: "潜力点分配摘要" })).getByText(
+        "8力2敏",
+      ),
     ).toBeInTheDocument();
 
     await waitFor(() => {
       const stored = JSON.parse(
-        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}",
       );
       expect(stored.skillBonuses.health).toBe(0);
       expect(stored.characterTrainingLevels).toEqual({
@@ -1677,94 +1670,94 @@ describe("CharacterAttributeCalculator", () => {
     const skillDialog = await openBonusEditor(user, "技能");
     await user.type(
       within(skillDialog).getByRole("spinbutton", { name: "技能：气血" }),
-      "100"
+      "100",
     );
     await user.click(within(skillDialog).getByRole("button", { name: "完成" }));
 
     const talismanDialog = await openBonusEditor(user, "灵符");
     await user.click(
-      within(talismanDialog).getByRole("radio", { name: /6 星灵符/ })
+      within(talismanDialog).getByRole("radio", { name: /6 星灵符/ }),
     );
     await user.click(
-      within(talismanDialog).getByRole("checkbox", { name: "气血 +309" })
+      within(talismanDialog).getByRole("checkbox", { name: "气血 +309" }),
     );
     await user.click(
-      within(talismanDialog).getByRole("button", { name: "完成" })
+      within(talismanDialog).getByRole("button", { name: "完成" }),
     );
 
     const guildTalentDialog = await openBonusEditor(user, "帮派天赋");
     await user.click(
       within(guildTalentDialog).getByRole("checkbox", {
         name: "物攻 +8 / 法攻 +6",
-      })
+      }),
     );
     await user.click(
       within(guildTalentDialog).getByRole("checkbox", {
         name: "物理暴击 +3% / 法术暴击 +3%",
-      })
+      }),
     );
     await user.click(
-      within(guildTalentDialog).getByRole("button", { name: "完成" })
+      within(guildTalentDialog).getByRole("button", { name: "完成" }),
     );
 
     const starSoulDialog = await openBonusEditor(user, "天书星魂");
     await user.click(
-      within(starSoulDialog).getByRole("checkbox", { name: "气血 +2%" })
+      within(starSoulDialog).getByRole("checkbox", { name: "气血 +2%" }),
     );
     await user.click(
-      within(starSoulDialog).getByRole("button", { name: "完成" })
+      within(starSoulDialog).getByRole("button", { name: "完成" }),
     );
 
     const seasonArtifactDialog = await openBonusEditor(user, "赛季神器");
     await user.click(
       within(seasonArtifactDialog).getByRole("button", {
         name: "增加赛季神器：等级 × 1 气血",
-      })
+      }),
     );
     await user.click(
-      within(seasonArtifactDialog).getByRole("button", { name: "完成" })
+      within(seasonArtifactDialog).getByRole("button", { name: "完成" }),
     );
 
     const amberTalismanDialog = await openBonusEditor(user, "法宝");
     await user.click(
       within(amberTalismanDialog).getByRole("checkbox", {
         name: "法宝：琥珀朱绫",
-      })
+      }),
     );
     await user.click(
-      within(amberTalismanDialog).getByRole("button", { name: "完成" })
+      within(amberTalismanDialog).getByRole("button", { name: "完成" }),
     );
 
     const trainingDialog = await openBonusEditor(user, "人物修炼");
     await user.selectOptions(
       within(trainingDialog).getByRole("combobox", { name: "攻击修炼等级" }),
-      "12"
+      "12",
     );
     await user.click(
-      within(trainingDialog).getByRole("checkbox", { name: "攻击修炼突破" })
+      within(trainingDialog).getByRole("checkbox", { name: "攻击修炼突破" }),
     );
     await user.click(
-      within(trainingDialog).getByRole("button", { name: "完成" })
+      within(trainingDialog).getByRole("button", { name: "完成" }),
     );
 
     const sanshengPillDialog = await openBonusEditor(user, "三生造化丹");
     await user.click(
       within(sanshengPillDialog).getByRole("button", {
         name: "增加三生造化丹：力量",
-      })
+      }),
     );
     await user.click(
       within(sanshengPillDialog).getByRole("button", {
         name: "增加三生造化丹：力量",
-      })
+      }),
     );
     await user.click(
-      within(sanshengPillDialog).getByRole("button", { name: "完成" })
+      within(sanshengPillDialog).getByRole("button", { name: "完成" }),
     );
 
     await waitFor(() => {
       const stored = JSON.parse(
-        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}",
       );
       expect(stored.skillBonuses.health).toBe(100);
       expect(stored.temporaryTalismanStar).toBe(6);
@@ -1825,7 +1818,7 @@ describe("CharacterAttributeCalculator", () => {
           "tianshuBonusCounts",
           "tianshuStarSoulOptionIds",
           "transformationTalismanSelections",
-        ].sort()
+        ].sort(),
       );
     });
 
@@ -1834,41 +1827,42 @@ describe("CharacterAttributeCalculator", () => {
 
     expect(screen.getByText("+技能 100")).toBeInTheDocument();
     expect(screen.getByText("+灵符 309")).toBeInTheDocument();
-    expect(screen.getByText("天书星魂 +2%"))
-      .toBeInTheDocument();
+    expect(screen.getByText("天书星魂 +2%")).toBeInTheDocument();
     expect(screen.getByText("+赛季神器 69")).toBeInTheDocument();
     expect(screen.getByText("三生造化丹 +4")).toBeInTheDocument();
     const restoredTalismanDialog = await openBonusEditor(user, "法宝");
     expect(
       within(restoredTalismanDialog).getByRole("checkbox", {
         name: "法宝：琥珀朱绫",
-      })
+      }),
     ).toBeChecked();
     await user.click(
-      within(restoredTalismanDialog).getByRole("button", { name: "完成" })
+      within(restoredTalismanDialog).getByRole("button", { name: "完成" }),
     );
     const restoredTalentCard = screen
       .getByRole("heading", { name: "帮派天赋" })
       .closest("article");
     expect(restoredTalentCard).not.toBeNull();
-    expect(within(restoredTalentCard!).getByText("物攻 +8")).toBeInTheDocument();
+    expect(
+      within(restoredTalentCard!).getByText("物攻 +8"),
+    ).toBeInTheDocument();
     const restoredTrainingCard = screen
       .getByRole("heading", { name: "人物修炼" })
       .closest("article");
     expect(restoredTrainingCard).not.toBeNull();
     expect(
-      within(restoredTrainingCard!).getByText("治疗强度 +65")
+      within(restoredTrainingCard!).getByText("治疗强度 +65"),
     ).toBeInTheDocument();
     const restoredDialog = await openBonusEditor(user, "技能");
     expect(
-      within(restoredDialog).getByRole("spinbutton", { name: "技能：气血" })
+      within(restoredDialog).getByRole("spinbutton", { name: "技能：气血" }),
     ).toHaveValue(100);
   });
 
   it("应该把旧版整组帮派天赋状态迁移为六项全选", async () => {
     window.localStorage.setItem(
       CHARACTER_ATTRIBUTES_STORAGE_KEY,
-      JSON.stringify({ isGuildTalentEnabled: true })
+      JSON.stringify({ isGuildTalentEnabled: true }),
     );
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
@@ -1880,7 +1874,7 @@ describe("CharacterAttributeCalculator", () => {
 
     await waitFor(() => {
       const stored = JSON.parse(
-        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}",
       );
       expect(stored.guildTalentOptionIds).toEqual([
         "attack",
@@ -1974,14 +1968,14 @@ describe("CharacterAttributeCalculator", () => {
           "constitution",
         ],
         starBlessingValue: 25,
-      })
+      }),
     );
 
     render(<CharacterAttributeCalculator />);
 
     await waitFor(() => {
       const stored = JSON.parse(
-        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}"
+        window.localStorage.getItem(CHARACTER_ATTRIBUTES_STORAGE_KEY) ?? "{}",
       );
       expect(stored.customAllocation).toEqual({
         constitution: 0,
@@ -2017,7 +2011,7 @@ describe("CharacterAttributeCalculator", () => {
       ]);
       expect(stored.starBlessingValue).toBe(25);
       expect(stored.sanshengPillCounts.strength).toBe(
-        calculateSanshengPillMaximumCount()
+        calculateSanshengPillMaximumCount(),
       );
       expect(stored.sanshengPillCounts.endurance).toBe(0);
     });
@@ -2026,7 +2020,7 @@ describe("CharacterAttributeCalculator", () => {
   it("损坏的当前版本根缓存应该安全回退到旧版配置", () => {
     window.localStorage.setItem(
       CHARACTER_ATTRIBUTES_STORAGE_KEY,
-      JSON.stringify([])
+      JSON.stringify([]),
     );
     window.localStorage.setItem(
       LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY,
@@ -2035,7 +2029,7 @@ describe("CharacterAttributeCalculator", () => {
         seasonArtifactAttribute: 123,
         charmAttribute: 123,
         starBlessingValue: 99,
-      })
+      }),
     );
 
     render(<CharacterAttributeCalculator />);
@@ -2049,7 +2043,7 @@ describe("CharacterAttributeCalculator", () => {
       JSON.stringify({
         skillBonuses: { health: 100 },
         temporaryTalismanBonuses: { health: 200 },
-      })
+      }),
     );
     const user = userEvent.setup();
     render(<CharacterAttributeCalculator />);
@@ -2060,24 +2054,24 @@ describe("CharacterAttributeCalculator", () => {
       .closest("article");
     expect(talismanSummaryCard).not.toBeNull();
     expect(
-      within(talismanSummaryCard!).queryByText("气血 +200")
+      within(talismanSummaryCard!).queryByText("气血 +200"),
     ).not.toBeInTheDocument();
 
     const talismanDialog = await openBonusEditor(user, "灵符");
     expect(
-      within(talismanDialog).getByRole("radio", { name: /6 星灵符/ })
+      within(talismanDialog).getByRole("radio", { name: /6 星灵符/ }),
     ).toHaveAttribute("aria-checked", "false");
     expect(
       within(talismanDialog)
         .getAllByRole("checkbox")
-        .every((option) => option.hasAttribute("disabled"))
+        .every((option) => option.hasAttribute("disabled")),
     ).toBe(true);
   });
 });
 
 const openBonusEditor = async (
   user: ReturnType<typeof userEvent.setup>,
-  title: string
+  title: string,
 ) => {
   await user.click(screen.getByRole("button", { name: `编辑${title}` }));
 

@@ -34,7 +34,7 @@ const AttributeBonusCard = ({
   const handleChange = (
     attribute: CharacterBonusAttribute,
     inputValue: string,
-    allowNegative: boolean
+    allowNegative: boolean,
   ) => {
     if (inputValue === "") {
       onChange(attribute, 0);

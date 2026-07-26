@@ -1,7 +1,4 @@
-import type {
-  EquipmentItem,
-  EquipmentSet,
-} from "../utils/equipmentAttributes";
+import type { EquipmentItem, EquipmentSet } from "../utils/equipmentAttributes";
 import { isSeasonEquipmentSlot } from "../utils/equipmentAttributes";
 import EquipmentAttributesSection, {
   EquipmentIndependentAffixSection,

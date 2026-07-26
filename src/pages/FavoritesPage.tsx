@@ -19,16 +19,16 @@ const FavoritesPage = ({
   onBrowseData: () => void;
 }) => {
   const sects = SECT_PROFILES.filter((profile) =>
-    isFavorite(favorites, "sect", profile.id)
+    isFavorite(favorites, "sect", profile.id),
   );
   const equipment = EQUIPMENT_ENTRIES.filter((entry) =>
-    isFavorite(favorites, "equipment", entry.id)
+    isFavorite(favorites, "equipment", entry.id),
   );
   const companions = COMPANION_ENTRIES.filter((entry) =>
-    isFavorite(favorites, "companion", entry.id)
+    isFavorite(favorites, "companion", entry.id),
   );
   const guides = GUIDE_ENTRIES.filter((entry) =>
-    isFavorite(favorites, "guide", entry.id)
+    isFavorite(favorites, "guide", entry.id),
   );
   const hasFavorites =
     sects.length > 0 ||
@@ -49,7 +49,9 @@ const FavoritesPage = ({
         <div className="space-y-5">
           {sects.length > 0 ? (
             <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-              <h2 className="text-base font-semibold text-slate-900">门派资料</h2>
+              <h2 className="text-base font-semibold text-slate-900">
+                门派资料
+              </h2>
               <div className="mt-3 divide-y divide-slate-100">
                 {sects.map((profile) => (
                   <article
@@ -57,7 +59,9 @@ const FavoritesPage = ({
                     className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
-                      <h3 className="font-semibold text-slate-900">{profile.id}</h3>
+                      <h3 className="font-semibold text-slate-900">
+                        {profile.id}
+                      </h3>
                       <p className="mt-1 text-sm text-slate-500">
                         {profile.positioning}
                       </p>
@@ -78,7 +82,9 @@ const FavoritesPage = ({
 
           {equipment.length > 0 ? (
             <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-              <h2 className="text-base font-semibold text-slate-900">装备资料</h2>
+              <h2 className="text-base font-semibold text-slate-900">
+                装备资料
+              </h2>
               <div className="mt-3 divide-y divide-slate-100">
                 {equipment.map((entry) => (
                   <article
@@ -86,7 +92,9 @@ const FavoritesPage = ({
                     className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
-                      <h3 className="font-semibold text-slate-900">{entry.title}</h3>
+                      <h3 className="font-semibold text-slate-900">
+                        {entry.title}
+                      </h3>
                       <p className="mt-1 text-sm text-slate-500">
                         {entry.summary}
                       </p>
@@ -117,7 +125,9 @@ const FavoritesPage = ({
                     className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
-                      <h3 className="font-semibold text-slate-900">{entry.title}</h3>
+                      <h3 className="font-semibold text-slate-900">
+                        {entry.title}
+                      </h3>
                       <p className="mt-1 text-sm text-slate-500">
                         {entry.positioning} · {entry.summary}
                       </p>
@@ -138,7 +148,9 @@ const FavoritesPage = ({
 
           {guides.length > 0 ? (
             <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-              <h2 className="text-base font-semibold text-slate-900">攻略与版本资料</h2>
+              <h2 className="text-base font-semibold text-slate-900">
+                攻略与版本资料
+              </h2>
               <div className="mt-3 divide-y divide-slate-100">
                 {guides.map((entry) => (
                   <article
@@ -146,8 +158,12 @@ const FavoritesPage = ({
                     className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
-                      <h3 className="font-semibold text-slate-900">{entry.title}</h3>
-                      <p className="mt-1 text-sm text-slate-500">{entry.summary}</p>
+                      <h3 className="font-semibold text-slate-900">
+                        {entry.title}
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {entry.summary}
+                      </p>
                       <div className="mt-2">
                         <ContentSourceLink source={entry.source} />
                       </div>
@@ -165,7 +181,9 @@ const FavoritesPage = ({
         </div>
       ) : (
         <section className="rounded-xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-900">还没有收藏内容</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            还没有收藏内容
+          </h2>
           <p className="mt-2 text-sm text-slate-500">
             可以先浏览游戏资料，把常用内容保存到这里。
           </p>

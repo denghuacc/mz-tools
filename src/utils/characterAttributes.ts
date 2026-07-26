@@ -18,7 +18,7 @@ export const normalizeCharacterLevel = (value: unknown): CharacterLevel => {
   }
 
   return CHARACTER_LEVEL_OPTIONS.reduce((nearest, option) =>
-    Math.abs(option - value) < Math.abs(nearest - value) ? option : nearest
+    Math.abs(option - value) < Math.abs(nearest - value) ? option : nearest,
   );
 };
 
@@ -30,7 +30,7 @@ export const getTotalPotentialPoints = (characterLevel: CharacterLevel) =>
 
 /** 按开服后的自然年数计算三生造化丹累计上限；2026 年为第 5 年。 */
 export const calculateSanshengPillMaximumCount = (
-  currentYear = new Date().getFullYear()
+  currentYear = new Date().getFullYear(),
 ): number => {
   const normalizedYear = Number.isFinite(currentYear)
     ? Math.trunc(currentYear)
@@ -53,13 +53,11 @@ export const PRIMARY_ATTRIBUTE_KEYS = [
 export type PrimaryAttribute = (typeof PRIMARY_ATTRIBUTE_KEYS)[number];
 export type CharacterAllocation = Record<PrimaryAttribute, number>;
 export type CharacterAllocationMode = "preset" | "custom";
-export type CustomCharacterAllocationScheme =
-  | "strength-or-spirit"
-  | "agility";
+export type CustomCharacterAllocationScheme = "strength-or-spirit" | "agility";
 
 /** 将各五维服用颗数换算为实际属性点。 */
 export const calculateSanshengPillBonuses = (
-  pillCounts: CharacterAllocation
+  pillCounts: CharacterAllocation,
 ): CharacterAllocation => ({
   constitution: pillCounts.constitution * SANSHENG_PILL_ATTRIBUTE_POINTS,
   spirit: pillCounts.spirit * SANSHENG_PILL_ATTRIBUTE_POINTS,
@@ -124,26 +122,24 @@ export const DEFAULT_AGILITY_CHARACTER_ALLOCATION: CharacterAllocation = {
 };
 
 export const getCharacterAllocationTotal = (
-  allocation: CharacterAllocation
+  allocation: CharacterAllocation,
 ): number =>
   PRIMARY_ATTRIBUTE_KEYS.reduce(
     (total, attribute) => total + allocation[attribute],
-    0
+    0,
   );
 
 /** 校验每级 10 点的自由加点规则；返回 null 表示可用于属性计算。 */
 export const getCustomCharacterAllocationValidationError = (
   allocation: CharacterAllocation,
-  scheme: CustomCharacterAllocationScheme
+  scheme: CustomCharacterAllocationScheme,
 ): string | null => {
   const values = PRIMARY_ATTRIBUTE_KEYS.map(
-    (attribute) => allocation[attribute]
+    (attribute) => allocation[attribute],
   );
 
   if (
-    values.some(
-      (value) => !Number.isInteger(value) || value < 0 || value > 10
-    )
+    values.some((value) => !Number.isInteger(value) || value < 0 || value > 10)
   ) {
     return "每项加点必须是 0～10 的整数。";
   }
@@ -160,7 +156,7 @@ export const getCustomCharacterAllocationValidationError = (
 
     const mainAttributePoints = Math.max(
       allocation.strength,
-      allocation.spirit
+      allocation.spirit,
     );
     if (mainAttributePoints < 6 || mainAttributePoints > 10) {
       return "力或灵的主属性加点必须为 6～10 点。";
@@ -195,67 +191,145 @@ export const CHARACTER_ALLOCATION_PRESETS = [
   {
     id: "10-strength",
     label: "10力",
-    ratio: { constitution: 0, spirit: 0, strength: 10, endurance: 0, agility: 0 },
+    ratio: {
+      constitution: 0,
+      spirit: 0,
+      strength: 10,
+      endurance: 0,
+      agility: 0,
+    },
   },
   {
     id: "10-spirit",
     label: "10灵",
-    ratio: { constitution: 0, spirit: 10, strength: 0, endurance: 0, agility: 0 },
+    ratio: {
+      constitution: 0,
+      spirit: 10,
+      strength: 0,
+      endurance: 0,
+      agility: 0,
+    },
   },
   {
     id: "10-agility",
     label: "10敏",
-    ratio: { constitution: 0, spirit: 0, strength: 0, endurance: 0, agility: 10 },
+    ratio: {
+      constitution: 0,
+      spirit: 0,
+      strength: 0,
+      endurance: 0,
+      agility: 10,
+    },
   },
   {
     id: "8-strength-2-agility",
     label: "8力2敏",
-    ratio: { constitution: 0, spirit: 0, strength: 8, endurance: 0, agility: 2 },
+    ratio: {
+      constitution: 0,
+      spirit: 0,
+      strength: 8,
+      endurance: 0,
+      agility: 2,
+    },
   },
   {
     id: "8-spirit-2-agility",
     label: "8灵2敏",
-    ratio: { constitution: 0, spirit: 8, strength: 0, endurance: 0, agility: 2 },
+    ratio: {
+      constitution: 0,
+      spirit: 8,
+      strength: 0,
+      endurance: 0,
+      agility: 2,
+    },
   },
   {
     id: "8-spirit-2-endurance",
     label: "8灵2耐",
-    ratio: { constitution: 0, spirit: 8, strength: 0, endurance: 2, agility: 0 },
+    ratio: {
+      constitution: 0,
+      spirit: 8,
+      strength: 0,
+      endurance: 2,
+      agility: 0,
+    },
   },
   {
     id: "8-agility-2-constitution",
     label: "8敏2体",
-    ratio: { constitution: 2, spirit: 0, strength: 0, endurance: 0, agility: 8 },
+    ratio: {
+      constitution: 2,
+      spirit: 0,
+      strength: 0,
+      endurance: 0,
+      agility: 8,
+    },
   },
   {
     id: "8-agility-2-endurance",
     label: "8敏2耐",
-    ratio: { constitution: 0, spirit: 0, strength: 0, endurance: 2, agility: 8 },
+    ratio: {
+      constitution: 0,
+      spirit: 0,
+      strength: 0,
+      endurance: 2,
+      agility: 8,
+    },
   },
   {
     id: "6-strength-4-agility",
     label: "6力4敏",
-    ratio: { constitution: 0, spirit: 0, strength: 6, endurance: 0, agility: 4 },
+    ratio: {
+      constitution: 0,
+      spirit: 0,
+      strength: 6,
+      endurance: 0,
+      agility: 4,
+    },
   },
   {
     id: "6-spirit-4-agility",
     label: "6灵4敏",
-    ratio: { constitution: 0, spirit: 6, strength: 0, endurance: 0, agility: 4 },
+    ratio: {
+      constitution: 0,
+      spirit: 6,
+      strength: 0,
+      endurance: 0,
+      agility: 4,
+    },
   },
   {
     id: "6-spirit-4-endurance",
     label: "6灵4耐",
-    ratio: { constitution: 0, spirit: 6, strength: 0, endurance: 4, agility: 0 },
+    ratio: {
+      constitution: 0,
+      spirit: 6,
+      strength: 0,
+      endurance: 4,
+      agility: 0,
+    },
   },
   {
     id: "6-agility-4-endurance",
     label: "6敏4耐",
-    ratio: { constitution: 0, spirit: 0, strength: 0, endurance: 4, agility: 6 },
+    ratio: {
+      constitution: 0,
+      spirit: 0,
+      strength: 0,
+      endurance: 4,
+      agility: 6,
+    },
   },
   {
     id: "6-agility-2-constitution-2-endurance",
     label: "6敏2体2耐",
-    ratio: { constitution: 2, spirit: 0, strength: 0, endurance: 2, agility: 6 },
+    ratio: {
+      constitution: 2,
+      spirit: 0,
+      strength: 0,
+      endurance: 2,
+      agility: 6,
+    },
   },
 ] as const satisfies readonly CharacterAllocationPreset[];
 
@@ -265,7 +339,7 @@ export type CharacterAllocationPresetId =
 /** 将每级 10 点的比例方案换算为当前等级的实际潜力点。 */
 export const calculatePresetAllocation = (
   ratio: CharacterAllocation,
-  characterLevel: CharacterLevel = CHARACTER_LEVEL
+  characterLevel: CharacterLevel = CHARACTER_LEVEL,
 ): CharacterAllocation => ({
   constitution: ratio.constitution * getCharacterUpgradeCount(characterLevel),
   spirit: ratio.spirit * getCharacterUpgradeCount(characterLevel),
@@ -299,21 +373,21 @@ export type StatusAttribute = keyof typeof STATUS_ATTRIBUTE_GROWTH_RULES;
 /** 高等级升级时会获得更多气血和法力；每一级的递增部分单独向下取整。 */
 export const calculateStatusAttributeUpgradePoints = (
   attribute: StatusAttribute,
-  targetLevel: number
+  targetLevel: number,
 ): number => {
   const rule = STATUS_ATTRIBUTE_GROWTH_RULES[attribute];
 
   return (
     rule.basePoints +
     Math.floor(
-      (targetLevel * rule.levelGrowthNumerator) / rule.levelGrowthDivisor
+      (targetLevel * rule.levelGrowthNumerator) / rule.levelGrowthDivisor,
     )
   );
 };
 
 const calculateAccumulatedStatusAttributeGrowth = (
   attribute: StatusAttribute,
-  characterLevel: CharacterLevel
+  characterLevel: CharacterLevel,
 ): number => {
   let growth = 0;
 
@@ -329,7 +403,7 @@ const calculateAccumulatedStatusAttributeGrowth = (
 };
 
 export const calculateFixedStatusAttributes = (
-  characterLevel: CharacterLevel
+  characterLevel: CharacterLevel,
 ): { health: number; mana: number; trueEnergy: number } => ({
   health:
     LEVEL_ONE_STATUS_ATTRIBUTES.health +
@@ -448,15 +522,15 @@ export const createEmptyCharacterAttributeBonuses =
 
 /** 魂器只能重新分配五维，体、灵、力、耐、敏的带符号增减总和必须为零。 */
 export const getPrimaryAttributeBonusTotal = (
-  bonuses: Partial<CharacterAttributeBonuses>
+  bonuses: Partial<CharacterAttributeBonuses>,
 ): number =>
   PRIMARY_ATTRIBUTE_KEYS.reduce(
     (total, attribute) => total + (bonuses[attribute] ?? 0),
-    0
+    0,
   );
 
 export const arePrimaryAttributeBonusesBalanced = (
-  bonuses: Partial<CharacterAttributeBonuses>
+  bonuses: Partial<CharacterAttributeBonuses>,
 ): boolean => Math.abs(getPrimaryAttributeBonusTotal(bonuses)) < 1e-9;
 
 /** 合并技能、装备等多个来源的最终属性加成。 */
@@ -510,7 +584,7 @@ export const LEVEL_69_ADVANCED_ATTRIBUTES: AdvancedAttributes = {
 };
 
 export const calculateLevelAdvancedAttributes = (
-  characterLevel: CharacterLevel
+  characterLevel: CharacterLevel,
 ): AdvancedAttributes => ({
   ...LEVEL_ONE_ADVANCED_ATTRIBUTES,
   sealHit:
@@ -519,7 +593,7 @@ export const calculateLevelAdvancedAttributes = (
 });
 
 export const calculateFixedPrimaryAttributes = (
-  characterLevel: CharacterLevel
+  characterLevel: CharacterLevel,
 ): CharacterAllocation => {
   const upgradePoints =
     getCharacterUpgradeCount(characterLevel) * FIXED_ATTRIBUTE_POINTS_PER_LEVEL;
@@ -569,7 +643,7 @@ export type EffectiveCharacterAttributes = {
 export const applyCharacterAttributeBonuses = (
   calculated: CalculatedCharacterAttributes,
   bonuses: CharacterAttributeBonuses,
-  characterLevel: CharacterLevel = CHARACTER_LEVEL
+  characterLevel: CharacterLevel = CHARACTER_LEVEL,
 ): EffectiveCharacterAttributes => {
   const magicAttributeBonus =
     bonuses.constitution * 0.1 +
@@ -651,13 +725,13 @@ export const applyCharacterAttributeBonuses = (
 /** 根据角色等级固定成长和玩家分配的潜力点计算当前已知裸属性。 */
 export const calculateCharacterAttributes = (
   allocation: CharacterAllocation,
-  characterLevel: CharacterLevel = CHARACTER_LEVEL
+  characterLevel: CharacterLevel = CHARACTER_LEVEL,
 ): CalculatedCharacterAttributes => {
-  const fixedPrimaryAttributes = calculateFixedPrimaryAttributes(characterLevel);
+  const fixedPrimaryAttributes =
+    calculateFixedPrimaryAttributes(characterLevel);
   const fixedStatusAttributes = calculateFixedStatusAttributes(characterLevel);
   const primary = {
-    constitution:
-      fixedPrimaryAttributes.constitution + allocation.constitution,
+    constitution: fixedPrimaryAttributes.constitution + allocation.constitution,
     spirit: fixedPrimaryAttributes.spirit + allocation.spirit,
     strength: fixedPrimaryAttributes.strength + allocation.strength,
     endurance: fixedPrimaryAttributes.endurance + allocation.endurance,
@@ -665,7 +739,7 @@ export const calculateCharacterAttributes = (
   };
   const allocatedPoints = PRIMARY_ATTRIBUTE_KEYS.reduce(
     (total, attribute) => total + allocation[attribute],
-    0
+    0,
   );
   const constitutionGrowth =
     primary.constitution - LEVEL_ONE_REFERENCE_PRIMARY_ATTRIBUTES.constitution;
@@ -681,8 +755,7 @@ export const calculateCharacterAttributes = (
   return {
     primary,
     derived: {
-      health:
-        fixedStatusAttributes.health + constitutionGrowth * 3,
+      health: fixedStatusAttributes.health + constitutionGrowth * 3,
       magicAttack:
         LEVEL_ONE_DERIVED_ATTRIBUTES.magicAttack +
         constitutionGrowth * 0.1 +

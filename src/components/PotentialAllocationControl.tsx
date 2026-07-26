@@ -53,7 +53,7 @@ const PotentialAllocationControl = ({
 
   const updateCustomAllocation = (
     attribute: PrimaryAttribute,
-    inputValue: string
+    inputValue: string,
   ) => {
     const value = inputValue === "" ? 0 : Number(inputValue);
 
@@ -90,10 +90,12 @@ const PotentialAllocationControl = ({
         role="radiogroup"
         aria-label="潜力点分配方式"
       >
-        {([
-          ["preset", "常见方案"],
-          ["custom", "自由加点"],
-        ] as const).map(([mode, label]) => {
+        {(
+          [
+            ["preset", "常见方案"],
+            ["custom", "自由加点"],
+          ] as const
+        ).map(([mode, label]) => {
           const isSelected = mode === allocationMode;
 
           return (
@@ -145,16 +147,20 @@ const PotentialAllocationControl = ({
       ) : (
         <div className="mt-4 space-y-4">
           <div>
-            <p className="mb-2 text-xs font-medium text-slate-600">自由加点规则</p>
+            <p className="mb-2 text-xs font-medium text-slate-600">
+              自由加点规则
+            </p>
             <div
               className="grid grid-cols-2 gap-2"
               role="radiogroup"
               aria-label="自由加点规则"
             >
-              {([
-                ["strength-or-spirit", "力 / 灵主属性"],
-                ["agility", "敏主属性"],
-              ] as const).map(([scheme, label]) => {
+              {(
+                [
+                  ["strength-or-spirit", "力 / 灵主属性"],
+                  ["agility", "敏主属性"],
+                ] as const
+              ).map(([scheme, label]) => {
                 const isSelected = scheme === customScheme;
 
                 return (
@@ -184,7 +190,9 @@ const PotentialAllocationControl = ({
 
           {customScheme === "strength-or-spirit" && (
             <div>
-              <p className="mb-2 text-xs font-medium text-slate-600">选择主属性</p>
+              <p className="mb-2 text-xs font-medium text-slate-600">
+                选择主属性
+              </p>
               <div
                 className="grid grid-cols-2 gap-2"
                 role="radiogroup"

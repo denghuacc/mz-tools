@@ -1,9 +1,4 @@
-import type {
-  Sect,
-  Attributes,
-  AttributeValue,
-  WeaponType,
-} from "../types";
+import type { Sect, Attributes, AttributeValue, WeaponType } from "../types";
 import { SECT_TO_PROFESSION, SECT_WEAPON_TYPES } from "../types/constants";
 import { ProfessionEnum, SectEnum, AttributeTypeEnum } from "../types";
 
@@ -24,12 +19,12 @@ type ConversionStepResult = {
 };
 
 const SECT_BY_WEAPON_TYPE = new Map<WeaponType, Sect>(
-  Object.values(SectEnum).map((sect) => [SECT_WEAPON_TYPES[sect], sect])
+  Object.values(SectEnum).map((sect) => [SECT_WEAPON_TYPES[sect], sect]),
 );
 
 // 获取武器转换时参与等比例互换的属性；封系与其他系别互转时武器属性保持不变。
 export const getEffectiveAttributeBySect = (
-  sect: Sect
+  sect: Sect,
 ): keyof Attributes | null => {
   const profession = SECT_TO_PROFESSION[sect];
   switch (profession) {
@@ -49,7 +44,7 @@ export const getEffectiveAttributeBySect = (
 // 属性转换工具函数
 export const convertAttributeValues = (
   sourceAttr: AttributeValue,
-  targetAttr: AttributeValue
+  targetAttr: AttributeValue,
 ): [AttributeValue, AttributeValue] => {
   const sourceRatio = sourceAttr.current / sourceAttr.max;
   const targetRatio = targetAttr.current / targetAttr.max;
@@ -66,7 +61,7 @@ export const convertAttributeValues = (
 export const performAttributeConversionStep = (
   attributes: Attributes,
   fromSect: Sect,
-  toSect: Sect
+  toSect: Sect,
 ): ConversionStepResult => {
   const newAttributes = { ...attributes };
   const fromEffectiveAttr = getEffectiveAttributeBySect(fromSect);
@@ -94,7 +89,7 @@ export const performAttributeConversionStep = (
 export const performAttributeConversion = (
   attributes: Attributes,
   fromSect: Sect,
-  toSect: Sect
+  toSect: Sect,
 ): Attributes =>
   performAttributeConversionStep(attributes, fromSect, toSect).attributes;
 
@@ -104,10 +99,10 @@ export const performAttributeConversion = (
 export const getConversionOutcome = (
   before: Attributes,
   after: Attributes,
-  stepStatuses: readonly ConversionStepStatus[]
+  stepStatuses: readonly ConversionStepStatus[],
 ): ConversionOutcome => {
   const hasChanges = (Object.keys(before) as (keyof Attributes)[]).some(
-    (type) => before[type].current !== after[type].current
+    (type) => before[type].current !== after[type].current,
   );
 
   if (hasChanges) return "changed";

@@ -9,7 +9,7 @@ describe("RingConverter 组件", () => {
     render(<RingConverter />);
 
     expect(
-      screen.getByText("戒指为全等级装备，属性值会随角色等级自动成长。")
+      screen.getByText("戒指为全等级装备，属性值会随角色等级自动成长。"),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("物攻当前值")).not.toHaveAttribute("max");
 
@@ -63,7 +63,7 @@ describe("RingConverter 组件", () => {
     render(<RingConverter />);
 
     expect(
-      screen.getByText(/数据依据：历史录入规则.*最近核验：待复核/)
+      screen.getByText(/数据依据：历史录入规则.*最近核验：待复核/),
     ).toBeInTheDocument();
   });
 
@@ -73,7 +73,7 @@ describe("RingConverter 组件", () => {
 
     await user.click(screen.getByRole("button", { name: "转换" }));
     expect(
-      screen.getByText("请完整输入气血和第二主属性数值")
+      screen.getByText("请完整输入气血和第二主属性数值"),
     ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("气血当前值"), {
@@ -84,7 +84,7 @@ describe("RingConverter 组件", () => {
     });
     await user.click(screen.getByRole("button", { name: "转换" }));
     expect(
-      screen.getByText("气血值必须是大于或等于0的有效数字")
+      screen.getByText("气血值必须是大于或等于0的有效数字"),
     ).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("气血当前值"), {
@@ -95,9 +95,8 @@ describe("RingConverter 组件", () => {
     });
     await user.click(screen.getByRole("button", { name: "转换" }));
     expect(
-      screen.getByText("物攻值必须是大于或等于0的有效数字")
+      screen.getByText("物攻值必须是大于或等于0的有效数字"),
     ).toBeInTheDocument();
-
   });
 
   it("重置和门派变化应该清除反馈", async () => {

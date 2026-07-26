@@ -27,7 +27,7 @@ pnpm build
 - 推送到 `master`、`main` 或 `develop`。
 - 创建或更新面向 `master`、`main` 的 Pull Request。
 
-CI 按顺序执行依赖安装、ESLint、覆盖率测试、生产构建，并保存 `dist/` 构建产物。当前没有单独的 PR 预览部署工作流。
+CI 按顺序执行依赖安装、Vite+ Oxlint 检查、覆盖率测试、生产构建，并保存 `dist/` 构建产物。当前没有单独的 PR 预览部署工作流。
 
 ### 生产部署
 

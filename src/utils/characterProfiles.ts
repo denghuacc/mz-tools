@@ -36,7 +36,7 @@ export const getDefaultCharacterProfileName = (slotIndex: number) =>
 
 export const normalizeCharacterProfileName = (
   value: unknown,
-  slotIndex: number
+  slotIndex: number,
 ) => {
   if (typeof value !== "string") {
     return getDefaultCharacterProfileName(slotIndex);
@@ -55,7 +55,7 @@ export const createEmptyCharacterProfileSlots = (): CharacterProfileSlots => [
 ];
 
 export const normalizeCharacterProfileSlots = (
-  value: unknown
+  value: unknown,
 ): CharacterProfileSlots | null => {
   if (!Array.isArray(value)) return null;
 
@@ -66,7 +66,7 @@ export const normalizeCharacterProfileSlots = (
     }
 
     const equipmentState = normalizeEquipmentCalculatorState(
-      candidate.equipmentState
+      candidate.equipmentState,
     );
     if (!equipmentState) return null;
 
@@ -83,7 +83,7 @@ export const normalizeCharacterProfileSlots = (
     (slot, slotIndex) =>
       slot !== null &&
       isRecord(value[slotIndex]) &&
-      value[slotIndex].isActive === true
+      value[slotIndex].isActive === true,
   );
 
   return [
@@ -96,11 +96,17 @@ export const normalizeCharacterProfileSlots = (
 export const replaceCharacterProfileSlot = (
   slots: CharacterProfileSlots,
   slotIndex: number,
-  profile: CharacterProfile
+  profile: CharacterProfile,
 ): CharacterProfileSlots => [
-  slotIndex === 0 ? { ...profile, isActive: true } : deactivateProfile(slots[0]),
-  slotIndex === 1 ? { ...profile, isActive: true } : deactivateProfile(slots[1]),
-  slotIndex === 2 ? { ...profile, isActive: true } : deactivateProfile(slots[2]),
+  slotIndex === 0
+    ? { ...profile, isActive: true }
+    : deactivateProfile(slots[0]),
+  slotIndex === 1
+    ? { ...profile, isActive: true }
+    : deactivateProfile(slots[1]),
+  slotIndex === 2
+    ? { ...profile, isActive: true }
+    : deactivateProfile(slots[2]),
 ];
 
 const deactivateProfile = (profile: CharacterProfile | null) =>
@@ -108,17 +114,11 @@ const deactivateProfile = (profile: CharacterProfile | null) =>
 
 export const activateCharacterProfileSlot = (
   slots: CharacterProfileSlots,
-  slotIndex: number
+  slotIndex: number,
 ): CharacterProfileSlots => [
-  slots[0]
-    ? { ...slots[0], isActive: slotIndex === 0 }
-    : null,
-  slots[1]
-    ? { ...slots[1], isActive: slotIndex === 1 }
-    : null,
-  slots[2]
-    ? { ...slots[2], isActive: slotIndex === 2 }
-    : null,
+  slots[0] ? { ...slots[0], isActive: slotIndex === 0 } : null,
+  slots[1] ? { ...slots[1], isActive: slotIndex === 1 } : null,
+  slots[2] ? { ...slots[2], isActive: slotIndex === 2 } : null,
 ];
 
 /** 读取三个角色存档；单个损坏槽位会回退为空槽。 */
@@ -126,11 +126,11 @@ export const loadCharacterProfileSlots = (): CharacterProfileSlots =>
   loadCalculatorState(
     CHARACTER_PROFILES_STORAGE_KEY,
     createEmptyCharacterProfileSlots(),
-    normalizeCharacterProfileSlots
+    normalizeCharacterProfileSlots,
   );
 
 export const saveCharacterProfileSlots = (
-  slots: CharacterProfileSlots
+  slots: CharacterProfileSlots,
 ): void => {
   saveCalculatorState(CHARACTER_PROFILES_STORAGE_KEY, slots);
 };
@@ -138,23 +138,24 @@ export const saveCharacterProfileSlots = (
 /** 获取角色面板自动保存的原始输入，供角色存档完整复制。 */
 export const loadCurrentCharacterStateSnapshot =
   (): StoredCharacterCalculatorState => {
-    const currentState = loadCalculatorState<StoredCharacterCalculatorState | null>(
-      CHARACTER_ATTRIBUTES_STORAGE_KEY,
-      null,
-      (value) => (isRecord(value) ? value : null)
-    );
+    const currentState =
+      loadCalculatorState<StoredCharacterCalculatorState | null>(
+        CHARACTER_ATTRIBUTES_STORAGE_KEY,
+        null,
+        (value) => (isRecord(value) ? value : null),
+      );
 
     if (currentState) return currentState;
 
     return loadCalculatorState<StoredCharacterCalculatorState>(
       LEGACY_CHARACTER_ATTRIBUTES_STORAGE_KEY,
       {},
-      (value) => (isRecord(value) ? value : null)
+      (value) => (isRecord(value) ? value : null),
     );
   };
 
 export const restoreCharacterStateSnapshot = (
-  state: StoredCharacterCalculatorState
+  state: StoredCharacterCalculatorState,
 ): void => {
   saveCalculatorState(CHARACTER_ATTRIBUTES_STORAGE_KEY, state);
 };

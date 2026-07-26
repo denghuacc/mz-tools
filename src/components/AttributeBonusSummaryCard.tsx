@@ -33,60 +33,55 @@ const AttributeBonusSummaryCard = ({
   onEdit,
   validationError,
 }: AttributeBonusSummaryCardProps) => (
-    <article
-      className={`flex min-h-24 flex-col rounded-xl border p-3 transition hover:border-blue-200 hover:bg-blue-50/30 ${
-        validationError
-          ? "border-rose-200 bg-rose-50/40"
-          : "border-slate-200 bg-slate-50/60"
-      }`}
-    >
-      <div className="flex items-center justify-between gap-1">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <h3
-            className={`text-[13px] font-semibold text-slate-800 ${
-              details ? "shrink-0 whitespace-nowrap" : "truncate"
-            }`}
-          >
-            {title}
-          </h3>
-          {badge && (
-            <span className="shrink-0 rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700">
-              {badge}
-            </span>
-          )}
-          {details && (
-            <InfoTooltipButton
-              label={`查看${title}详情`}
-              details={details}
-            />
-          )}
-        </div>
-        <EditIconButton label={`编辑${title}`} onClick={onEdit} />
-      </div>
-
-      <div className="mt-2 flex min-h-10 flex-1 flex-wrap content-start gap-1">
-        {items.length > 0 ? (
-          items.map((item) => (
-            <span
-              key={`${item.label}-${item.unit ?? ""}`}
-              className={`whitespace-nowrap rounded-md bg-white px-1.5 py-1 text-[11px] font-medium ${
-                item.value < 0 ? "text-rose-600" : "text-blue-600"
-              }`}
-            >
-              {item.label} {formatValue(item.value, item.unit)}
-            </span>
-          ))
-        ) : (
-          <span className="text-xs leading-5 text-slate-400">尚未添加</span>
+  <article
+    className={`flex min-h-24 flex-col rounded-xl border p-3 transition hover:border-blue-200 hover:bg-blue-50/30 ${
+      validationError
+        ? "border-rose-200 bg-rose-50/40"
+        : "border-slate-200 bg-slate-50/60"
+    }`}
+  >
+    <div className="flex items-center justify-between gap-1">
+      <div className="flex min-w-0 items-center gap-1.5">
+        <h3
+          className={`text-[13px] font-semibold text-slate-800 ${
+            details ? "shrink-0 whitespace-nowrap" : "truncate"
+          }`}
+        >
+          {title}
+        </h3>
+        {badge && (
+          <span className="shrink-0 rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-medium text-violet-700">
+            {badge}
+          </span>
+        )}
+        {details && (
+          <InfoTooltipButton label={`查看${title}详情`} details={details} />
         )}
       </div>
+      <EditIconButton label={`编辑${title}`} onClick={onEdit} />
+    </div>
 
-      {validationError && (
-        <p className="mt-1 text-[11px] font-medium text-rose-600">
-          数值待调整
-        </p>
+    <div className="mt-2 flex min-h-10 flex-1 flex-wrap content-start gap-1">
+      {items.length > 0 ? (
+        items.map((item) => (
+          <span
+            key={`${item.label}-${item.unit ?? ""}`}
+            className={`whitespace-nowrap rounded-md bg-white px-1.5 py-1 text-[11px] font-medium ${
+              item.value < 0 ? "text-rose-600" : "text-blue-600"
+            }`}
+          >
+            {item.label} {formatValue(item.value, item.unit)}
+          </span>
+        ))
+      ) : (
+        <span className="text-xs leading-5 text-slate-400">尚未添加</span>
       )}
-    </article>
-  );
+    </div>
+
+    {validationError && (
+      <p className="mt-1 text-[11px] font-medium text-rose-600">数值待调整</p>
+    )}
+  </article>
+);
 
 export default AttributeBonusSummaryCard;

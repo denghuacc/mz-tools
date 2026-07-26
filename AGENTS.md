@@ -5,7 +5,7 @@
 ## 项目概览
 
 - 项目是《梦幻新诛仙》工具箱，当前为浏览器端 React 单页应用。
-- 技术栈：React 19、TypeScript 6、Vite 8、Tailwind CSS 4、Vitest、Testing Library。
+- 技术栈：React 19、TypeScript 6、Vite+（Vite 8、Vitest、Oxlint、Oxfmt）、Tailwind CSS 4、Testing Library。
 - 包管理器固定为 `pnpm@11.11.0`，Node.js 要求 `>=22.13.0`。
 - 用户界面、测试描述和项目文档默认使用中文；代码标识符沿用现有英文风格。
 - 优先做小而明确的修改，复用现有组件、类型、工具函数和测试模式。
@@ -23,6 +23,7 @@
 ```bash
 pnpm install
 pnpm dev
+pnpm check
 pnpm lint
 pnpm test --run
 pnpm test --run path/to/file.test.tsx
@@ -141,7 +142,7 @@ Use the following structure, based on Conventional Commits:
 ### Automated Enforcement
 
 - `commitlint.config.cjs` is the executable source of truth for machine-checkable commit message rules.
-- The Husky `commit-msg` hook runs commitlint for every local commit after `pnpm install` or `pnpm prepare`.
+- The Vite+ `commit-msg` hook runs commitlint for every local commit after `pnpm install` or `pnpm prepare`.
 - The `prepare` script also configures `.gitmessage` as the local commit template to prompt authors for the required body.
 - GitHub Actions validates every commit introduced by a pull request and every new commit pushed directly to a protected workflow branch.
 - The automated checks enforce a Conventional Commit type, a non-empty English subject, and a meaningful body of at least 20 characters.

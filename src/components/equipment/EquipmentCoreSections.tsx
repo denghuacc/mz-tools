@@ -83,14 +83,16 @@ export const EquipmentBaseAttributesSection = ({
 }: EquipmentSectionProps) => {
   const fixedAttributes = EQUIPMENT_BASE_ATTRIBUTE_CONFIG[item.slot];
   const ringSecondaryAttribute =
-    item.slot === "ring" ? getRingSecondaryAttribute(item.baseAttributes) : null;
+    item.slot === "ring"
+      ? getRingSecondaryAttribute(item.baseAttributes)
+      : null;
   const necklaceBaseAttributeLines =
     item.slot === "necklace"
       ? getNecklaceBaseAttributeLines(item.baseAttributes)
       : [];
   const updateBaseAttribute = (
     attribute: EquipmentAttribute,
-    value: number
+    value: number,
   ) => {
     onChange({
       ...item,
@@ -167,7 +169,7 @@ export const EquipmentBaseAttributesSection = ({
                     disabled: necklaceBaseAttributeLines.some(
                       (candidate, candidateIndex) =>
                         candidateIndex !== index &&
-                        candidate.attribute === option.attribute
+                        candidate.attribute === option.attribute,
                     ),
                   }))}
                   onChange={(attribute) => {
@@ -176,7 +178,7 @@ export const EquipmentBaseAttributesSection = ({
                       (candidate, candidateIndex) =>
                         candidateIndex === index
                           ? { ...candidate, attribute: nextAttribute }
-                          : candidate
+                          : candidate,
                     );
                     const baseAttributes: EquipmentItem["baseAttributes"] = {};
 

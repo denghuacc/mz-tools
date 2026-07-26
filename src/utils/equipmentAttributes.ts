@@ -29,7 +29,7 @@ export const SEASON_EQUIPMENT_SLOTS = ["ring", "necklace"] as const;
 export type SeasonEquipmentSlot = (typeof SEASON_EQUIPMENT_SLOTS)[number];
 
 export const isSeasonEquipmentSlot = (
-  slot: EquipmentSlot
+  slot: EquipmentSlot,
 ): slot is SeasonEquipmentSlot =>
   SEASON_EQUIPMENT_SLOTS.includes(slot as SeasonEquipmentSlot);
 
@@ -177,9 +177,7 @@ export const getGemLevelLimit = (characterLevel: number): number => {
   const normalizedLevel = Number.isFinite(characterLevel)
     ? Math.max(1, Math.floor(characterLevel))
     : DEFAULT_EQUIPMENT_CHARACTER_LEVEL;
-  return (
-    Math.floor(normalizedLevel / 10) + (normalizedLevel >= 105 ? 3 : 2)
-  );
+  return Math.floor(normalizedLevel / 10) + (normalizedLevel >= 105 ? 3 : 2);
 };
 
 export const EQUIPMENT_PRIMARY_ATTRIBUTES = [
@@ -219,8 +217,7 @@ export const EQUIPMENT_ATTRIBUTE_OPTIONS = [
 export const EQUIPMENT_AFFINITY_EFFECT_OPTIONS = AFFINITY_BONUS_FIELDS;
 export const EQUIPMENT_AFFINITY_EFFECT_VALUE = 3;
 export const ACCESSORY_VITALITY_EFFECT_VALUE = 5;
-export type EquipmentAffinityEffectAttribute =
-  CharacterAffinityBonusAttribute;
+export type EquipmentAffinityEffectAttribute = CharacterAffinityBonusAttribute;
 
 export const EQUIPMENT_ATTRIBUTE_LABELS = Object.fromEntries(
   [
@@ -228,7 +225,7 @@ export const EQUIPMENT_ATTRIBUTE_LABELS = Object.fromEntries(
     ...EQUIPMENT_AFFINITY_EFFECT_OPTIONS,
     { attribute: "healthPercent", label: "气血" },
     { attribute: "speedPercent", label: "速度" },
-  ].map(({ attribute, label }) => [attribute, label])
+  ].map(({ attribute, label }) => [attribute, label]),
 ) as Record<EquipmentAttribute, string>;
 
 export const EQUIPMENT_BASE_ATTRIBUTE_CONFIG: Record<
@@ -275,18 +272,18 @@ export type EquipmentAttributeValues = Partial<
 
 /** 戒指固定气血，并按职业只取物攻、法攻、速度中的一条作为第二主属性。 */
 export const getRingSecondaryAttribute = (
-  attributes: EquipmentAttributeValues
+  attributes: EquipmentAttributeValues,
 ): RingSecondaryAttribute =>
   RING_SECONDARY_ATTRIBUTE_OPTIONS.find(
-    ({ attribute }) => attributes[attribute] !== undefined
+    ({ attribute }) => attributes[attribute] !== undefined,
   )?.attribute ?? "physicalAttack";
 
 /** 项链从气血、物防、法防中取两条不重复的装备属性。 */
 export const getNecklaceBaseAttributeLines = (
-  attributes: EquipmentAttributeValues
+  attributes: EquipmentAttributeValues,
 ): EquipmentAttributeLine[] => {
   const allowedAttributes = new Set<EquipmentAttribute>(
-    NECKLACE_BASE_ATTRIBUTE_OPTIONS.map(({ attribute }) => attribute)
+    NECKLACE_BASE_ATTRIBUTE_OPTIONS.map(({ attribute }) => attribute),
   );
   const lines = (Object.entries(attributes) as [EquipmentAttribute, number][])
     .filter(([attribute]) => allowedAttributes.has(attribute))
@@ -332,9 +329,7 @@ export const SEASON_EQUIPMENT_EFFECT_OPTIONS = [
 export type SeasonEquipmentEffectName =
   (typeof SEASON_EQUIPMENT_EFFECT_OPTIONS)[number]["effect"];
 
-export const SEASON_EQUIPMENT_RESONANCE_THRESHOLDS = [
-  4, 6, 8, 9, 10,
-] as const;
+export const SEASON_EQUIPMENT_RESONANCE_THRESHOLDS = [4, 6, 8, 9, 10] as const;
 export type SeasonEquipmentResonanceThreshold =
   (typeof SEASON_EQUIPMENT_RESONANCE_THRESHOLDS)[number];
 
@@ -375,7 +370,7 @@ export type BaseEquipmentEffectId =
 
 /** 列出基础装备已配置的特效；特技不计入特效数量。 */
 export const getBaseEquipmentEffectIds = (
-  item: EquipmentItem
+  item: EquipmentItem,
 ): BaseEquipmentEffectId[] => {
   if (isSeasonEquipmentSlot(item.slot)) return [];
 
@@ -387,13 +382,12 @@ export const getBaseEquipmentEffectIds = (
     item.slot === "armor" && item.affinityEffectAttribute ? "affinity" : null,
     item.slot === "accessory" && item.vitalityEffect ? "vitality" : null,
     item.specialEffect.trim() || item.specialEffectAttribute ? "custom" : null,
-  ]
-    .filter((effect): effect is BaseEquipmentEffectId => effect !== null);
+  ].filter((effect): effect is BaseEquipmentEffectId => effect !== null);
 };
 
 /** 返回真正生效的基础装备特效，统一执行最多两个的规则。 */
 export const getEffectiveBaseEquipmentEffectIds = (
-  item: EquipmentItem
+  item: EquipmentItem,
 ): BaseEquipmentEffectId[] =>
   getBaseEquipmentEffectIds(item).slice(0, BASE_EQUIPMENT_EFFECT_LIMIT);
 
@@ -415,7 +409,7 @@ export type EquipmentIndependentAffixBonus = {
 
 /** 只计算已收录且装备部位匹配的独立词条面板属性。 */
 export const calculateEquipmentIndependentAffixBonus = (
-  item: EquipmentItem
+  item: EquipmentItem,
 ): EquipmentIndependentAffixBonus | null => {
   const affix = item.independentAffix;
   if (!affix || !EQUIPMENT_INDEPENDENT_AFFIX_LEVELS.includes(affix.level)) {
@@ -424,7 +418,10 @@ export const calculateEquipmentIndependentAffixBonus = (
 
   const name = affix.name.trim() as EquipmentIndependentAffixName;
   const config = EQUIPMENT_INDEPENDENT_AFFIX_CONFIG[name];
-  if (!config || !(config.slots as readonly EquipmentSlot[]).includes(item.slot)) {
+  if (
+    !config ||
+    !(config.slots as readonly EquipmentSlot[]).includes(item.slot)
+  ) {
     return null;
   }
 
@@ -439,21 +436,22 @@ export const calculateEquipmentIndependentAffixBonus = (
 /** 计算单件装备的有效宝石属性；成长特效生效时额外增加 20%。 */
 export const calculateEquipmentGemBonus = (
   item: EquipmentItem,
-  characterLevel = DEFAULT_EQUIPMENT_CHARACTER_LEVEL
+  characterLevel = DEFAULT_EQUIPMENT_CHARACTER_LEVEL,
 ): EquipmentGemBonus | null => {
   if (!item.gem || isSeasonEquipmentSlot(item.slot)) return null;
-  if (!EQUIPMENT_GEM_SLOT_CONFIG[item.slot].includes(item.gem.type)) return null;
+  if (!EQUIPMENT_GEM_SLOT_CONFIG[item.slot].includes(item.gem.type))
+    return null;
 
   const config = EQUIPMENT_GEM_CONFIG[item.gem.type];
   const levelLimit = getGemLevelLimit(characterLevel);
   const storedLevel = Math.max(1, Math.floor(item.gem.level));
   const level = Math.min(
     storedLevel + (item.gem.breakthrough ? 1 : 0),
-    levelLimit + (item.gem.breakthrough ? 1 : 0)
+    levelLimit + (item.gem.breakthrough ? 1 : 0),
   );
   const breakthrough = item.gem.breakthrough && level > levelLimit;
   const growthMultiplier = getEffectiveBaseEquipmentEffectIds(item).includes(
-    "growth"
+    "growth",
   )
     ? 1.2
     : 1;
@@ -470,7 +468,7 @@ export const calculateEquipmentGemBonus = (
 
 export const canEnableBaseEquipmentEffect = (
   item: EquipmentItem,
-  effect: BaseEquipmentEffectId
+  effect: BaseEquipmentEffectId,
 ) => {
   const configuredEffects = getBaseEquipmentEffectIds(item);
   return (
@@ -508,9 +506,7 @@ export const getEquipmentEffectLabels = (item: EquipmentItem): string[] => {
     effects.has("vitality")
       ? `体魄 · 气血 +${ACCESSORY_VITALITY_EFFECT_VALUE}%`
       : null,
-    effects.has("custom")
-      ? item.specialEffect || "其它属性特效"
-      : null,
+    effects.has("custom") ? item.specialEffect || "其它属性特效" : null,
     item.specialSkill || null,
   ].filter((effect): effect is string => effect !== null);
 };
@@ -526,14 +522,12 @@ export type SeasonEquipmentResonance = {
 
 /** 同名神装特效按两件装备的等级和取已达到的最高共鸣档位。 */
 export const getSeasonEquipmentResonance = (
-  equipment: EquipmentSet
+  equipment: EquipmentSet,
 ): SeasonEquipmentResonance | null => {
   const ring = equipment.ring;
   const necklace = equipment.necklace;
   const ringEffect = getSeasonEquipmentEffectOption(ring.specialEffect);
-  const necklaceEffect = getSeasonEquipmentEffectOption(
-    necklace.specialEffect
-  );
+  const necklaceEffect = getSeasonEquipmentEffectOption(necklace.specialEffect);
 
   if (
     !ring.enabled ||
@@ -554,7 +548,7 @@ export const getSeasonEquipmentResonance = (
       .find((threshold) => totalLevel >= threshold) ?? null;
   const nextThreshold =
     SEASON_EQUIPMENT_RESONANCE_THRESHOLDS.find(
-      (threshold) => totalLevel < threshold
+      (threshold) => totalLevel < threshold,
     ) ?? null;
 
   return {
@@ -567,7 +561,7 @@ export const getSeasonEquipmentResonance = (
 
 const createItem = (
   slot: EquipmentSlot,
-  changes: Partial<Omit<EquipmentItem, "slot">> = {}
+  changes: Partial<Omit<EquipmentItem, "slot">> = {},
 ): EquipmentItem => ({
   slot,
   enabled: true,
@@ -660,20 +654,20 @@ export const createInitialEquipmentSet = (): EquipmentSet => ({
 /** 创建不含任何属性、宝石、词条或特效的八件装备配置。 */
 export const createEmptyEquipmentSet = (): EquipmentSet =>
   Object.fromEntries(
-    EQUIPMENT_SLOTS.map((slot) => [slot, createItem(slot)])
+    EQUIPMENT_SLOTS.map((slot) => [slot, createItem(slot)]),
   ) as EquipmentSet;
 
 const EQUIPMENT_ATTRIBUTE_SET = new Set<string>(
-  EQUIPMENT_ATTRIBUTE_OPTIONS.map(({ attribute }) => attribute)
+  EQUIPMENT_ATTRIBUTE_OPTIONS.map(({ attribute }) => attribute),
 );
 const STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET = new Set<string>(
-  EQUIPMENT_PRIMARY_ATTRIBUTES
+  EQUIPMENT_PRIMARY_ATTRIBUTES,
 );
 const EQUIPMENT_AFFINITY_ATTRIBUTE_SET = new Set<string>(
-  EQUIPMENT_AFFINITY_EFFECT_OPTIONS.map(({ attribute }) => attribute)
+  EQUIPMENT_AFFINITY_EFFECT_OPTIONS.map(({ attribute }) => attribute),
 );
 const EQUIPMENT_GEM_TYPE_SET = new Set<string>(
-  Object.keys(EQUIPMENT_GEM_CONFIG)
+  Object.keys(EQUIPMENT_GEM_CONFIG),
 );
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -681,7 +675,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const normalizeEquipmentAttributeValues = (
   value: unknown,
-  fallback: EquipmentAttributeValues
+  fallback: EquipmentAttributeValues,
 ): EquipmentAttributeValues => {
   if (!isRecord(value)) return fallback;
 
@@ -690,14 +684,14 @@ const normalizeEquipmentAttributeValues = (
       ([attribute, storedValue]) =>
         EQUIPMENT_ATTRIBUTE_SET.has(attribute) &&
         typeof storedValue === "number" &&
-        Number.isFinite(storedValue)
-    )
+        Number.isFinite(storedValue),
+    ),
   ) as EquipmentAttributeValues;
 };
 
 const mergeEquipmentAttributeValues = (
   baseAttributes: EquipmentAttributeValues,
-  additionalAttributes: EquipmentAttributeValues
+  additionalAttributes: EquipmentAttributeValues,
 ): EquipmentAttributeValues => {
   const mergedAttributes = { ...baseAttributes };
 
@@ -714,7 +708,7 @@ const mergeEquipmentAttributeValues = (
 const normalizeEquipmentGem = (
   value: unknown,
   slot: EquipmentSlot,
-  fallback: EquipmentGem | null
+  fallback: EquipmentGem | null,
 ): EquipmentGem | null => {
   if (value === null) return null;
   if (
@@ -739,7 +733,7 @@ const normalizeEquipmentGem = (
 const normalizeEquipmentIndependentAffix = (
   value: unknown,
   slot: EquipmentSlot,
-  fallback: EquipmentIndependentAffix | null
+  fallback: EquipmentIndependentAffix | null,
 ): EquipmentIndependentAffix | null => {
   if (value === null) return null;
   const name =
@@ -754,9 +748,7 @@ const normalizeEquipmentIndependentAffix = (
     !(config.slots as readonly EquipmentSlot[]).includes(slot) ||
     typeof value.level !== "number" ||
     !Number.isInteger(value.level) ||
-    !EQUIPMENT_INDEPENDENT_AFFIX_LEVELS.some(
-      (level) => level === value.level
-    )
+    !EQUIPMENT_INDEPENDENT_AFFIX_LEVELS.some((level) => level === value.level)
   ) {
     return fallback;
   }
@@ -770,7 +762,7 @@ const normalizeEquipmentIndependentAffix = (
 const normalizeEquipmentAttributeLine = <Attribute extends EquipmentAttribute>(
   value: unknown,
   allowedAttributes: ReadonlySet<string>,
-  fallback: { attribute: Attribute; value: number }
+  fallback: { attribute: Attribute; value: number },
 ): { attribute: Attribute; value: number } => {
   if (
     !isRecord(value) ||
@@ -793,7 +785,7 @@ const normalizeOptionalEquipmentAttributeLine = <
 >(
   value: unknown,
   allowedAttributes: ReadonlySet<string>,
-  fallback: { attribute: Attribute; value: number } | null
+  fallback: { attribute: Attribute; value: number } | null,
 ): { attribute: Attribute; value: number } | null => {
   if (value === null) return null;
   if (
@@ -812,13 +804,11 @@ const normalizeOptionalEquipmentAttributeLine = <
   };
 };
 
-const normalizeEquipmentAttributeLines = <
-  Attribute extends EquipmentAttribute,
->(
+const normalizeEquipmentAttributeLines = <Attribute extends EquipmentAttribute>(
   value: unknown,
   allowedAttributes: ReadonlySet<string>,
   maximumLineCount: number,
-  fallback: readonly { attribute: Attribute; value: number }[]
+  fallback: readonly { attribute: Attribute; value: number }[],
 ): readonly { attribute: Attribute; value: number }[] => {
   if (!Array.isArray(value)) return fallback;
 
@@ -849,14 +839,14 @@ const normalizeEquipmentAttributeLines = <
 const normalizeEquipmentItem = (
   value: unknown,
   slot: EquipmentSlot,
-  fallback: EquipmentItem
+  fallback: EquipmentItem,
 ): EquipmentItem => {
   if (!isRecord(value)) return fallback;
 
   const supportAttribute = normalizeOptionalEquipmentAttributeLine(
     value.supportAttribute,
     STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET,
-    fallback.supportAttribute
+    fallback.supportAttribute,
   );
   const affinityEffectAttribute =
     value.affinityEffectAttribute === null
@@ -868,7 +858,7 @@ const normalizeEquipmentItem = (
   const specialEffectAttribute = normalizeOptionalEquipmentAttributeLine(
     value.specialEffectAttribute,
     EQUIPMENT_ATTRIBUTE_SET,
-    fallback.specialEffectAttribute
+    fallback.specialEffectAttribute,
   );
   const seasonEffectLevel =
     typeof value.seasonEffectLevel === "number" &&
@@ -879,7 +869,7 @@ const normalizeEquipmentItem = (
       : fallback.seasonEffectLevel;
   const baseAttributes = normalizeEquipmentAttributeValues(
     value.baseAttributes,
-    fallback.baseAttributes
+    fallback.baseAttributes,
   );
   // 旧缓存曾单独保存铸灵值，读取时合并到游戏面板展示的最终装备属性。
   const legacyCastingAttributes =
@@ -901,36 +891,35 @@ const normalizeEquipmentItem = (
     independentAffix: normalizeEquipmentIndependentAffix(
       value.independentAffix,
       slot,
-      fallback.independentAffix
+      fallback.independentAffix,
     ),
     baseAttributes: mergeEquipmentAttributeValues(
       baseAttributes,
-      legacyCastingAttributes
+      legacyCastingAttributes,
     ),
     additionalPrimaryAttributes: normalizeEquipmentAttributeLines(
       value.additionalPrimaryAttributes,
       STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET,
       2,
-      fallback.additionalPrimaryAttributes
+      fallback.additionalPrimaryAttributes,
     ),
     tempering: normalizeEquipmentAttributeLine(
       value.tempering,
       STORED_EQUIPMENT_PRIMARY_ATTRIBUTE_SET,
-      fallback.tempering
+      fallback.tempering,
     ),
     affixes: isSeasonEquipmentSlot(slot)
       ? normalizeEquipmentAttributeLines(
           value.affixes,
           EQUIPMENT_ATTRIBUTE_SET,
           3,
-          fallback.affixes
+          fallback.affixes,
         )
       : [],
     supportAttribute,
     blessing:
       typeof value.blessing === "boolean" ? value.blessing : fallback.blessing,
-    growth:
-      typeof value.growth === "boolean" ? value.growth : fallback.growth,
+    growth: typeof value.growth === "boolean" ? value.growth : fallback.growth,
     gale: typeof value.gale === "boolean" ? value.gale : fallback.gale,
     affinityEffectAttribute,
     vitalityEffect:
@@ -959,7 +948,7 @@ export const normalizeEquipmentSet = (value: unknown): EquipmentSet | null => {
     EQUIPMENT_SLOTS.map((slot) => [
       slot,
       normalizeEquipmentItem(value[slot], slot, fallback[slot]),
-    ])
+    ]),
   ) as EquipmentSet;
 
   const gemUseCounts = new Map<EquipmentGemType, number>();
@@ -992,7 +981,7 @@ export const createInitialEquipmentCalculatorState =
 /** 同步宝石与角色等级；已突破的额外一级会在新上限覆盖后转为普通等级。 */
 export const clampEquipmentGemLevels = (
   equipment: EquipmentSet,
-  characterLevel: number
+  characterLevel: number,
 ): EquipmentSet => {
   const levelLimit = getGemLevelLimit(characterLevel);
 
@@ -1004,10 +993,9 @@ export const clampEquipmentGemLevels = (
       const storedLevel = Math.max(1, Math.floor(item.gem.level));
       const effectiveLevel = Math.min(
         storedLevel + (item.gem.breakthrough ? 1 : 0),
-        levelLimit + (item.gem.breakthrough ? 1 : 0)
+        levelLimit + (item.gem.breakthrough ? 1 : 0),
       );
-      const breakthrough =
-        item.gem.breakthrough && effectiveLevel > levelLimit;
+      const breakthrough = item.gem.breakthrough && effectiveLevel > levelLimit;
       const level = breakthrough ? levelLimit : effectiveLevel;
 
       return [
@@ -1016,12 +1004,12 @@ export const clampEquipmentGemLevels = (
           ? { ...item, gem: { ...item.gem, level, breakthrough } }
           : item,
       ];
-    })
+    }),
   ) as EquipmentSet;
 };
 
 export const normalizeEquipmentCalculatorState = (
-  value: unknown
+  value: unknown,
 ): EquipmentCalculatorState | null => {
   if (!isRecord(value)) return null;
 
@@ -1046,7 +1034,7 @@ export type EquipmentSummary = {
 
 const addValues = (
   target: EquipmentAttributeValues,
-  source: EquipmentAttributeValues
+  source: EquipmentAttributeValues,
 ) => {
   for (const [attribute, value] of Object.entries(source) as [
     EquipmentAttribute,
@@ -1059,14 +1047,14 @@ const addValues = (
 /** 汇总单件装备，并执行当前已知的固定值与百分比特效。 */
 export const calculateEquipmentItemAttributes = (
   item: EquipmentItem,
-  characterLevel = DEFAULT_EQUIPMENT_CHARACTER_LEVEL
+  characterLevel = DEFAULT_EQUIPMENT_CHARACTER_LEVEL,
 ): EquipmentAttributeValues => {
   if (!item.enabled) return {};
 
   const attributes: EquipmentAttributeValues = {};
   const isSeasonEquipment = isSeasonEquipmentSlot(item.slot);
   const baseEquipmentEffects = new Set(
-    getEffectiveBaseEquipmentEffectIds(item)
+    getEffectiveBaseEquipmentEffectIds(item),
   );
 
   if (item.slot === "ring") {
@@ -1137,10 +1125,7 @@ export const calculateEquipmentItemAttributes = (
     addValues(attributes, { speedPercent: 3 });
   }
 
-  if (
-    baseEquipmentEffects.has("affinity") &&
-    item.affinityEffectAttribute
-  ) {
+  if (baseEquipmentEffects.has("affinity") && item.affinityEffectAttribute) {
     addValues(attributes, {
       [item.affinityEffectAttribute]: EQUIPMENT_AFFINITY_EFFECT_VALUE,
     });
@@ -1153,11 +1138,7 @@ export const calculateEquipmentItemAttributes = (
   }
 
   const seasonEffect = getSeasonEquipmentEffectOption(item.specialEffect);
-  if (
-    isSeasonEquipment &&
-    seasonEffect &&
-    item.seasonEffectLevel > 0
-  ) {
+  if (isSeasonEquipment && seasonEffect && item.seasonEffectLevel > 0) {
     addValues(attributes, {
       [seasonEffect.attribute]:
         seasonEffect.valuePerLevel * item.seasonEffectLevel,
@@ -1170,7 +1151,8 @@ export const calculateEquipmentItemAttributes = (
     baseEquipmentEffects.has("custom")
   ) {
     addValues(attributes, {
-      [item.specialEffectAttribute.attribute]: item.specialEffectAttribute.value,
+      [item.specialEffectAttribute.attribute]:
+        item.specialEffectAttribute.value,
     });
   }
 
@@ -1180,7 +1162,7 @@ export const calculateEquipmentItemAttributes = (
 /** 将八件装备汇总为装备总览，并提取角色面板计算器能够识别的字段。 */
 export const calculateEquipmentSummary = (
   equipment: EquipmentSet,
-  characterLevel = DEFAULT_EQUIPMENT_CHARACTER_LEVEL
+  characterLevel = DEFAULT_EQUIPMENT_CHARACTER_LEVEL,
 ): EquipmentSummary => {
   const allAttributes: EquipmentAttributeValues = {};
   const gemAttributes: EquipmentAttributeValues = {};
@@ -1196,7 +1178,8 @@ export const calculateEquipmentSummary = (
       if (gemBonus) {
         addValues(gemAttributes, { [gemBonus.attribute]: gemBonus.value });
       }
-      const independentAffixBonus = calculateEquipmentIndependentAffixBonus(item);
+      const independentAffixBonus =
+        calculateEquipmentIndependentAffixBonus(item);
       if (independentAffixBonus) {
         addValues(independentAffixAttributes, {
           [independentAffixBonus.attribute]: independentAffixBonus.value,
@@ -1205,13 +1188,13 @@ export const calculateEquipmentSummary = (
     }
     addValues(
       allAttributes,
-      calculateEquipmentItemAttributes(item, characterLevel)
+      calculateEquipmentItemAttributes(item, characterLevel),
     );
   }
 
   const characterBonuses = createEmptyCharacterAttributeBonuses();
   const characterAttributeSet = new Set<CharacterBonusAttribute>(
-    CHARACTER_BONUS_ATTRIBUTE_KEYS
+    CHARACTER_BONUS_ATTRIBUTE_KEYS,
   );
 
   for (const [attribute, value] of Object.entries(allAttributes) as [

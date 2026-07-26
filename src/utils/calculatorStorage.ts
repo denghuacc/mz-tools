@@ -12,7 +12,7 @@ export const CHARACTER_PROFILES_STORAGE_KEY = "mz-tools.character-profiles.v1";
 export const loadCalculatorState = <T>(
   storageKey: string,
   fallback: T,
-  normalize: (value: unknown) => T | null
+  normalize: (value: unknown) => T | null,
 ): T => {
   try {
     const stored = window.localStorage.getItem(storageKey);

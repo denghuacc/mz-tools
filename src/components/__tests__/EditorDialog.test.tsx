@@ -1,6 +1,6 @@
 import { useState } from "react";
 import userEvent from "@testing-library/user-event";
-import { vi } from "vitest";
+import { vi } from "vite-plus/test";
 import { fireEvent, render, screen } from "../../test/testUtils";
 import EditorDialog from "../EditorDialog";
 
@@ -36,7 +36,7 @@ describe("EditorDialog", () => {
         <EditorDialog title="测试" onClose={() => undefined}>
           <button type="button">弹窗内容操作</button>
         </EditorDialog>
-      </>
+      </>,
     );
 
     const closeButton = screen.getByRole("button", { name: "关闭弹窗" });
@@ -77,7 +77,7 @@ describe("EditorDialog", () => {
     const { rerender } = render(
       <EditorDialog title="测试" onClose={onClose}>
         内容
-      </EditorDialog>
+      </EditorDialog>,
     );
 
     fireEvent.mouseDown(screen.getByRole("dialog").parentElement!);
@@ -87,7 +87,7 @@ describe("EditorDialog", () => {
     rerender(
       <EditorDialog title="测试" onClose={onClose} isCloseDisabled>
         内容
-      </EditorDialog>
+      </EditorDialog>,
     );
     fireEvent.mouseDown(screen.getByRole("dialog").parentElement!);
     await user.keyboard("{Escape}");

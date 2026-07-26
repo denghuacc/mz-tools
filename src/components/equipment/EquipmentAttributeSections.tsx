@@ -34,14 +34,14 @@ type EquipmentAttributesSectionProps = {
 
 const createNextSeasonAffixes = (
   currentAffixes: readonly EquipmentAttributeLine[],
-  count: number
+  count: number,
 ) => {
   const affixes = currentAffixes.slice(0, count);
 
   while (affixes.length < count) {
     const attribute = EQUIPMENT_ATTRIBUTE_OPTIONS.find(
       (option) =>
-        !affixes.some((affix) => affix.attribute === option.attribute)
+        !affixes.some((affix) => affix.attribute === option.attribute),
     )?.attribute;
 
     if (!attribute) break;
@@ -58,10 +58,7 @@ const AdditionalPrimaryAttributesEditor = ({
   const displayedAttributes = item.supportAttribute
     ? [...item.additionalPrimaryAttributes, item.supportAttribute]
     : [...item.additionalPrimaryAttributes];
-  const updateLine = (
-    index: number,
-    line: EquipmentPrimaryAttributeLine
-  ) => {
+  const updateLine = (index: number, line: EquipmentPrimaryAttributeLine) => {
     if (index === item.additionalPrimaryAttributes.length) {
       onChange({ ...item, supportAttribute: line });
       return;
@@ -80,7 +77,7 @@ const AdditionalPrimaryAttributesEditor = ({
     onChange({
       ...item,
       additionalPrimaryAttributes: item.additionalPrimaryAttributes.filter(
-        (_, current) => current !== index
+        (_, current) => current !== index,
       ),
     });
   };
@@ -94,8 +91,8 @@ const AdditionalPrimaryAttributesEditor = ({
           const attribute = EQUIPMENT_PRIMARY_ATTRIBUTES.find(
             (candidate) =>
               !item.additionalPrimaryAttributes.some(
-                (line) => line.attribute === candidate
-              )
+                (line) => line.attribute === candidate,
+              ),
           );
 
           onChange({
@@ -120,8 +117,7 @@ const AdditionalPrimaryAttributesEditor = ({
               label: EQUIPMENT_ATTRIBUTE_LABELS[attribute],
               disabled: displayedAttributes.some(
                 (candidate, candidateIndex) =>
-                  candidateIndex !== index &&
-                  candidate.attribute === attribute
+                  candidateIndex !== index && candidate.attribute === attribute,
               ),
             }))}
             removeLabel={`删除${EQUIPMENT_SLOT_LABELS[item.slot]}附加五维 ${index + 1}`}
@@ -143,8 +139,8 @@ const AdditionalPrimaryAttributesEditor = ({
             const attribute = EQUIPMENT_PRIMARY_ATTRIBUTES.find(
               (candidate) =>
                 !item.additionalPrimaryAttributes.some(
-                  (line) => line.attribute === candidate
-                ) && item.supportAttribute?.attribute !== candidate
+                  (line) => line.attribute === candidate,
+                ) && item.supportAttribute?.attribute !== candidate,
             );
 
             if (!attribute) return;
@@ -217,7 +213,9 @@ const EquipmentAffixesEditor = ({
 
   return (
     <div className="mt-4 border-t border-slate-100 pt-4">
-      <p className="mb-2 text-xs font-semibold text-slate-500">副属性（1～3 条）</p>
+      <p className="mb-2 text-xs font-semibold text-slate-500">
+        副属性（1～3 条）
+      </p>
 
       <div className="space-y-2">
         {item.affixes.map((line, index) => (
@@ -231,7 +229,7 @@ const EquipmentAffixesEditor = ({
               disabled: item.affixes.some(
                 (candidate, candidateIndex) =>
                   candidateIndex !== index &&
-                  candidate.attribute === option.attribute
+                  candidate.attribute === option.attribute,
               ),
             }))}
             removeLabel={`删除${EQUIPMENT_SLOT_LABELS[item.slot]}副属性 ${index + 1}`}
@@ -240,9 +238,7 @@ const EquipmentAffixesEditor = ({
             onRemove={() =>
               onChange({
                 ...item,
-                affixes: item.affixes.filter(
-                  (_, current) => current !== index
-                ),
+                affixes: item.affixes.filter((_, current) => current !== index),
               })
             }
           />
@@ -266,9 +262,9 @@ export const EquipmentIndependentAffixSection = ({
 }: EquipmentAttributesSectionProps) => {
   const independentAffixBonus = calculateEquipmentIndependentAffixBonus(item);
   const availableAffixes = Object.entries(
-    EQUIPMENT_INDEPENDENT_AFFIX_CONFIG
+    EQUIPMENT_INDEPENDENT_AFFIX_CONFIG,
   ).filter(([, config]) =>
-    (config.slots as readonly EquipmentItem["slot"][]).includes(item.slot)
+    (config.slots as readonly EquipmentItem["slot"][]).includes(item.slot),
   );
   if (availableAffixes.length === 0) return null;
 
@@ -323,7 +319,7 @@ export const EquipmentIndependentAffixSection = ({
                   ? {
                       ...item.independentAffix,
                       level: Number(
-                        event.target.value
+                        event.target.value,
                       ) as EquipmentIndependentAffixLevel,
                     }
                   : null,
@@ -341,8 +337,8 @@ export const EquipmentIndependentAffixSection = ({
 
       {independentAffixBonus ? (
         <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs leading-5 text-blue-800">
-          当前提供{EQUIPMENT_ATTRIBUTE_LABELS[independentAffixBonus.attribute]} +
-          {independentAffixBonus.value}。
+          当前提供{EQUIPMENT_ATTRIBUTE_LABELS[independentAffixBonus.attribute]}{" "}
+          +{independentAffixBonus.value}。
         </p>
       ) : null}
     </EquipmentEditorSection>

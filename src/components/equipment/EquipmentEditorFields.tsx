@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
-import {
-  EQUIPMENT_ATTRIBUTE_OPTIONS,
-} from "../../utils/equipmentAttributes";
+import { EQUIPMENT_ATTRIBUTE_OPTIONS } from "../../utils/equipmentAttributes";
 import type { EquipmentAttribute } from "../../utils/equipmentAttributes";
 import type { EquipmentAttributeLine } from "../../utils/equipmentAttributes";
 

@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { vi } from "vite-plus/test";
 import {
   clearFavorites,
   EMPTY_FAVORITES,
@@ -22,16 +22,12 @@ describe("内容收藏存储", () => {
     const withEquipment = toggleFavorite(
       EMPTY_FAVORITES,
       "equipment",
-      "season-divine-equipment"
+      "season-divine-equipment",
     );
-    const withCompanion = toggleFavorite(
-      withEquipment,
-      "companion",
-      "jiuer"
-    );
+    const withCompanion = toggleFavorite(withEquipment, "companion", "jiuer");
 
     expect(
-      isFavorite(withCompanion, "equipment", "season-divine-equipment")
+      isFavorite(withCompanion, "equipment", "season-divine-equipment"),
     ).toBe(true);
     expect(isFavorite(withCompanion, "companion", "jiuer")).toBe(true);
     expect(loadFavorites()).toEqual(withCompanion);
@@ -42,7 +38,7 @@ describe("内容收藏存储", () => {
       FAVORITES_STORAGE_KEY,
       JSON.stringify({
         items: ["sect:鬼王宗", "sect:鬼王宗", "guide:missing", 1],
-      })
+      }),
     );
 
     expect(loadFavorites()).toEqual({ items: ["sect:鬼王宗"] });
@@ -67,7 +63,9 @@ describe("内容收藏存储", () => {
       .mockImplementation(() => {
         throw new Error("quota exceeded");
       });
-    expect(toggleFavorite(EMPTY_FAVORITES, "guide", "official-strategy-hub")).toEqual({
+    expect(
+      toggleFavorite(EMPTY_FAVORITES, "guide", "official-strategy-hub"),
+    ).toEqual({
       items: ["guide:official-strategy-hub"],
     });
     setItem.mockRestore();

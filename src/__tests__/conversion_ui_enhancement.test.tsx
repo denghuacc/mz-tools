@@ -117,7 +117,7 @@ describe("转换结果UI增强功能", () => {
 
     // 结果误差提示应该始终显示
     expect(
-      screen.getByText(/结果可能与游戏实际数值存在少量误差/)
+      screen.getByText(/结果可能与游戏实际数值存在少量误差/),
     ).toBeInTheDocument();
 
     // 数值发生变化时不需要额外解释

@@ -10,10 +10,10 @@ describe("WeaponConverter 组件", () => {
   describe("初始渲染", () => {
     it("应该渲染标题", () => {
       expect(
-        screen.getByRole("heading", { name: "转换设置" })
+        screen.getByRole("heading", { name: "转换设置" }),
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("heading", { name: "武器属性" })
+        screen.getByRole("heading", { name: "武器属性" }),
       ).toBeInTheDocument();
     });
 
@@ -51,11 +51,9 @@ describe("WeaponConverter 组件", () => {
       // 验证武器等级初始值
       expect(selects[0]).toHaveValue("60");
       expect(
-        screen.getByRole("option", { name: "60级（69特色服）" })
+        screen.getByRole("option", { name: "60级（69特色服）" }),
       ).toBeInTheDocument();
-      expect(
-        screen.getByRole("option", { name: "60级" })
-      ).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: "60级" })).toBeInTheDocument();
 
       // 验证最大值显示
       expect(inputs[1]).toHaveValue(665); // 物攻最大值
@@ -450,7 +448,7 @@ describe("WeaponConverter 组件", () => {
       expect(formContainer).toBeInTheDocument();
 
       const gridContainer = document.querySelector(
-        ".grid.grid-cols-1.sm\\:grid-cols-3"
+        ".grid.grid-cols-1.sm\\:grid-cols-3",
       );
       expect(gridContainer).toBeInTheDocument();
     });
@@ -459,7 +457,7 @@ describe("WeaponConverter 组件", () => {
   describe("数据显示", () => {
     it("应该如实显示规则数据待复核", () => {
       expect(
-        screen.getByText(/数据依据：历史录入数据.*最近核验：待复核/)
+        screen.getByText(/数据依据：历史录入数据.*最近核验：待复核/),
       ).toBeInTheDocument();
     });
 

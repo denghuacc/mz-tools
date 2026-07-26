@@ -37,7 +37,7 @@ describe("官网内容快照", () => {
       SECT_PROFILES.length +
         EQUIPMENT_ENTRIES.length +
         COMPANION_ENTRIES.length +
-        GUIDE_ENTRIES.length
+        GUIDE_ENTRIES.length,
     );
   });
 

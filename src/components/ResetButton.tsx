@@ -85,7 +85,10 @@ const ResetButton = ({
                 !
               </span>
               <div>
-                <h2 id={titleId} className="text-base font-semibold text-slate-900">
+                <h2
+                  id={titleId}
+                  className="text-base font-semibold text-slate-900"
+                >
                   {confirmationTitle}
                 </h2>
                 <p

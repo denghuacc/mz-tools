@@ -11,7 +11,7 @@ describe("综合测试", () => {
     it("应该正确渲染完整应用", () => {
       // 验证主要元素存在
       expect(
-        screen.getByRole("heading", { name: "武器属性转换器" })
+        screen.getByRole("heading", { name: "武器属性转换器" }),
       ).toBeInTheDocument();
 
       // 验证表单元素
@@ -115,7 +115,7 @@ describe("综合测试", () => {
       expect(mainContainer).toHaveClass(
         "bg-gray-100",
         "flex",
-        "justify-center"
+        "justify-center",
       );
     });
 

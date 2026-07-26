@@ -32,9 +32,9 @@ export const loadFavorites = (): FavoritesState => {
       new Set(
         parsed.items.filter(
           (item): item is string =>
-            typeof item === "string" && CONTENT_ITEM_IDS.has(item)
-        )
-      )
+            typeof item === "string" && CONTENT_ITEM_IDS.has(item),
+        ),
+      ),
     );
 
     return { items };
@@ -46,14 +46,14 @@ export const loadFavorites = (): FavoritesState => {
 export const isFavorite = (
   favorites: FavoritesState,
   kind: FavoriteKind,
-  id: string
+  id: string,
 ) => favorites.items.includes(createFavoriteId(kind, id));
 
 /** 切换收藏并安全写入本地存储。 */
 export const toggleFavorite = (
   favorites: FavoritesState,
   kind: FavoriteKind,
-  id: string
+  id: string,
 ): FavoritesState => {
   const favoriteId = createFavoriteId(kind, id);
   const items = favorites.items.includes(favoriteId)

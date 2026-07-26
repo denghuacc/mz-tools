@@ -28,7 +28,7 @@ const SanshengPillBonusControl = ({
 }: SanshengPillBonusControlProps) => {
   const usedCount = PRIMARY_ATTRIBUTE_KEYS.reduce(
     (total, attribute) => total + counts[attribute],
-    0
+    0,
   );
   const gameYearCount = Math.max(0, currentYear - GAME_LAUNCH_YEAR);
 
@@ -52,8 +52,8 @@ const SanshengPillBonusControl = ({
           <p className="mt-1 text-xs leading-5 text-slate-500">
             每颗选择一项力、体、耐、灵或敏并增加{" "}
             {SANSHENG_PILL_ATTRIBUTE_POINTS} 点；{GAME_LAUNCH_YEAR}{" "}
-            年开服，按自然年累计，每年最多服用{" "}
-            {SANSHENG_PILL_COUNT_PER_YEAR} 颗。
+            年开服，按自然年累计，每年最多服用 {SANSHENG_PILL_COUNT_PER_YEAR}{" "}
+            颗。
           </p>
         </div>
         <button
@@ -137,7 +137,8 @@ const SanshengPillBonusControl = ({
         className="mt-3 text-right text-xs text-slate-500"
       >
         {currentYear} 年为开服第 {gameYearCount} 年，已服用{" "}
-        <span className="font-medium text-blue-600">{usedCount}</span> / {maximumCount} 颗
+        <span className="font-medium text-blue-600">{usedCount}</span> /{" "}
+        {maximumCount} 颗
       </p>
     </section>
   );

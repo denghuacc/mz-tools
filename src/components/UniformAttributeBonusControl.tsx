@@ -45,7 +45,10 @@ const UniformAttributeBonusControl = ({
         </button>
       </div>
 
-      <div className="mt-4 grid grid-cols-5 gap-1.5" aria-label={`${title}适用属性`}>
+      <div
+        className="mt-4 grid grid-cols-5 gap-1.5"
+        aria-label={`${title}适用属性`}
+      >
         {attributeLabels.map((label) => (
           <span
             key={label}

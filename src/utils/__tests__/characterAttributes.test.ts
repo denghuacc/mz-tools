@@ -62,7 +62,7 @@ describe("角色面板计算", () => {
   it("应该合并多个来源的直接属性和潜力属性加成", () => {
     const combined = combineCharacterAttributeBonuses(
       { health: 100, strength: 5, healingPower: 20 },
-      { health: 50, strength: 7, speed: 3, sealHit: 10 }
+      { health: 50, strength: 7, speed: 3, sealHit: 10 },
     );
 
     expect(combined).toEqual({
@@ -76,9 +76,7 @@ describe("角色面板计算", () => {
   });
 
   it("应该让潜力加成参与派生公式但不占用可分配点", () => {
-    const calculated = calculateCharacterAttributes(
-      EMPTY_CHARACTER_ALLOCATION
-    );
+    const calculated = calculateCharacterAttributes(EMPTY_CHARACTER_ALLOCATION);
     const bonuses = {
       ...createEmptyCharacterAttributeBonuses(),
       strength: 10,
@@ -103,9 +101,7 @@ describe("角色面板计算", () => {
   });
 
   it("应该把灵符的治疗强度和进战怒气计入进阶属性", () => {
-    const calculated = calculateCharacterAttributes(
-      EMPTY_CHARACTER_ALLOCATION
-    );
+    const calculated = calculateCharacterAttributes(EMPTY_CHARACTER_ALLOCATION);
     const bonuses = {
       ...createEmptyCharacterAttributeBonuses(),
       healingPower: 31,
@@ -121,9 +117,7 @@ describe("角色面板计算", () => {
   });
 
   it("应该把百分比加成直接计入对应进阶属性", () => {
-    const calculated = calculateCharacterAttributes(
-      EMPTY_CHARACTER_ALLOCATION
-    );
+    const calculated = calculateCharacterAttributes(EMPTY_CHARACTER_ALLOCATION);
     const bonuses = {
       ...createEmptyCharacterAttributeBonuses(),
       physicalCritical: 3.5,
@@ -138,9 +132,7 @@ describe("角色面板计算", () => {
   });
 
   it("应该在固定速度之后应用百分比速度并叠加闪避、封印抵抗和亲和", () => {
-    const calculated = calculateCharacterAttributes(
-      EMPTY_CHARACTER_ALLOCATION
-    );
+    const calculated = calculateCharacterAttributes(EMPTY_CHARACTER_ALLOCATION);
     const bonuses = {
       ...createEmptyCharacterAttributeBonuses(),
       speed: 10,
@@ -166,9 +158,7 @@ describe("角色面板计算", () => {
   });
 
   it("应该在固定防御加成之后应用物防和法防百分比", () => {
-    const calculated = calculateCharacterAttributes(
-      EMPTY_CHARACTER_ALLOCATION
-    );
+    const calculated = calculateCharacterAttributes(EMPTY_CHARACTER_ALLOCATION);
     const bonuses = {
       ...createEmptyCharacterAttributeBonuses(),
       physicalDefense: 10,
@@ -183,9 +173,7 @@ describe("角色面板计算", () => {
   });
 
   it("应该在直接气血和体力气血之后应用气血百分比", () => {
-    const calculated = calculateCharacterAttributes(
-      EMPTY_CHARACTER_ALLOCATION
-    );
+    const calculated = calculateCharacterAttributes(EMPTY_CHARACTER_ALLOCATION);
     const baseBonuses = {
       ...createEmptyCharacterAttributeBonuses(),
       constitution: 10,
@@ -193,22 +181,18 @@ describe("角色面板计算", () => {
     };
     const healthBeforePercentage = applyCharacterAttributeBonuses(
       calculated,
-      baseBonuses
+      baseBonuses,
     ).status.health;
     const effective = applyCharacterAttributeBonuses(calculated, {
       ...baseBonuses,
       healthPercent: 5,
     });
 
-    expect(effective.status.health).toBeCloseTo(
-      healthBeforePercentage * 1.05
-    );
+    expect(effective.status.health).toBeCloseTo(healthBeforePercentage * 1.05);
   });
 
   it("应该支持技能直接减少速度", () => {
-    const calculated = calculateCharacterAttributes(
-      EMPTY_CHARACTER_ALLOCATION
-    );
+    const calculated = calculateCharacterAttributes(EMPTY_CHARACTER_ALLOCATION);
     const bonuses = {
       ...createEmptyCharacterAttributeBonuses(),
       magicAttack: 20,
@@ -225,7 +209,7 @@ describe("角色面板计算", () => {
       const allocation = calculatePresetAllocation(preset.ratio);
       const allocatedPoints = Object.values(allocation).reduce(
         (total, points) => total + points,
-        0
+        0,
       );
 
       expect(allocatedPoints).toBe(TOTAL_POTENTIAL_POINTS);
@@ -234,9 +218,9 @@ describe("角色面板计算", () => {
     expect(
       calculatePresetAllocation(
         CHARACTER_ALLOCATION_PRESETS.find(
-          ({ id }) => id === "6-agility-2-constitution-2-endurance"
-        )!.ratio
-      )
+          ({ id }) => id === "6-agility-2-constitution-2-endurance",
+        )!.ratio,
+      ),
     ).toEqual({
       constitution: 138,
       spirit: 0,
@@ -256,8 +240,8 @@ describe("角色面板计算", () => {
           endurance: 0,
           agility: 2,
         },
-        "strength-or-spirit"
-      )
+        "strength-or-spirit",
+      ),
     ).toBeNull();
     expect(
       getCustomCharacterAllocationValidationError(
@@ -268,8 +252,8 @@ describe("角色面板计算", () => {
           endurance: 1,
           agility: 0,
         },
-        "strength-or-spirit"
-      )
+        "strength-or-spirit",
+      ),
     ).toBeNull();
     expect(
       getCustomCharacterAllocationValidationError(
@@ -280,8 +264,8 @@ describe("角色面板计算", () => {
           endurance: 2,
           agility: 5,
         },
-        "agility"
-      )
+        "agility",
+      ),
     ).toBeNull();
 
     expect(
@@ -293,8 +277,8 @@ describe("角色面板计算", () => {
           endurance: 0,
           agility: 0,
         },
-        "strength-or-spirit"
-      )
+        "strength-or-spirit",
+      ),
     ).toBe("力和灵互斥，必须且只能选择一项作为主属性。");
     expect(
       getCustomCharacterAllocationValidationError(
@@ -305,8 +289,8 @@ describe("角色面板计算", () => {
           endurance: 0,
           agility: 5,
         },
-        "strength-or-spirit"
-      )
+        "strength-or-spirit",
+      ),
     ).toBe("力或灵的主属性加点必须为 6～10 点。");
     expect(
       getCustomCharacterAllocationValidationError(
@@ -317,8 +301,8 @@ describe("角色面板计算", () => {
           endurance: 5,
           agility: 0,
         },
-        "agility"
-      )
+        "agility",
+      ),
     ).toBe("敏主属性方案至少分配 1 点敏。");
     expect(
       getCustomCharacterAllocationValidationError(
@@ -329,8 +313,8 @@ describe("角色面板计算", () => {
           endurance: 2,
           agility: 4,
         },
-        "agility"
-      )
+        "agility",
+      ),
     ).toBe("每级必须分配 10 点，当前还需分配 1 点。");
     expect(
       getCustomCharacterAllocationValidationError(
@@ -341,8 +325,8 @@ describe("角色面板计算", () => {
           endurance: 2,
           agility: 5,
         },
-        "agility"
-      )
+        "agility",
+      ),
     ).toBe("每级必须分配 10 点，当前已超出 1 点。");
   });
 
@@ -362,11 +346,11 @@ describe("角色面板计算", () => {
 
     const level110Allocation = calculatePresetAllocation(
       CHARACTER_ALLOCATION_PRESETS[0].ratio,
-      110
+      110,
     );
     expect(level110Allocation.strength).toBe(1100);
     expect(
-      calculateCharacterAttributes(level110Allocation, 110).remainingPoints
+      calculateCharacterAttributes(level110Allocation, 110).remainingPoints,
     ).toBe(0);
   });
 
@@ -421,7 +405,9 @@ describe("角色面板计算", () => {
   });
 
   it("应该让封印命中从 0 级 10 点起每级成长并保持封印抵抗为 2", () => {
-    const emptyResult = calculateCharacterAttributes(EMPTY_CHARACTER_ALLOCATION);
+    const emptyResult = calculateCharacterAttributes(
+      EMPTY_CHARACTER_ALLOCATION,
+    );
     const allocatedResult = calculateCharacterAttributes({
       constitution: 0,
       spirit: 0,
@@ -481,7 +467,7 @@ describe("角色面板计算", () => {
         strength: 3,
         endurance: 4,
         agility: 5,
-      })
+      }),
     ).toEqual({
       constitution: 4,
       spirit: 2,

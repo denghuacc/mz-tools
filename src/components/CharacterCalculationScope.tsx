@@ -73,10 +73,7 @@ const CharacterCalculationScope = ({
         aria-labelledby={titleId}
       >
         <div className="flex items-center gap-1.5">
-          <strong
-            id={titleId}
-            className="font-semibold"
-          >
+          <strong id={titleId} className="font-semibold">
             当前计算口径
           </strong>
           <button
@@ -102,8 +99,8 @@ const CharacterCalculationScope = ({
           </button>
         </div>
         <p className="mt-1 text-blue-800">
-          当前计算仅在现有样本范围内有效；升一级五维各固定增加 2 点，并获得
-          10 点潜力。当前 {characterLevel} 级可分配潜力点 {totalPotentialPoints}。
+          当前计算仅在现有样本范围内有效；升一级五维各固定增加 2 点，并获得 10
+          点潜力。当前 {characterLevel} 级可分配潜力点 {totalPotentialPoints}。
           数据仅供参考，以实际游戏数据为准。
         </p>
       </section>
@@ -125,16 +122,19 @@ const CharacterCalculationScope = ({
             </section>
 
             <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-              <h3 className="font-semibold text-slate-900">角色初始值与样本基准</h3>
+              <h3 className="font-semibold text-slate-900">
+                角色初始值与样本基准
+              </h3>
               <ul className="mt-2 list-disc space-y-1 pl-5">
                 <li>0 级五维：体、灵、力、耐、敏均为 20 点。</li>
                 <li>0 级封印命中为 10%，封印抵抗为 2%；真气固定为 100。</li>
                 <li>
-                  气血、法力和五项派生属性缺少可靠的 0 级样本，当前从 1 级样本开始计算。
+                  气血、法力和五项派生属性缺少可靠的 0 级样本，当前从 1
+                  级样本开始计算。
                 </li>
                 <li>
-                  1 级样本五维为体 22、灵 22、力 32、耐 22、敏 22；其中多出的
-                  10 点力量来自首批潜力分配。
+                  1 级样本五维为体 22、灵 22、力 32、耐 22、敏 22；其中多出的 10
+                  点力量来自首批潜力分配。
                 </li>
                 <li>
                   1 级样本基准为气血 234、法力 157、物攻 98、法攻 100、物防 53、
@@ -151,7 +151,9 @@ const CharacterCalculationScope = ({
             </section>
 
             <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-              <h3 className="font-semibold text-slate-900">每次升级增加的属性</h3>
+              <h3 className="font-semibold text-slate-900">
+                每次升级增加的属性
+              </h3>
               <ul className="mt-2 list-disc space-y-1 pl-5">
                 <li>五维各固定增加 2 点，另获得 10 点可分配潜力。</li>
                 <li>封印命中增加 2%；封印抵抗和真气当前不随等级成长。</li>
@@ -161,10 +163,9 @@ const CharacterCalculationScope = ({
                 </li>
               </ul>
               <p className="mt-2 rounded-lg bg-blue-50 px-3 py-2 text-blue-900">
-                当前 {characterLevel} 级从 0 级起共升级 {characterUpgradeCount} 次；
-                未分配潜力前五维各为 {fixedPrimaryAttribute} 点，可分配潜力共
-                {" "}
-                {totalPotentialPoints} 点。
+                当前 {characterLevel} 级从 0 级起共升级 {characterUpgradeCount}{" "}
+                次； 未分配潜力前五维各为 {fixedPrimaryAttribute}{" "}
+                点，可分配潜力共 {totalPotentialPoints} 点。
               </p>
             </section>
 
@@ -180,13 +181,17 @@ const CharacterCalculationScope = ({
                 >
                   <thead>
                     <tr className="bg-slate-100 text-slate-600">
-                      <th className="rounded-l-lg px-2 py-2 text-left font-medium">五维</th>
+                      <th className="rounded-l-lg px-2 py-2 text-left font-medium">
+                        五维
+                      </th>
                       <th className="px-2 py-2 font-medium">气血</th>
                       <th className="px-2 py-2 font-medium">物攻</th>
                       <th className="px-2 py-2 font-medium">法攻</th>
                       <th className="px-2 py-2 font-medium">物防</th>
                       <th className="px-2 py-2 font-medium">法防</th>
-                      <th className="rounded-r-lg px-2 py-2 font-medium">速度</th>
+                      <th className="rounded-r-lg px-2 py-2 font-medium">
+                        速度
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -212,7 +217,9 @@ const CharacterCalculationScope = ({
               <h3 className="font-semibold text-slate-900">加成与取整顺序</h3>
               <ol className="mt-2 list-decimal space-y-1 pl-5">
                 <li>先按当前五维计算气血、物攻、法攻、物防、法防和速度。</li>
-                <li>装备、魂器等额外五维按同一比例转换，再叠加直接固定属性。</li>
+                <li>
+                  装备、魂器等额外五维按同一比例转换，再叠加直接固定属性。
+                </li>
                 <li>气血、物防、法防和速度的百分比加成在固定属性之后计算。</li>
                 <li>内部保留完整精度，角色面板最终展示值统一向下取整。</li>
               </ol>

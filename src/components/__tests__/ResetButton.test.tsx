@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { vi } from "vitest";
+import { vi } from "vite-plus/test";
 import { fireEvent, render, screen } from "../../test/testUtils";
 import ResetButton from "../ResetButton";
 
@@ -14,7 +14,7 @@ describe("ResetButton", () => {
           onConfirm={() => undefined}
         />
         <button type="button">背景操作</button>
-      </>
+      </>,
     );
 
     const resetButton = screen.getByRole("button", { name: "重置" });
@@ -42,7 +42,7 @@ describe("ResetButton", () => {
         confirmationTitle="确认重置？"
         confirmationMessage="重置后无法恢复。"
         onConfirm={onConfirm}
-      />
+      />,
     );
 
     const resetButton = screen.getByRole("button", { name: "重置" });

@@ -42,7 +42,7 @@ const TemporaryTalismanBonusControl = <
     onSelectedAttributesChange(
       selectedAttributes.includes(attribute)
         ? selectedAttributes.filter((candidate) => candidate !== attribute)
-        : [...selectedAttributes, attribute]
+        : [...selectedAttributes, attribute],
     );
   };
 
