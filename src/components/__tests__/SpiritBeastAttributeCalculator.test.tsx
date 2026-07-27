@@ -289,6 +289,285 @@ describe("SpiritBeastAttributeCalculator", () => {
     ).toBeInTheDocument();
   });
 
+  it("应该详细录入三件装备并在重新挂载后恢复原始配置", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<SpiritBeastAttributeCalculator />);
+
+    await user.click(screen.getByRole("button", { name: "编辑装备" }));
+    let dialog = screen.getByRole("dialog", { name: "编辑装备" });
+
+    expect(
+      within(dialog).getByRole("heading", { name: "宝衣" }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("heading", { name: "宝链" }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole("heading", { name: "宝冠" }),
+    ).toBeInTheDocument();
+    expect(dialog).toHaveTextContent("宝链技能请统一在“技能”来源录入");
+    const crownSecondaryAttributeOne = within(dialog).getByRole("combobox", {
+      name: "宝冠：副属性 1",
+    });
+    expect(
+      within(crownSecondaryAttributeOne)
+        .getAllByRole("option")
+        .map((option) => option.textContent),
+    ).toEqual([
+      "体",
+      "灵",
+      "力",
+      "耐",
+      "敏",
+      "气血",
+      "法力",
+      "物攻",
+      "法攻",
+      "物防",
+      "法防",
+      "速度",
+      "物伤结果",
+      "法伤结果",
+      "物伤减免",
+      "法伤减免",
+      "暴击伤害（%）",
+    ]);
+    const garmentBaseAttributeTwo = within(dialog).getByRole("combobox", {
+      name: "宝衣：装备属性 2",
+    });
+    expect(
+      within(garmentBaseAttributeTwo).getByRole("option", { name: "气血" }),
+    ).toBeInTheDocument();
+    expect(
+      within(
+        within(dialog).getByRole("combobox", { name: "宝冠：装备属性 1" }),
+      ).getByRole("option", { name: "气血" }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).queryByRole("spinbutton", { name: /装备等级/ }),
+    ).not.toBeInTheDocument();
+
+    const garmentBaseAttributeOneValue = within(dialog).getByRole(
+      "spinbutton",
+      {
+        name: "宝衣：装备属性 1 数值",
+      },
+    );
+    await user.click(garmentBaseAttributeOneValue);
+    await user.keyboard("6");
+    expect(garmentBaseAttributeOneValue).toHaveFocus();
+    await user.keyboard("5");
+    expect(garmentBaseAttributeOneValue).toHaveValue(65);
+    await user.selectOptions(garmentBaseAttributeTwo, "health");
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "宝衣：装备属性 2 数值",
+      }),
+      { target: { value: "107" } },
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "宝衣：启灵属性 1 数值",
+      }),
+      { target: { value: "10" } },
+    );
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "添加宝衣第 2 条启灵属性",
+      }),
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", {
+        name: "宝衣：启灵属性 2",
+      }),
+      "strength",
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "宝衣：启灵属性 2 数值",
+      }),
+      { target: { value: "8" } },
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "宝链：启灵属性 1 数值",
+      }),
+      { target: { value: "13" } },
+    );
+    await user.selectOptions(crownSecondaryAttributeOne, "magicalAttack");
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "宝冠：副属性 1 数值",
+      }),
+      { target: { value: "49" } },
+    );
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "添加宝冠第 2 条副属性",
+      }),
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "宝冠：副属性 2" }),
+      "criticalDamagePercent",
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "宝冠：副属性 2 数值",
+      }),
+      { target: { value: "8" } },
+    );
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "添加宝冠第 3 条副属性",
+      }),
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "宝冠：副属性 3" }),
+      "physicalDamageReduction",
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "宝冠：副属性 3 数值",
+      }),
+      { target: { value: "12" } },
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "宝冠：百炼属性数值",
+      }),
+      { target: { value: "21" } },
+    );
+    fireEvent.change(
+      within(dialog).getByRole("textbox", { name: "宝冠：特效名称" }),
+      { target: { value: "五行之水" } },
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "宝冠：特效修正 1 数值",
+      }),
+      { target: { value: "40" } },
+    );
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "添加宝冠第 2 条特效修正",
+      }),
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", {
+        name: "宝冠：特效修正 2",
+      }),
+      "strength",
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "宝冠：特效修正 2 数值",
+      }),
+      { target: { value: "-20" } },
+    );
+    await user.click(within(dialog).getByRole("button", { name: "完成" }));
+
+    expect(screen.getByText("物攻 +65")).toBeInTheDocument();
+    expect(screen.getByText("气血 +107")).toBeInTheDocument();
+    expect(screen.getByText("法攻 +49")).toBeInTheDocument();
+    expect(screen.getByText("暴击伤害 +8%")).toBeInTheDocument();
+    expect(screen.getByText("物伤减免 +12")).toBeInTheDocument();
+    expect(screen.getByText("体 +10")).toBeInTheDocument();
+    expect(screen.getByText("灵 +40")).toBeInTheDocument();
+    expect(screen.getByText("力 +1")).toBeInTheDocument();
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY) ??
+          "{}",
+      );
+      expect(stored.equipment.garment.baseAttributes[0].value).toBe(65);
+      expect(stored.equipment.garment.baseAttributes[1]).toEqual({
+        attribute: "health",
+        value: 107,
+      });
+      expect(stored.equipment.crown.specialEffectName).toBe("五行之水");
+      expect(stored.equipment.crown.secondaryAttributes[2]).toEqual({
+        attribute: "physicalDamageReduction",
+        value: 12,
+      });
+      expect(stored.equipment.crown.specialEffectAdjustments[1]).toEqual({
+        attribute: "strength",
+        value: -20,
+      });
+    });
+
+    unmount();
+    render(<SpiritBeastAttributeCalculator />);
+
+    expect(screen.getByText("法攻 +49")).toBeInTheDocument();
+    expect(screen.getByText("气血 +107")).toBeInTheDocument();
+    expect(screen.getByText("物伤减免 +12")).toBeInTheDocument();
+    expect(screen.getByText("力 +1")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "编辑装备" }));
+    dialog = screen.getByRole("dialog", { name: "编辑装备" });
+    expect(
+      within(dialog).getByRole("textbox", { name: "宝冠：特效名称" }),
+    ).toHaveValue("五行之水");
+    expect(
+      within(dialog).getByRole("spinbutton", {
+        name: "宝冠：特效修正 2 数值",
+      }),
+    ).toHaveValue(-20);
+    expect(dialog).not.toHaveTextContent("旧版装备汇总修正");
+  });
+
+  it("应该按三件装备各自的计入状态更新卡片数量", async () => {
+    const user = userEvent.setup();
+    render(<SpiritBeastAttributeCalculator />);
+
+    const equipmentCard = screen
+      .getByRole("heading", { name: "装备" })
+      .closest("article");
+    expect(equipmentCard).not.toBeNull();
+    expect(within(equipmentCard!).getByText("3/3")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "编辑装备" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑装备" });
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: "宝衣：计入装备" }),
+    );
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: "宝链：计入装备" }),
+    );
+
+    expect(within(equipmentCard!).getByText("1/3")).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "完成" }));
+    expect(within(equipmentCard!).getByText("1/3")).toBeInTheDocument();
+  });
+
+  it("应该继续显示并允许清理旧版装备汇总", async () => {
+    window.localStorage.setItem(
+      SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY,
+      JSON.stringify({
+        bonusSources: {
+          equipment: {
+            strength: 10,
+          },
+        },
+      }),
+    );
+    const user = userEvent.setup();
+    render(<SpiritBeastAttributeCalculator />);
+
+    const equipmentCard = screen
+      .getByRole("heading", { name: "装备" })
+      .closest("article");
+    expect(equipmentCard).not.toBeNull();
+    expect(within(equipmentCard!).getByText("力 +10")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "编辑装备" }));
+
+    const dialog = screen.getByRole("dialog", { name: "编辑装备" });
+    expect(dialog).toHaveTextContent("旧版装备汇总修正");
+    await user.click(within(dialog).getByRole("button", { name: "清空" }));
+
+    expect(dialog).not.toHaveTextContent("旧版装备汇总修正");
+  });
+
   it("损坏缓存不应该阻断计算器", () => {
     window.localStorage.setItem(
       SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY,

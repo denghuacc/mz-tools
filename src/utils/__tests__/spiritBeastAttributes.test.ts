@@ -2,6 +2,7 @@ import {
   calculateSpiritBeastAttributes,
   createDefaultSpiritBeastState,
   createRandomSpiritBeastLevelZeroPrimary,
+  getSpiritBeastEquipmentBonusTotal,
   getSpiritBeastAllocationTotal,
   getSpiritBeastLevelZeroPrimaryTotal,
   getSpiritBeastPotentialPoints,
@@ -135,6 +136,39 @@ describe("灵兽面板计算", () => {
     const excluded = calculateSpiritBeastAttributes(state);
     expect(excluded.primary.strength).toBe(52);
     expect(Math.floor(excluded.derived.physicalAttack)).toBe(153);
+  });
+
+  it("应该把三件详细装备与旧版装备汇总一起接入灵兽面板", () => {
+    const state = createDefaultSpiritBeastState();
+    state.equipment.garment.baseAttributes = [
+      { attribute: "health", value: 107 },
+      { attribute: "magicalAttack", value: 0 },
+    ];
+    state.equipment.garment.enlightenmentAttributes = [
+      { attribute: "strength", value: 10 },
+    ];
+    state.equipment.crown.baseAttributes = [
+      { attribute: "physicalAttack", value: 28 },
+      { attribute: "physicalDefense", value: 18 },
+    ];
+    state.equipment.crown.specialEffectAdjustments = [
+      { attribute: "strength", value: -20 },
+    ];
+    state.bonusSources.equipment.physicalAttack = 2;
+
+    expect(getSpiritBeastEquipmentBonusTotal(state, "physicalAttack")).toBe(30);
+    expect(getSpiritBeastEquipmentBonusTotal(state, "health")).toBe(107);
+    expect(calculateSpiritBeastAttributes(state).primary.strength).toBe(42);
+    expect(
+      Math.floor(calculateSpiritBeastAttributes(state).derived.health),
+    ).toBe(297);
+    expect(
+      Math.floor(calculateSpiritBeastAttributes(state).derived.physicalAttack),
+    ).toBe(158);
+
+    state.isEquipmentIncluded = false;
+    expect(getSpiritBeastEquipmentBonusTotal(state, "physicalAttack")).toBe(0);
+    expect(calculateSpiritBeastAttributes(state).primary.strength).toBe(52);
   });
 
   it("随机初值应该始终保持五维总和 200", () => {

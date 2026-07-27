@@ -22,6 +22,7 @@ import {
   createDefaultSpiritBeastState,
   createEmptySpiritBeastBonusSources,
   createEmptySpiritBeastBonuses,
+  getSpiritBeastEquipmentBonusTotal,
   getSpiritBeastLevelZeroPrimaryValidationError,
   normalizeSpiritBeastCalculatorState,
 } from "../utils/spiritBeastAttributes";
@@ -32,6 +33,12 @@ import type {
   SpiritBeastCalculatorState,
   SpiritBeastDerivedAttribute,
 } from "../utils/spiritBeastAttributes";
+import {
+  calculateSpiritBeastEquipmentBonuses,
+  createEmptySpiritBeastEquipmentSet,
+  SPIRIT_BEAST_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS,
+} from "../utils/spiritBeastEquipment";
+import type { SpiritBeastEquipmentBonusAttribute } from "../utils/spiritBeastEquipment";
 import {
   SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY,
   loadCalculatorState,
@@ -50,6 +57,7 @@ import {
   SpiritBeastLevelZeroPrimaryControl,
 } from "./SpiritBeastBaseConfigControl";
 import SpiritBeastCalculationScope from "./SpiritBeastCalculationScope";
+import SpiritBeastEquipmentControl from "./SpiritBeastEquipmentControl";
 import SpiritBeastQualificationPanel from "./SpiritBeastQualificationPanel";
 import {
   SPIRIT_BEAST_AFFINITY_LABELS as AFFINITY_LABELS,
@@ -80,7 +88,6 @@ const BONUS_SOURCE_CONFIG: Record<
     title: "装备",
     shortTitle: "装备",
     description: "录入 3 件灵兽装备提供的属性合计。",
-    badge: "3 件",
     colorClass: "text-blue-700",
   },
   accessory: {
@@ -137,6 +144,10 @@ const ALL_BONUS_FIELDS = [
 const BONUS_FIELD_LABELS = Object.fromEntries(
   ALL_BONUS_FIELDS.map(({ attribute, label }) => [attribute, label]),
 ) as Record<SpiritBeastBonusAttribute, string>;
+
+const STANDARD_BONUS_ATTRIBUTE_SET = new Set<string>(
+  ALL_BONUS_FIELDS.map(({ attribute }) => attribute),
+);
 
 const DERIVED_ATTRIBUTE_COLUMNS = [
   "magicalAttack",
@@ -222,21 +233,66 @@ const SpiritBeastAttributeCalculator = () => {
         `${PRIMARY_LABELS[attribute]} +${calculated.allocation[attribute]}`,
     )
     .join(" · ");
+  const enabledEquipmentCount = [
+    state.equipment.garment.enabled,
+    state.equipment.necklace.enabled,
+    state.equipment.crown.enabled,
+  ].filter(Boolean).length;
 
   const attributeBonusSources: readonly AttributeBonusSummarySource<SpiritBeastBonusSourceId>[] =
     SPIRIT_BEAST_BONUS_SOURCE_IDS.map((sourceId) => {
       const config = BONUS_SOURCE_CONFIG[sourceId];
-      const items = ALL_BONUS_FIELDS.filter(
-        ({ attribute }) => state.bonusSources[sourceId][attribute] !== 0,
-      ).map(({ attribute }) => ({
-        label: BONUS_FIELD_LABELS[attribute],
-        value: state.bonusSources[sourceId][attribute],
-      }));
+      const detailedEquipmentBonuses =
+        sourceId === "equipment"
+          ? calculateSpiritBeastEquipmentBonuses(state.equipment)
+          : null;
+      const standardItems = ALL_BONUS_FIELDS.filter(({ attribute }) => {
+        const detailedValue =
+          detailedEquipmentBonuses && attribute in detailedEquipmentBonuses
+            ? detailedEquipmentBonuses[
+                attribute as SpiritBeastEquipmentBonusAttribute
+              ]
+            : 0;
+
+        return state.bonusSources[sourceId][attribute] + detailedValue !== 0;
+      }).map(({ attribute }) => {
+        const detailedValue =
+          detailedEquipmentBonuses && attribute in detailedEquipmentBonuses
+            ? detailedEquipmentBonuses[
+                attribute as SpiritBeastEquipmentBonusAttribute
+              ]
+            : 0;
+
+        return {
+          label: BONUS_FIELD_LABELS[attribute],
+          value: state.bonusSources[sourceId][attribute] + detailedValue,
+        };
+      });
+      const equipmentOnlyItems =
+        sourceId === "equipment" && detailedEquipmentBonuses
+          ? SPIRIT_BEAST_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS.filter(
+              ({ attribute }) =>
+                !STANDARD_BONUS_ATTRIBUTE_SET.has(attribute) &&
+                detailedEquipmentBonuses[attribute] !== 0,
+            ).map(({ attribute, label, unit }) => ({
+              label: label.replace("（%）", ""),
+              value: detailedEquipmentBonuses[attribute],
+              unit,
+            }))
+          : [];
+      const items = [...standardItems, ...equipmentOnlyItems];
 
       return {
         id: sourceId,
         title: config.title,
-        badge: config.badge,
+        badge:
+          sourceId === "equipment"
+            ? `${enabledEquipmentCount}/3`
+            : config.badge,
+        details:
+          sourceId === "equipment"
+            ? "宝衣和宝冠各录入两条装备属性；宝衣、宝链启灵录入五维；宝冠另录入副属性、百炼与属性特效。宝链技能统一在“技能”来源录入。"
+            : undefined,
         items,
       };
     });
@@ -272,7 +328,10 @@ const SpiritBeastAttributeCalculator = () => {
     SPIRIT_BEAST_BONUS_SOURCE_IDS.map((sourceId) => {
       if (sourceId === "equipment" && !state.isEquipmentIncluded) return null;
 
-      const value = state.bonusSources[sourceId][attribute];
+      const value =
+        sourceId === "equipment"
+          ? getSpiritBeastEquipmentBonusTotal(state, attribute)
+          : state.bonusSources[sourceId][attribute];
       if (value === 0) return null;
 
       const config = BONUS_SOURCE_CONFIG[sourceId];
@@ -325,6 +384,7 @@ const SpiritBeastAttributeCalculator = () => {
             onReset={() =>
               setState((current) => ({
                 ...current,
+                equipment: createEmptySpiritBeastEquipmentSet(),
                 bonusSources: createEmptySpiritBeastBonusSources(),
               }))
             }
@@ -654,7 +714,37 @@ const SpiritBeastAttributeCalculator = () => {
         </EditorDialog>
       )}
 
-      {activeSourceId && (
+      {activeSourceId === "equipment" && (
+        <EditorDialog
+          title={BONUS_SOURCE_CONFIG.equipment.title}
+          onClose={() => setActiveEditorId(null)}
+        >
+          <SpiritBeastEquipmentControl
+            equipment={state.equipment}
+            onChange={(equipment) =>
+              setState((current) => ({ ...current, equipment }))
+            }
+          />
+          {ALL_BONUS_FIELDS.some(
+            ({ attribute }) => state.bonusSources.equipment[attribute] !== 0,
+          ) && (
+            <div className="mt-3">
+              <AttributeBonusCard
+                title="旧版装备汇总修正"
+                description="这是旧版装备合计输入的兼容数据；确认详细装备已覆盖这些数值后可以清空。"
+                fields={ALL_BONUS_FIELDS}
+                values={state.bonusSources.equipment}
+                onChange={(attribute, value) =>
+                  updateBonus("equipment", attribute, value)
+                }
+                onReset={() => resetBonusSource("equipment")}
+              />
+            </div>
+          )}
+        </EditorDialog>
+      )}
+
+      {activeSourceId && activeSourceId !== "equipment" && (
         <EditorDialog
           title={BONUS_SOURCE_CONFIG[activeSourceId].title}
           onClose={() => setActiveEditorId(null)}

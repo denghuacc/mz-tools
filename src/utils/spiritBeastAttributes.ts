@@ -13,6 +13,15 @@ import type {
   CustomCharacterAllocationScheme,
   PrimaryAttribute,
 } from "./characterAttributes";
+import {
+  calculateSpiritBeastEquipmentBonuses,
+  createEmptySpiritBeastEquipmentSet,
+  normalizeSpiritBeastEquipmentSet,
+} from "./spiritBeastEquipment";
+import type {
+  SpiritBeastEquipmentBonusAttribute,
+  SpiritBeastEquipmentSet,
+} from "./spiritBeastEquipment";
 
 export const SPIRIT_BEAST_LEVEL_MIN = 1;
 export const SPIRIT_BEAST_LEVEL_MAX = 115;
@@ -127,6 +136,7 @@ export type SpiritBeastCalculatorState = {
   customAllocation: CharacterAllocation;
   affinities: SpiritBeastAffinities;
   isEquipmentIncluded: boolean;
+  equipment: SpiritBeastEquipmentSet;
   bonusSources: SpiritBeastBonusSources;
 };
 
@@ -205,6 +215,7 @@ export const createDefaultSpiritBeastState =
     customAllocation: { ...DEFAULT_CUSTOM_CHARACTER_ALLOCATION },
     affinities: { ...EMPTY_SPIRIT_BEAST_AFFINITIES },
     isEquipmentIncluded: true,
+    equipment: createEmptySpiritBeastEquipmentSet(),
     bonusSources: createEmptySpiritBeastBonusSources(),
   });
 
@@ -490,6 +501,7 @@ export const normalizeSpiritBeastCalculatorState = (
     ),
     affinities: normalizeAffinities(value.affinities, fallback.affinities),
     isEquipmentIncluded: value.isEquipmentIncluded !== false,
+    equipment: normalizeSpiritBeastEquipmentSet(value.equipment),
     bonusSources: normalizeBonusSources(value.bonusSources),
   };
 };
@@ -499,17 +511,34 @@ const isBonusSourceEnabled = (
   state: SpiritBeastCalculatorState,
 ) => sourceId !== "equipment" || state.isEquipmentIncluded;
 
+export const getSpiritBeastEquipmentBonusTotal = (
+  state: SpiritBeastCalculatorState,
+  attribute: SpiritBeastBonusAttribute,
+): number => {
+  if (!state.isEquipmentIncluded) return 0;
+
+  const detailedBonuses = calculateSpiritBeastEquipmentBonuses(state.equipment);
+  const detailedValue =
+    attribute in detailedBonuses
+      ? detailedBonuses[attribute as SpiritBeastEquipmentBonusAttribute]
+      : 0;
+
+  // v2 曾允许直接录入装备汇总，继续叠加可避免旧缓存和存档丢失。
+  return detailedValue + state.bonusSources.equipment[attribute];
+};
+
 export const getSpiritBeastBonusTotal = (
   state: SpiritBeastCalculatorState,
   attribute: SpiritBeastBonusAttribute,
 ): number =>
-  SPIRIT_BEAST_BONUS_SOURCE_IDS.reduce(
-    (total, sourceId) =>
-      isBonusSourceEnabled(sourceId, state)
-        ? total + state.bonusSources[sourceId][attribute]
-        : total,
-    0,
-  );
+  SPIRIT_BEAST_BONUS_SOURCE_IDS.reduce((total, sourceId) => {
+    if (!isBonusSourceEnabled(sourceId, state)) return total;
+    if (sourceId === "equipment") {
+      return total + getSpiritBeastEquipmentBonusTotal(state, attribute);
+    }
+
+    return total + state.bonusSources[sourceId][attribute];
+  }, 0);
 
 /**
  * 两组升级预览中，未向灵力分配潜力时的法力增量均符合此规则。

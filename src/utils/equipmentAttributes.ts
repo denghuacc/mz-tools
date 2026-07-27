@@ -214,6 +214,12 @@ export const EQUIPMENT_ATTRIBUTE_OPTIONS = [
   label: string;
 }[];
 
+/** 角色戒指、项链等赛年神装共用的完整副属性候选。 */
+export const SEASON_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS =
+  EQUIPMENT_ATTRIBUTE_OPTIONS;
+export type SeasonEquipmentSecondaryAttribute =
+  (typeof SEASON_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS)[number]["attribute"];
+
 export const EQUIPMENT_AFFINITY_EFFECT_OPTIONS = AFFINITY_BONUS_FIELDS;
 export const EQUIPMENT_AFFINITY_EFFECT_VALUE = 3;
 export const ACCESSORY_VITALITY_EFFECT_VALUE = 5;

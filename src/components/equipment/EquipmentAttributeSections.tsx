@@ -1,10 +1,10 @@
 import {
   EQUIPMENT_ATTRIBUTE_LABELS,
-  EQUIPMENT_ATTRIBUTE_OPTIONS,
   EQUIPMENT_INDEPENDENT_AFFIX_CONFIG,
   EQUIPMENT_INDEPENDENT_AFFIX_LEVELS,
   EQUIPMENT_PRIMARY_ATTRIBUTES,
   EQUIPMENT_SLOT_LABELS,
+  SEASON_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS,
   calculateEquipmentIndependentAffixBonus,
   canEnableBaseEquipmentEffect,
   isSeasonEquipmentSlot,
@@ -39,7 +39,7 @@ const createNextSeasonAffixes = (
   const affixes = currentAffixes.slice(0, count);
 
   while (affixes.length < count) {
-    const attribute = EQUIPMENT_ATTRIBUTE_OPTIONS.find(
+    const attribute = SEASON_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS.find(
       (option) =>
         !affixes.some((affix) => affix.attribute === option.attribute),
     )?.attribute;
@@ -224,14 +224,16 @@ const EquipmentAffixesEditor = ({
             line={line}
             selectLabel={`${EQUIPMENT_SLOT_LABELS[item.slot]}：副属性 ${index + 1}`}
             valueLabel={`副属性 ${index + 1} 数值`}
-            options={EQUIPMENT_ATTRIBUTE_OPTIONS.map((option) => ({
-              ...option,
-              disabled: item.affixes.some(
-                (candidate, candidateIndex) =>
-                  candidateIndex !== index &&
-                  candidate.attribute === option.attribute,
-              ),
-            }))}
+            options={SEASON_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS.map(
+              (option) => ({
+                ...option,
+                disabled: item.affixes.some(
+                  (candidate, candidateIndex) =>
+                    candidateIndex !== index &&
+                    candidate.attribute === option.attribute,
+                ),
+              }),
+            )}
             removeLabel={`删除${EQUIPMENT_SLOT_LABELS[item.slot]}副属性 ${index + 1}`}
             removeDisabled={item.affixes.length === 1}
             onChange={(nextLine) => updateAffix(index, nextLine)}

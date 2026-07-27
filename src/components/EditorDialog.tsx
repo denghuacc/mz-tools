@@ -21,6 +21,14 @@ const EditorDialog = ({
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  const isCloseDisabledRef = useRef(isCloseDisabled);
+
+  // 保持事件读取最新参数，同时避免参数变化时重复执行弹窗焦点初始化。
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    isCloseDisabledRef.current = isCloseDisabled;
+  }, [isCloseDisabled, onClose]);
 
   useEffect(() => {
     const previousActiveElement = document.activeElement;
@@ -30,8 +38,8 @@ const EditorDialog = ({
     closeButtonRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !isCloseDisabled) {
-        onClose();
+      if (event.key === "Escape" && !isCloseDisabledRef.current) {
+        onCloseRef.current();
         return;
       }
 
@@ -50,7 +58,7 @@ const EditorDialog = ({
         previousActiveElement.focus();
       }
     };
-  }, [isCloseDisabled, onClose]);
+  }, []);
 
   return (
     <div
