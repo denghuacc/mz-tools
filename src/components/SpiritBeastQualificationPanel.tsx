@@ -36,7 +36,14 @@ const SliderNumberField = ({
   );
 
   useEffect(() => {
-    setDraftValue(formatSliderValue(value, precision));
+    setDraftValue((currentDraft) => {
+      const draftNumber = Number(currentDraft);
+
+      // 父状态回传当前输入值时保留编辑格式，避免输入 1.2 后立即变成 1.200。
+      return currentDraft !== "" && draftNumber === value
+        ? currentDraft
+        : formatSliderValue(value, precision);
+    });
   }, [precision, value]);
 
   const commitValue = (inputValue: string) => {
@@ -70,13 +77,21 @@ const SliderNumberField = ({
           inputMode="decimal"
           value={draftValue}
           onBlur={() => {
-            if (!commitValue(draftValue)) {
+            if (commitValue(draftValue)) {
+              setDraftValue(formatSliderValue(Number(draftValue), precision));
+            } else {
               setDraftValue(formatSliderValue(value, precision));
             }
           }}
           onChange={(event) => {
             setDraftValue(event.target.value);
             commitValue(event.target.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              event.currentTarget.blur();
+            }
           }}
         />
       </span>

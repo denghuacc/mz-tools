@@ -110,6 +110,46 @@ describe("SpiritBeastAttributeCalculator", () => {
     );
   });
 
+  it("连续输入成长小数时不应该在编辑中途补零", () => {
+    render(<SpiritBeastAttributeCalculator />);
+
+    const growthInput = screen.getByRole("spinbutton", {
+      name: "成长数值",
+    });
+    fireEvent.change(growthInput, { target: { value: "1.2" } });
+
+    expect(growthInput).toHaveDisplayValue("1.2");
+
+    fireEvent.change(growthInput, { target: { value: "1.21" } });
+    expect(growthInput).toHaveDisplayValue("1.21");
+  });
+
+  it("灵兽资质的六个数字输入框按 Enter 后应该失焦并确认数值", async () => {
+    const user = userEvent.setup();
+    render(<SpiritBeastAttributeCalculator />);
+
+    const inputCases = [
+      ["物攻资质数值", "1501"],
+      ["物防资质数值", "1502"],
+      ["气血资质数值", "1503"],
+      ["灵力资质数值", "1504"],
+      ["速度资质数值", "1505"],
+      ["成长数值", "1.21"],
+    ] as const;
+
+    for (const [name, value] of inputCases) {
+      const input = screen.getByRole("spinbutton", { name });
+      fireEvent.change(input, { target: { value } });
+      await user.click(input);
+      expect(input).toHaveFocus();
+
+      await user.keyboard("{Enter}");
+
+      expect(input).not.toHaveFocus();
+      expect(input).toHaveValue(Number(value));
+    }
+  });
+
   it("应该沿用人物面板方案并额外提供 5 体 5 耐", async () => {
     const user = userEvent.setup();
     render(<SpiritBeastAttributeCalculator />);
