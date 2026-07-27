@@ -1,12 +1,10 @@
 import {
-  CHARACTER_ALLOCATION_PRESETS,
   getCharacterAllocationTotal,
   PRIMARY_ATTRIBUTE_LABELS,
 } from "../utils/characterAttributes";
 import type {
   CharacterAllocation,
   CharacterAllocationMode,
-  CharacterAllocationPresetId,
   CustomCharacterAllocationScheme,
   PrimaryAttribute,
 } from "../utils/characterAttributes";
@@ -19,23 +17,31 @@ const CUSTOM_ALLOCATION_ATTRIBUTE_ORDER = [
   "agility",
 ] as const satisfies readonly PrimaryAttribute[];
 
-type PotentialAllocationControlProps = {
+type PotentialAllocationPreset<PresetId extends string> = {
+  id: PresetId;
+  label: string;
+  ratio: CharacterAllocation;
+};
+
+type PotentialAllocationControlProps<PresetId extends string> = {
   title: string;
+  presets: readonly PotentialAllocationPreset<PresetId>[];
   allocationMode: CharacterAllocationMode;
-  selectedPresetId: CharacterAllocationPresetId;
+  selectedPresetId: PresetId;
   customScheme: CustomCharacterAllocationScheme;
   customAllocation: CharacterAllocation;
   customValidationError: string | null;
   summary: string;
   onAllocationModeChange: (mode: CharacterAllocationMode) => void;
-  onSelectPreset: (presetId: CharacterAllocationPresetId) => void;
+  onSelectPreset: (presetId: PresetId) => void;
   onCustomSchemeChange: (scheme: CustomCharacterAllocationScheme) => void;
   onCustomAllocationChange: (allocation: CharacterAllocation) => void;
 };
 
 /** 在编辑弹层中选择常见方案，或按两套规则自由分配每级 10 点潜力。 */
-const PotentialAllocationControl = ({
+const PotentialAllocationControl = <PresetId extends string>({
   title,
+  presets,
   allocationMode,
   selectedPresetId,
   customScheme,
@@ -46,7 +52,7 @@ const PotentialAllocationControl = ({
   onSelectPreset,
   onCustomSchemeChange,
   onCustomAllocationChange,
-}: PotentialAllocationControlProps) => {
+}: PotentialAllocationControlProps<PresetId>) => {
   const total = getCharacterAllocationTotal(customAllocation);
   const selectedMainAttribute: "strength" | "spirit" =
     customAllocation.spirit > 0 ? "spirit" : "strength";
@@ -123,7 +129,7 @@ const PotentialAllocationControl = ({
           role="radiogroup"
           aria-label="潜力点加点方案"
         >
-          {CHARACTER_ALLOCATION_PRESETS.map((preset) => {
+          {presets.map((preset) => {
             const isSelected = preset.id === selectedPresetId;
 
             return (
@@ -283,7 +289,7 @@ const PotentialAllocationControl = ({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-            <span className="text-slate-500">合法后才会应用到角色属性</span>
+            <span className="text-slate-500">合法后才会应用到面板属性</span>
             <span
               className={
                 customValidationError

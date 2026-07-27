@@ -1,26 +1,21 @@
-import type {
-  CharacterAttributeBonuses,
-  CharacterBonusAttribute,
-} from "../utils/characterAttributes";
-
-export type AttributeBonusField = {
-  attribute: CharacterBonusAttribute;
+export type AttributeBonusField<Attribute extends string = string> = {
+  attribute: Attribute;
   label: string;
   allowNegative?: boolean;
 };
 
-type AttributeBonusCardProps = {
+type AttributeBonusCardProps<Attribute extends string> = {
   title: string;
   description: string;
-  fields: readonly AttributeBonusField[];
-  values: CharacterAttributeBonuses;
-  onChange: (attribute: CharacterBonusAttribute, value: number) => void;
+  fields: readonly AttributeBonusField<Attribute>[];
+  values: Record<Attribute, number>;
+  onChange: (attribute: Attribute, value: number) => void;
   onReset: () => void;
   validationError?: string | null;
 };
 
 /** 可配置为单属性或多属性，用于录入技能、装备等来源的直接或潜力属性加成。 */
-const AttributeBonusCard = ({
+const AttributeBonusCard = <Attribute extends string>({
   title,
   description,
   fields,
@@ -28,11 +23,11 @@ const AttributeBonusCard = ({
   onChange,
   onReset,
   validationError,
-}: AttributeBonusCardProps) => {
+}: AttributeBonusCardProps<Attribute>) => {
   const hasBonus = fields.some(({ attribute }) => values[attribute] !== 0);
 
   const handleChange = (
-    attribute: CharacterBonusAttribute,
+    attribute: Attribute,
     inputValue: string,
     allowNegative: boolean,
   ) => {

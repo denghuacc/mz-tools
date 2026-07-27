@@ -4,6 +4,8 @@ import WeaponConverter from "./components/WeaponConverter";
 import CharacterAttributeCalculator from "./components/CharacterAttributeCalculator";
 import CharacterProfileSlots from "./components/CharacterProfileSlots";
 import EquipmentCalculator from "./components/EquipmentCalculator";
+import SpiritBeastAttributeCalculator from "./components/SpiritBeastAttributeCalculator";
+import SpiritBeastProfileSlots from "./components/SpiritBeastProfileSlots";
 import DataPage from "./pages/DataPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import GuidePage from "./pages/GuidePage";
@@ -45,6 +47,15 @@ import {
   restoreCharacterStateSnapshot,
   saveCharacterProfileSlots,
 } from "./utils/characterProfiles";
+import {
+  activateSpiritBeastProfileSlot,
+  loadCurrentSpiritBeastStateSnapshot,
+  loadSpiritBeastProfileSlots,
+  normalizeSpiritBeastProfileName,
+  replaceSpiritBeastProfileSlot,
+  restoreSpiritBeastStateSnapshot,
+  saveSpiritBeastProfileSlots,
+} from "./utils/spiritBeastProfiles";
 
 type PageId =
   | "home"
@@ -172,11 +183,17 @@ const CalculatorPage = () => {
   const [characterProfileSlots, setCharacterProfileSlots] = useState(
     loadCharacterProfileSlots,
   );
+  const [spiritBeastProfileSlots, setSpiritBeastProfileSlots] = useState(
+    loadSpiritBeastProfileSlots,
+  );
   const [characterCalculatorKey, setCharacterCalculatorKey] = useState(0);
+  const [spiritBeastCalculatorKey, setSpiritBeastCalculatorKey] = useState(0);
   const [characterProfileNotice, setCharacterProfileNotice] = useState("");
+  const [spiritBeastProfileNotice, setSpiritBeastProfileNotice] = useState("");
   const isWeapon = activeTool === "weapon";
   const isCharacter = activeTool === "character";
   const isEquipment = activeTool === "equipment";
+  const isSpiritBeast = activeTool === "spirit-beast";
   const equipmentSummary = useMemo(
     () =>
       calculateEquipmentSummary(
@@ -194,25 +211,34 @@ const CalculatorPage = () => {
     saveCharacterProfileSlots(characterProfileSlots);
   }, [characterProfileSlots]);
 
+  useEffect(() => {
+    saveSpiritBeastProfileSlots(spiritBeastProfileSlots);
+  }, [spiritBeastProfileSlots]);
+
   const toolMeta = isEquipment
     ? {
         title: "角色装备计算器",
         description: "录入八件装备，汇总装备属性并同步到角色面板。",
       }
-    : isCharacter
+    : isSpiritBeast
       ? {
-          title: "角色面板计算器",
-          description: "按角色等级分配潜力点，查看装备和其它加成后的属性。",
+          title: "灵兽面板计算器",
+          description: "录入灵兽五维、资质、成长与加成，查看暂算面板。",
         }
-      : isWeapon
+      : isCharacter
         ? {
-            title: "武器属性转换器",
-            description: "设置转换路径，并填写当前武器的三项属性。",
+            title: "角色面板计算器",
+            description: "按角色等级分配潜力点，查看装备和其它加成后的属性。",
           }
-        : {
-            title: "戒指属性转换器",
-            description: "选择当前与目标门派，并填写戒指的两项主属性。",
-          };
+        : isWeapon
+          ? {
+              title: "武器属性转换器",
+              description: "设置转换路径，并填写当前武器的三项属性。",
+            }
+          : {
+              title: "戒指属性转换器",
+              description: "选择当前与目标门派，并填写戒指的两项主属性。",
+            };
 
   const handleToolChange = (tool: CalculatorTool) => {
     setActiveTool(tool);
@@ -256,6 +282,34 @@ const CalculatorPage = () => {
     setCharacterProfileNotice(`已恢复“${profile.name}”的完整角色配置。`);
   };
 
+  const handleSaveSpiritBeastProfile = (slotIndex: number, name: string) => {
+    const normalizedName = normalizeSpiritBeastProfileName(name, slotIndex);
+    const isOverwrite = spiritBeastProfileSlots[slotIndex] !== null;
+
+    setSpiritBeastProfileSlots((currentSlots) =>
+      replaceSpiritBeastProfileSlot(currentSlots, slotIndex, {
+        name: normalizedName,
+        state: loadCurrentSpiritBeastStateSnapshot(),
+        isActive: true,
+      }),
+    );
+    setSpiritBeastProfileNotice(
+      `已${isOverwrite ? "覆盖" : "保存"}“${normalizedName}”的完整灵兽配置。`,
+    );
+  };
+
+  const handleRestoreSpiritBeastProfile = (slotIndex: number) => {
+    const profile = spiritBeastProfileSlots[slotIndex];
+    if (!profile) return;
+
+    restoreSpiritBeastStateSnapshot(profile.state);
+    setSpiritBeastProfileSlots((currentSlots) =>
+      activateSpiritBeastProfileSlot(currentSlots, slotIndex),
+    );
+    setSpiritBeastCalculatorKey((currentKey) => currentKey + 1);
+    setSpiritBeastProfileNotice(`已恢复“${profile.name}”的完整灵兽配置。`);
+  };
+
   return (
     <div className="space-y-3">
       <div>
@@ -264,12 +318,12 @@ const CalculatorPage = () => {
           游戏数值计算
         </h1>
         <p className="mt-2 text-sm text-slate-500">
-          计算角色与装备属性，或查看装备转换至目标门派后的数值变化。
+          计算角色、装备与灵兽属性，或查看装备转换至目标门派后的数值变化。
         </p>
       </div>
 
       <div
-        className="inline-flex rounded-lg border border-slate-200 bg-white p-1 shadow-sm"
+        className="no-scrollbar flex max-w-full overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 shadow-sm"
         role="tablist"
         aria-label="计算器类型"
       >
@@ -279,6 +333,7 @@ const CalculatorPage = () => {
             ["ring", "戒指转换"],
             ["character", "角色面板 (测试版)"],
             ["equipment", "角色装备 (测试版)"],
+            ["spirit-beast", "灵兽面板 (测试版)"],
           ] as const
         ).map(([tool, label]) => (
           <button
@@ -286,7 +341,7 @@ const CalculatorPage = () => {
             type="button"
             role="tab"
             aria-selected={activeTool === tool}
-            className={`whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 sm:px-4 sm:text-sm ${
+            className={`shrink-0 whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 sm:px-4 sm:text-sm ${
               activeTool === tool
                 ? "bg-blue-600 text-white"
                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
@@ -307,9 +362,18 @@ const CalculatorPage = () => {
         />
       )}
 
+      {isSpiritBeast && (
+        <SpiritBeastProfileSlots
+          slots={spiritBeastProfileSlots}
+          notice={spiritBeastProfileNotice}
+          onSave={handleSaveSpiritBeastProfile}
+          onRestore={handleRestoreSpiritBeastProfile}
+        />
+      )}
+
       <div
         className={`grid items-start gap-5 ${
-          isCharacter || isEquipment
+          isCharacter || isEquipment || isSpiritBeast
             ? ""
             : "xl:grid-cols-[minmax(0,672px)_minmax(260px,1fr)]"
         }`}
@@ -326,13 +390,15 @@ const CalculatorPage = () => {
             state={equipmentState}
             onChange={setEquipmentState}
           />
+        ) : isSpiritBeast ? (
+          <SpiritBeastAttributeCalculator key={spiritBeastCalculatorKey} />
         ) : isWeapon ? (
           <WeaponConverter />
         ) : (
           <RingConverter />
         )}
 
-        {!isCharacter && !isEquipment && (
+        {!isCharacter && !isEquipment && !isSpiritBeast && (
           <aside className="space-y-4 xl:sticky xl:top-24">
             <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-5 hidden border-b border-slate-100 pb-5 xl:block">

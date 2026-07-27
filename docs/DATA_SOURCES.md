@@ -37,6 +37,8 @@
 | 灵兽·九儿     | [五周年兽潮赛季与九儿公告](https://mhxzx.wanmei.com/m/news/gamenews/20260625/262881.shtml)  | 2026-06-25 |
 | 灵兽·苍龙神君 | [苍龙神君上线与技能说明](https://mhxzx.wanmei.com/m/news/gamenews/20260326/261493.shtml)    | 2026-03-26 |
 | 灵兽·讹兽     | [105级灵兽·讹兽登场公告](https://mhxzx.wanmei.com/news/gamenews/20220721/238817.shtml)      | 2022-07-21 |
+| 五系元素亲和  | [元素系统与五种元素亲和说明](https://www.taptap.cn/moment/120587306833808954)               | 2021-07-14 |
+| 风元素亲和    | [寒风龙族与风元素上线公告](https://www.taptap.cn/moment/560552939739939207)                 | 2024-05-30 |
 | 坐骑·幻月仙   | [坐骑·幻月仙上线公告](https://mhxzx.wanmei.com/news/gamebroad/20250423/256101.shtml)        | 2025-04-23 |
 | 坐骑·涅离火   | [四象坐骑·涅离火上线公告](https://mhxzx.wanmei.com/m/news/gamebroad/20260205/260801.shtml)  | 2026-02-05 |
 | 坐骑·踏云骓   | [侠客行版本与坐骑·踏云骓公告](https://mhxzx.wanmei.com/news/gamenews/20230330/242983.shtml) | 2023-03-30 |

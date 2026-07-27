@@ -1,15 +1,10 @@
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import type { CSSProperties, ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import useAttributePanelHeight from "../hooks/useAttributePanelHeight";
 import AttributeBonusCard from "./AttributeBonusCard";
 import AttributeBonusSummaryPanel from "./AttributeBonusSummaryPanel";
 import type { AttributeBonusSummarySource } from "./AttributeBonusSummaryPanel";
+import AttributeValueLayout from "./AttributeValueLayout";
 import CharacterTrainingBonusControl from "./CharacterTrainingBonusControl";
 import CharacterCalculationScope from "./CharacterCalculationScope";
 import {
@@ -646,22 +641,6 @@ const formatPanelAttribute = (value: number) =>
 
 const formatBonus = (value: number) =>
   `${value > 0 ? "+" : ""}${formatAttribute(value)}`;
-
-type AttributeValueLayoutProps = {
-  bonuses?: ReactNode;
-  value: ReactNode;
-};
-
-/** 最终值固定在行尾；空间不足时，左侧加成可独立换行。 */
-const AttributeValueLayout = ({
-  bonuses,
-  value,
-}: AttributeValueLayoutProps) => (
-  <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-2 text-right">
-    <div className="min-w-0 leading-5">{bonuses}</div>
-    {value}
-  </div>
-);
 
 const createBonusSummaryItems = (
   fields: readonly {
@@ -1368,8 +1347,8 @@ const CharacterAttributeCalculator = ({
     ? availableEquipmentBonuses
     : EMPTY_EQUIPMENT_BONUSES;
   const [activeEditorId, setActiveEditorId] = useState<EditorId | null>(null);
-  const [leftAttributePanelHeight, setLeftAttributePanelHeight] = useState(0);
-  const leftAttributePanelRef = useRef<HTMLElement>(null);
+  const { attributePanelRef: leftAttributePanelRef, rightRailStyle } =
+    useAttributePanelHeight();
   const closeEditor = useCallback(() => setActiveEditorId(null), []);
   const characterUpgradeCount = getCharacterUpgradeCount(characterLevel);
   const totalPotentialPoints = getTotalPotentialPoints(characterLevel);
@@ -1465,33 +1444,6 @@ const CharacterAttributeCalculator = ({
     starBlessingValue,
   ]);
 
-  useLayoutEffect(() => {
-    const panel = leftAttributePanelRef.current;
-
-    if (!panel) {
-      return;
-    }
-
-    const updatePanelHeight = () => {
-      const nextHeight = Math.ceil(panel.getBoundingClientRect().height);
-
-      if (nextHeight > 0) {
-        setLeftAttributePanelHeight(nextHeight);
-      }
-    };
-
-    updatePanelHeight();
-
-    if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", updatePanelHeight);
-      return () => window.removeEventListener("resize", updatePanelHeight);
-    }
-
-    const resizeObserver = new ResizeObserver(updatePanelHeight);
-    resizeObserver.observe(panel);
-
-    return () => resizeObserver.disconnect();
-  }, []);
   const seasonArtifactPotentialBonuses = useMemo(
     () =>
       createSinglePrimaryAttributeBonuses(
@@ -1824,13 +1776,6 @@ const CharacterAttributeCalculator = ({
   const seasonArtifactSelectedCount = Object.values(
     seasonArtifactBonusCounts,
   ).reduce((total, count) => total + count, 0);
-  const rightRailStyle =
-    leftAttributePanelHeight > 0
-      ? ({
-          "--attribute-panel-height": `${leftAttributePanelHeight}px`,
-        } as CSSProperties)
-      : undefined;
-
   const updateSkillBonus = (
     attribute: CharacterBonusAttribute,
     value: number,
@@ -2219,6 +2164,7 @@ const CharacterAttributeCalculator = ({
       renderContent: (title) => (
         <PotentialAllocationControl
           title={title}
+          presets={CHARACTER_ALLOCATION_PRESETS}
           allocationMode={allocationMode}
           selectedPresetId={selectedPresetId}
           customScheme={customAllocationScheme}

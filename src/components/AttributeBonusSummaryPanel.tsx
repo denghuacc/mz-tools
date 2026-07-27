@@ -17,6 +17,9 @@ type AttributeBonusSummaryPanelProps<SourceId extends string> = {
   onEdit: (sourceId: SourceId) => void;
   onEquipmentIncludedChange: (included: boolean) => void;
   onReset: () => void;
+  equipmentToggleLabel?: string;
+  equipmentToggleTitle?: string;
+  resetConfirmationMessage?: string;
 };
 
 /** 统一展示全部属性加成来源，并根据来源配置生成摘要卡与统计。 */
@@ -26,6 +29,9 @@ const AttributeBonusSummaryPanel = <SourceId extends string>({
   onEdit,
   onEquipmentIncludedChange,
   onReset,
+  equipmentToggleLabel = "计入装备值",
+  equipmentToggleTitle = "关闭后保留角色装备录入，但不计入角色面板属性",
+  resetConfirmationMessage = "重置后将清除全部属性加成配置，此操作无法撤销。角色等级和潜力点方案会保留。",
 }: AttributeBonusSummaryPanelProps<SourceId>) => {
   const configuredSourceCount = sources.filter(
     ({ items }) => items.length > 0,
@@ -48,7 +54,7 @@ const AttributeBonusSummaryPanel = <SourceId extends string>({
         <div className="flex shrink-0 items-center gap-3">
           <label
             className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700"
-            title="关闭后保留角色装备录入，但不计入角色面板属性"
+            title={equipmentToggleTitle}
           >
             <input
               type="checkbox"
@@ -58,11 +64,11 @@ const AttributeBonusSummaryPanel = <SourceId extends string>({
                 onEquipmentIncludedChange(event.target.checked)
               }
             />
-            <span>计入装备值</span>
+            <span>{equipmentToggleLabel}</span>
           </label>
           <ResetButton
             confirmationTitle="确认重置属性加成？"
-            confirmationMessage="重置后将清除全部属性加成配置，此操作无法撤销。角色等级和潜力点方案会保留。"
+            confirmationMessage={resetConfirmationMessage}
             onConfirm={onReset}
           />
         </div>

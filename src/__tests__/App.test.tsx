@@ -7,6 +7,8 @@ import {
   CHARACTER_PROFILES_STORAGE_KEY,
   EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
   LEGACY_EQUIPMENT_ATTRIBUTES_STORAGE_KEY,
+  SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY,
+  SPIRIT_BEAST_PROFILES_STORAGE_KEY,
 } from "../utils/calculatorStorage";
 import {
   EQUIPMENT_SLOTS,
@@ -148,6 +150,7 @@ describe("App 组件", () => {
       "戒指转换",
       "角色面板 (测试版)",
       "角色装备 (测试版)",
+      "灵兽面板 (测试版)",
     ]);
 
     await user.click(screen.getByRole("tab", { name: "角色装备 (测试版)" }));
@@ -163,6 +166,24 @@ describe("App 组件", () => {
     ).not.toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: "计入装备值" })).toBeChecked();
     expect(screen.getByText("装备 +138")).toBeInTheDocument();
+  });
+
+  it("应该提供灵兽面板并保存当前工具偏好", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "灵兽面板 (测试版)" }));
+
+    expect(
+      within(screen.getByRole("region", { name: "灵兽面板结果" })).getByRole(
+        "heading",
+        { name: "数值条" },
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "基础属性 · 10 项" }),
+    ).toBeInTheDocument();
+    expect(loadPreferences().activeTool).toBe("spirit-beast");
   });
 
   it("应该保存三个角色存档并一键恢复角色面板和装备配置", async () => {
@@ -266,6 +287,85 @@ describe("App 组件", () => {
       expect(
         restoredEquipmentState.equipment.weapon.baseAttributes.physicalAttack,
       ).toBe(700);
+    });
+  });
+
+  it("应该保存三个灵兽存档并一键恢复完整灵兽配置", async () => {
+    updatePreferences({ activeTool: "spirit-beast" });
+    const user = userEvent.setup();
+    render(<App />);
+
+    const profileRegion = screen.getByRole("region", { name: "灵兽存档" });
+    expect(
+      within(profileRegion).getAllByRole("button", { name: /恢复存档/ }),
+    ).toHaveLength(3);
+    expect(
+      within(profileRegion).getByRole("button", { name: "恢复存档1" }),
+    ).toBeDisabled();
+    expect(
+      within(profileRegion).getByRole("textbox", { name: "存档1名称" }),
+    ).toHaveValue("灵兽1");
+
+    const physicalAttackInput = screen.getByRole("spinbutton", {
+      name: "物攻资质数值",
+    });
+    await user.clear(physicalAttackInput);
+    await user.type(physicalAttackInput, "1500");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "灵兽等级" }),
+      "11",
+    );
+    await waitFor(() => {
+      const currentState = JSON.parse(
+        window.localStorage.getItem(SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY) ??
+          "{}",
+      );
+      expect(currentState.level).toBe(11);
+      expect(currentState.qualifications.physicalAttack).toBe(1500);
+    });
+
+    const profileNameInput = within(profileRegion).getByRole("textbox", {
+      name: "存档1名称",
+    });
+    await user.clear(profileNameInput);
+    await user.type(profileNameInput, "物攻灵兽");
+    await user.click(
+      within(profileRegion).getByRole("button", {
+        name: "保存当前到存档1",
+      }),
+    );
+
+    await waitFor(() => {
+      const storedProfiles = JSON.parse(
+        window.localStorage.getItem(SPIRIT_BEAST_PROFILES_STORAGE_KEY) ?? "[]",
+      );
+      expect(storedProfiles[0].name).toBe("物攻灵兽");
+      expect(storedProfiles[0].isActive).toBe(true);
+      expect(storedProfiles[0].state.level).toBe(11);
+      expect(storedProfiles[0].state.qualifications.physicalAttack).toBe(1500);
+      expect(storedProfiles.slice(1)).toEqual([null, null]);
+    });
+
+    await user.clear(physicalAttackInput);
+    await user.type(physicalAttackInput, "1700");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "灵兽等级" }),
+      "20",
+    );
+    await user.click(
+      within(profileRegion).getByRole("button", { name: "恢复存档1" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("spinbutton", { name: "物攻资质数值" }),
+      ).toHaveValue(1500);
+      expect(screen.getByRole("combobox", { name: "灵兽等级" })).toHaveValue(
+        "11",
+      );
+      expect(within(profileRegion).getByRole("status")).toHaveTextContent(
+        "已恢复“物攻灵兽”的完整灵兽配置",
+      );
     });
   });
 
@@ -449,7 +549,7 @@ describe("App 组件", () => {
     expect(screen.getByText("FR69服明天")).toBeInTheDocument();
     expect(screen.getByText(/当前收藏 0 项/)).toBeInTheDocument();
     expect(
-      screen.getByText(/角色面板和八件装备输入会保存在当前浏览器/),
+      screen.getByText(/角色面板、八件装备和灵兽面板输入会保存在当前浏览器/),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "清空收藏" })).toBeDisabled();
 
