@@ -151,7 +151,7 @@ const SpiritBeastQualificationPanel = ({
           </span>
         </div>
         <p className="mt-1 text-xs leading-5 text-slate-500">
-          拖动滑杆快速调整，也可以直接输入精确数值。
+          请填写游戏内显示的最终资质（已包含仙府点化资质），也可以拖动滑杆快速调整。
         </p>
         {accessoryQualificationBonus > 0 ? (
           <p className="mt-1 text-xs font-medium text-violet-600">
@@ -161,7 +161,8 @@ const SpiritBeastQualificationPanel = ({
         ) : null}
         {enlightenmentSummary ? (
           <p className="mt-1 text-xs font-medium text-cyan-600">
-            仙府点化额外提供 {enlightenmentSummary}，计算时自动叠加。
+            仙府点化记录：{enlightenmentSummary}
+            。这些数值已包含在灵兽资质输入值中，仅作对照，不会再次叠加。
           </p>
         ) : null}
       </div>

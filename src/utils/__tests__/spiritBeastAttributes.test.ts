@@ -5,7 +5,6 @@ import {
   calculateSpiritBeastAttributes,
   createDefaultSpiritBeastState,
   getSpiritBeastAccessoryQualificationBonus,
-  getSpiritBeastEnlightenmentQualificationBonus,
   getSpiritBeastEquipmentBonusTotal,
   getSpiritBeastAllocationTotal,
   getSpiritBeastPotentialPoints,
@@ -315,7 +314,7 @@ describe("灵兽面板计算", () => {
     expect(result.derived.speed - baseline.derived.speed).toBeCloseTo(0.06645);
   });
 
-  it("应该先叠加仙府点化资质和五维，再进入灵兽面板公式", () => {
+  it("应该只叠加仙府点化五维，资质加成仅用于记录", () => {
     const state = createDefaultSpiritBeastState();
     const baseline = calculateSpiritBeastAttributes(state);
     state.enlightenment = {
@@ -332,13 +331,15 @@ describe("灵兽面板计算", () => {
     };
 
     const result = calculateSpiritBeastAttributes(state);
+    const resultWithoutQualificationRecords = calculateSpiritBeastAttributes({
+      ...state,
+      enlightenment: {
+        ...state.enlightenment,
+        qualificationBonuses: [],
+      },
+    });
 
-    expect(getSpiritBeastEnlightenmentQualificationBonus(state, "health")).toBe(
-      5,
-    );
-    expect(
-      getSpiritBeastEnlightenmentQualificationBonus(state, "physicalAttack"),
-    ).toBe(23);
+    expect(result.derived).toEqual(resultWithoutQualificationRecords.derived);
     expect(result.primary).toEqual({
       constitution: baseline.primary.constitution + 13,
       spirit: baseline.primary.spirit + 13,
@@ -346,10 +347,10 @@ describe("灵兽面板计算", () => {
       endurance: baseline.primary.endurance,
       agility: baseline.primary.agility,
     });
-    expect(result.derived.health - baseline.derived.health).toBeCloseTo(39.05);
+    expect(result.derived.health - baseline.derived.health).toBeCloseTo(39);
     expect(
       result.derived.physicalAttack - baseline.derived.physicalAttack,
-    ).toBeCloseTo(7.615);
+    ).toBeCloseTo(7.5);
   });
 
   it("应该把三件详细装备与旧版装备汇总一起接入灵兽面板", () => {

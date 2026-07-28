@@ -39,7 +39,10 @@ describe("SpiritBeastAttributeCalculator", () => {
       /法力增量 =（等级 - 1）×（12 \+ 10 ×\s*成长）；1 级基础法力尚未计入/,
     );
     expect(dialog).toHaveTextContent(
-      "灵饰全资质先增加公式中的资质，面板属性加成在公式结果后直接叠加",
+      "灵饰全资质先增加公式中的资质，点化资质不重复叠加",
+    );
+    expect(dialog).toHaveTextContent(
+      "灵兽资质输入值已包含点化加成，因此这里只记录实际点数",
     );
     expect(dialog).toHaveTextContent("道具培养当前不限制单项与总加点");
     expect(dialog).toHaveTextContent(
@@ -529,7 +532,7 @@ describe("SpiritBeastAttributeCalculator", () => {
     expect(within(enlightenmentCard!).getByText("体 +13")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "仙府点化额外提供 物攻资质 +23 · 气血资质 +5，计算时自动叠加。",
+        "仙府点化记录：物攻资质 +23 · 气血资质 +5。这些数值已包含在灵兽资质输入值中，仅作对照，不会再次叠加。",
       ),
     ).toBeInTheDocument();
     expect(

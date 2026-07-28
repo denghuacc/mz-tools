@@ -91,7 +91,7 @@ const SpiritBeastEnlightenmentControl = ({
       <div className="flex items-center justify-between gap-4 rounded-xl border border-cyan-100 bg-cyan-50/60 px-4 py-3">
         <div>
           <p className="text-xs leading-5 text-cyan-900">
-            资质上限受仙府配置综合影响，当前按游戏内实际加点录入；属性星级决定五维词条数量和数值范围。
+            资质加成仅用于记录和对照，不会重复计入面板；属性星级决定五维词条数量和数值范围。
           </p>
           {validationError ? (
             <p className="mt-1 text-xs font-medium text-rose-600">
@@ -139,7 +139,7 @@ const SpiritBeastEnlightenmentControl = ({
 
       <EquipmentEditorSection
         title="资质加成"
-        description="从物攻、物防、气血、灵力和速度资质中选择 2 项不同资质，录入当前效果显示的实际点数。"
+        description="选择 2 项不同资质并记录实际点数。灵兽资质应填写游戏内已包含点化加成的最终值，这里不会再次叠加。"
       >
         <div
           className="grid grid-cols-2 gap-1.5 sm:grid-cols-5"

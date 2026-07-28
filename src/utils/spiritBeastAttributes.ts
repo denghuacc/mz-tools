@@ -652,14 +652,6 @@ export const getSpiritBeastAccessoryQualificationBonus = (
 ): number =>
   calculateSpiritBeastAccessoryBonuses(state.accessories).qualification;
 
-export const getSpiritBeastEnlightenmentQualificationBonus = (
-  state: SpiritBeastCalculatorState,
-  qualification: SpiritBeastQualification,
-): number =>
-  calculateSpiritBeastEnlightenmentBonuses(state.enlightenment).qualifications[
-    qualification
-  ];
-
 export const getSpiritBeastEnlightenmentPrimaryBonus = (
   state: SpiritBeastCalculatorState,
   attribute: SpiritBeastBonusAttribute,
@@ -776,9 +768,7 @@ const calculateBaseSpiritBeastAttributes = (
   const accessoryQualificationBonus =
     getSpiritBeastAccessoryQualificationBonus(state);
   const getQualification = (qualification: SpiritBeastQualification) =>
-    state.qualifications[qualification] +
-    accessoryQualificationBonus +
-    getSpiritBeastEnlightenmentQualificationBonus(state, qualification);
+    state.qualifications[qualification] + accessoryQualificationBonus;
   const primary = Object.fromEntries(
     SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => [
       attribute,
