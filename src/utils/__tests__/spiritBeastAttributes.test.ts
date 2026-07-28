@@ -1,33 +1,35 @@
 import {
+  DEFAULT_SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY,
+  SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE,
+  SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL,
   calculateSpiritBeastAttributes,
   createDefaultSpiritBeastState,
-  createRandomSpiritBeastLevelZeroPrimary,
   getSpiritBeastAccessoryQualificationBonus,
   getSpiritBeastEnlightenmentQualificationBonus,
   getSpiritBeastEquipmentBonusTotal,
   getSpiritBeastAllocationTotal,
-  getSpiritBeastLevelZeroPrimaryTotal,
   getSpiritBeastPotentialPoints,
+  getSpiritBeastResettableInitialPrimaryTotal,
   normalizeSpiritBeastCalculatorState,
 } from "../spiritBeastAttributes";
 
 describe("灵兽面板计算", () => {
-  it("应该按 0 级初值、1 次固定成长和 10 点默认潜力还原两张参考图的五维", () => {
+  it("应该按固定初值、可重置初值、1 次固定成长和 10 点默认潜力还原两张参考图的五维", () => {
     const firstReference = createDefaultSpiritBeastState();
-    firstReference.levelZeroPrimary = {
-      constitution: 41,
-      spirit: 40,
-      strength: 38,
-      endurance: 41,
-      agility: 40,
+    firstReference.resettableInitialPrimary = {
+      constitution: 21,
+      spirit: 20,
+      strength: 18,
+      endurance: 21,
+      agility: 20,
     };
     const secondReference = createDefaultSpiritBeastState();
-    secondReference.levelZeroPrimary = {
-      constitution: 42,
-      spirit: 31,
-      strength: 37,
-      endurance: 43,
-      agility: 47,
+    secondReference.resettableInitialPrimary = {
+      constitution: 22,
+      spirit: 11,
+      strength: 17,
+      endurance: 23,
+      agility: 27,
     };
 
     expect(calculateSpiritBeastAttributes(firstReference).primary).toEqual({
@@ -76,6 +78,25 @@ describe("灵兽面板计算", () => {
       strength: 76,
       endurance: 46,
       agility: 46,
+    });
+  });
+
+  it("应该把游戏重置入口显示的 100 点初值与每项固定 20 点合并计算", () => {
+    const state = createDefaultSpiritBeastState();
+    state.resettableInitialPrimary = {
+      constitution: 31,
+      spirit: 38,
+      strength: 9,
+      endurance: 5,
+      agility: 17,
+    };
+
+    expect(calculateSpiritBeastAttributes(state).primary).toEqual({
+      constitution: 53,
+      spirit: 60,
+      strength: 41,
+      endurance: 27,
+      agility: 39,
     });
   });
 
@@ -364,15 +385,61 @@ describe("灵兽面板计算", () => {
     expect(calculateSpiritBeastAttributes(state).primary.strength).toBe(52);
   });
 
-  it("随机初值应该始终保持五维总和 200", () => {
-    const values = [0.1, 0.2, 0.3, 0.4, 0.5];
-    let index = 0;
-    const primary = createRandomSpiritBeastLevelZeroPrimary(
-      () => values[index++],
+  it("默认可重置初值应该平均分配 100 点并保持底层五维总和 200", () => {
+    const state = createDefaultSpiritBeastState();
+    const resettableTotal = getSpiritBeastResettableInitialPrimaryTotal(
+      state.resettableInitialPrimary,
     );
 
-    expect(getSpiritBeastLevelZeroPrimaryTotal(primary)).toBe(200);
-    expect(Object.values(primary).every(Number.isInteger)).toBe(true);
+    expect(state.resettableInitialPrimary).toEqual(
+      DEFAULT_SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY,
+    );
+    expect(resettableTotal).toBe(100);
+    expect(
+      resettableTotal + SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE * 5,
+    ).toBe(SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL);
+  });
+
+  it("应该迁移有效的旧版 200 点初值，并让无效旧值安全回退", () => {
+    expect(
+      normalizeSpiritBeastCalculatorState({
+        levelZeroPrimary: {
+          constitution: 41,
+          spirit: 40,
+          strength: 38,
+          endurance: 41,
+          agility: 40,
+        },
+      })?.resettableInitialPrimary,
+    ).toEqual({
+      constitution: 21,
+      spirit: 20,
+      strength: 18,
+      endurance: 21,
+      agility: 20,
+    });
+    expect(
+      normalizeSpiritBeastCalculatorState({
+        levelZeroPrimary: {
+          constitution: 51,
+          spirit: 67,
+          strength: 32,
+          endurance: 14,
+          agility: 36,
+        },
+      })?.resettableInitialPrimary,
+    ).toEqual(DEFAULT_SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY);
+    expect(
+      normalizeSpiritBeastCalculatorState({
+        resettableInitialPrimary: {
+          constitution: 19,
+          spirit: 20,
+          strength: 20,
+          endurance: 20,
+          agility: 20,
+        },
+      })?.resettableInitialPrimary,
+    ).toEqual(DEFAULT_SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY);
   });
 
   it("应该校验损坏缓存并收紧资质、成长和加点配置", () => {

@@ -60,6 +60,9 @@ import type { SpiritBeastMountConfig } from "./spiritBeastMount";
 export const SPIRIT_BEAST_LEVEL_MIN = 1;
 export const SPIRIT_BEAST_LEVEL_MAX = 115;
 export const SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL = 200;
+export const SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE = 20;
+export const SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_TOTAL = 100;
+export const SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL = 100;
 export const SPIRIT_BEAST_POTENTIAL_POINTS_PER_LEVEL = 10;
 
 /** 灵兽沿用人物常见方案，并额外支持纯生存向的 5 体 5 耐。 */
@@ -169,7 +172,7 @@ export type SpiritBeastCalculatorState = {
   level: number;
   growth: number;
   qualifications: SpiritBeastQualifications;
-  levelZeroPrimary: SpiritBeastPrimaryAttributes;
+  resettableInitialPrimary: SpiritBeastPrimaryAttributes;
   allocationMode: CharacterAllocationMode;
   selectedPresetId: SpiritBeastAllocationPresetId;
   customAllocationScheme: CustomCharacterAllocationScheme;
@@ -202,13 +205,13 @@ export const EMPTY_SPIRIT_BEAST_AFFINITIES: SpiritBeastAffinities = {
   windAffinity: 0,
 };
 
-export const DEFAULT_SPIRIT_BEAST_LEVEL_ZERO_PRIMARY: SpiritBeastPrimaryAttributes =
+export const DEFAULT_SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY: SpiritBeastPrimaryAttributes =
   {
-    constitution: 40,
-    spirit: 40,
-    strength: 40,
-    endurance: 40,
-    agility: 40,
+    constitution: 20,
+    spirit: 20,
+    strength: 20,
+    endurance: 20,
+    agility: 20,
   };
 
 export const DEFAULT_SPIRIT_BEAST_QUALIFICATIONS: SpiritBeastQualifications = {
@@ -263,7 +266,9 @@ export const createDefaultSpiritBeastState =
     level: 1,
     growth: 1,
     qualifications: { ...DEFAULT_SPIRIT_BEAST_QUALIFICATIONS },
-    levelZeroPrimary: { ...DEFAULT_SPIRIT_BEAST_LEVEL_ZERO_PRIMARY },
+    resettableInitialPrimary: {
+      ...DEFAULT_SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY,
+    },
     allocationMode: "preset",
     selectedPresetId: "10-strength",
     customAllocationScheme: "strength-or-spirit",
@@ -279,40 +284,6 @@ export const createDefaultSpiritBeastState =
     mount: createEmptySpiritBeastMountConfig(),
     bonusSources: createEmptySpiritBeastBonusSources(),
   });
-
-/**
- * 暂按未知概率生成总和 200 的五维，供用户快速建立草稿。
- * 真实随机范围尚无可靠资料，因此结果仍允许手动覆盖。
- */
-export const createRandomSpiritBeastLevelZeroPrimary = (
-  random: () => number = Math.random,
-): SpiritBeastPrimaryAttributes => {
-  const weights = SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map(() =>
-    Math.max(Number.EPSILON, random()),
-  );
-  const totalWeight = weights.reduce((total, weight) => total + weight, 0);
-  const rawValues = weights.map(
-    (weight) => (weight / totalWeight) * SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL,
-  );
-  const values = rawValues.map(Math.floor);
-  const remaining =
-    SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL -
-    values.reduce((total, value) => total + value, 0);
-  const remainderOrder = rawValues
-    .map((value, index) => ({ index, remainder: value - Math.floor(value) }))
-    .sort((left, right) => right.remainder - left.remainder);
-
-  for (let index = 0; index < remaining; index += 1) {
-    values[remainderOrder[index].index] += 1;
-  }
-
-  return Object.fromEntries(
-    SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute, index) => [
-      attribute,
-      values[index],
-    ]),
-  ) as SpiritBeastPrimaryAttributes;
-};
 
 const clampNumber = (
   value: unknown,
@@ -353,18 +324,18 @@ export const getSpiritBeastAllocationTotal = (
     0,
   );
 
-export const getSpiritBeastLevelZeroPrimaryTotal = (
+export const getSpiritBeastResettableInitialPrimaryTotal = (
   primary: SpiritBeastPrimaryAttributes,
 ): number => getSpiritBeastAllocationTotal(primary);
 
-export const getSpiritBeastLevelZeroPrimaryValidationError = (
+export const getSpiritBeastResettableInitialPrimaryValidationError = (
   primary: SpiritBeastPrimaryAttributes,
 ): string | null => {
-  const total = getSpiritBeastLevelZeroPrimaryTotal(primary);
+  const total = getSpiritBeastResettableInitialPrimaryTotal(primary);
 
-  return total === SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL
+  return total === SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL
     ? null
-    : `0 级五维总和必须为 ${SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL}，当前为 ${total}。`;
+    : `可重置初始五维总和必须为 ${SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL}，当前为 ${total}。`;
 };
 
 export const calculateSpiritBeastAllocation = (
@@ -419,6 +390,55 @@ const normalizePrimaryAttributes = (
     endurance: clampInteger(source.endurance, 0, 9999, fallback.endurance),
     agility: clampInteger(source.agility, 0, 9999, fallback.agility),
   };
+};
+
+const normalizeResettableInitialPrimary = (
+  value: unknown,
+  fallback: SpiritBeastPrimaryAttributes,
+): SpiritBeastPrimaryAttributes => {
+  const source = isRecord(value) ? value : {};
+  const normalized = Object.fromEntries(
+    SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => [
+      attribute,
+      clampInteger(source[attribute], 0, 100, fallback[attribute]),
+    ]),
+  ) as SpiritBeastPrimaryAttributes;
+
+  return getSpiritBeastResettableInitialPrimaryValidationError(normalized) ===
+    null
+    ? normalized
+    : { ...fallback };
+};
+
+const migrateLegacyLevelZeroPrimary = (
+  value: unknown,
+  fallback: SpiritBeastPrimaryAttributes,
+): SpiritBeastPrimaryAttributes => {
+  const legacyDefault = Object.fromEntries(
+    SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => [
+      attribute,
+      SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE + fallback[attribute],
+    ]),
+  ) as SpiritBeastPrimaryAttributes;
+  const legacyPrimary = normalizePrimaryAttributes(value, legacyDefault);
+  const canMigrate =
+    getSpiritBeastAllocationTotal(legacyPrimary) ===
+      SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL &&
+    SPIRIT_BEAST_PRIMARY_ATTRIBUTES.every(
+      (attribute) =>
+        legacyPrimary[attribute] >=
+        SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE,
+    );
+
+  if (!canMigrate) return { ...fallback };
+
+  return Object.fromEntries(
+    SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => [
+      attribute,
+      legacyPrimary[attribute] -
+        SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE,
+    ]),
+  ) as SpiritBeastPrimaryAttributes;
 };
 
 const normalizeAllocation = (
@@ -557,6 +577,16 @@ export const normalizeSpiritBeastCalculatorState = (
     SPIRIT_BEAST_ALLOCATION_PRESETS.find(
       ({ id }) => id === value.selectedPresetId,
     )?.id ?? fallback.selectedPresetId;
+  const resettableInitialPrimary =
+    value.resettableInitialPrimary === undefined
+      ? migrateLegacyLevelZeroPrimary(
+          value.levelZeroPrimary,
+          fallback.resettableInitialPrimary,
+        )
+      : normalizeResettableInitialPrimary(
+          value.resettableInitialPrimary,
+          fallback.resettableInitialPrimary,
+        );
 
   return {
     level: clampInteger(
@@ -575,10 +605,7 @@ export const normalizeSpiritBeastCalculatorState = (
       value.qualifications,
       fallback.qualifications,
     ),
-    levelZeroPrimary: normalizePrimaryAttributes(
-      value.levelZeroPrimary,
-      fallback.levelZeroPrimary,
-    ),
+    resettableInitialPrimary,
     allocationMode: value.allocationMode === "custom" ? "custom" : "preset",
     selectedPresetId,
     customAllocationScheme,
@@ -755,7 +782,8 @@ const calculateBaseSpiritBeastAttributes = (
   const primary = Object.fromEntries(
     SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => [
       attribute,
-      state.levelZeroPrimary[attribute] +
+      SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE +
+        state.resettableInitialPrimary[attribute] +
         fixedGrowth +
         allocation[attribute] +
         getSpiritBeastBonusTotal(state, attribute),
@@ -863,7 +891,7 @@ export const calculateSpiritBeastStructuredMountBonuses = (
   );
 
 /**
- * 五维沿用人物面板的“0 级初值 + 每级固定成长 + 每级潜力”规则。
+ * 五维按“固定初值 + 可重置初值 + 每级固定成长 + 每级潜力”计算。
  * 资质换算沿用当前截图提供的待复核公式。
  */
 export const calculateSpiritBeastAttributes = (

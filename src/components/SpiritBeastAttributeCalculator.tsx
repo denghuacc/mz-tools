@@ -14,11 +14,13 @@ import {
   SPIRIT_BEAST_AFFINITIES,
   SPIRIT_BEAST_BONUS_SOURCE_IDS,
   SPIRIT_BEAST_DERIVED_ATTRIBUTES,
+  SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE,
   SPIRIT_BEAST_LEVEL_MAX,
   SPIRIT_BEAST_LEVEL_MIN,
   SPIRIT_BEAST_ALLOCATION_PRESETS,
   SPIRIT_BEAST_PRIMARY_ATTRIBUTES,
   SPIRIT_BEAST_QUALIFICATIONS,
+  SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL,
   calculateSpiritBeastAttributes,
   calculateSpiritBeastStructuredMountBonuses,
   calculateSpiritBeastStructuredSkillBonuses,
@@ -31,8 +33,9 @@ import {
   getSpiritBeastDestinyBonusTotal,
   getSpiritBeastEnlightenmentPrimaryBonus,
   getSpiritBeastEquipmentBonusTotal,
-  getSpiritBeastLevelZeroPrimaryValidationError,
   getSpiritBeastMountFixedBonusTotal,
+  getSpiritBeastResettableInitialPrimaryTotal,
+  getSpiritBeastResettableInitialPrimaryValidationError,
   normalizeSpiritBeastCalculatorState,
 } from "../utils/spiritBeastAttributes";
 import type {
@@ -86,10 +89,7 @@ import EditorDialog from "./EditorDialog";
 import EditIconButton from "./EditIconButton";
 import PotentialAllocationControl from "./PotentialAllocationControl";
 import SpiritBeastAccessoryControl from "./SpiritBeastAccessoryControl";
-import {
-  SpiritBeastAffinityControl,
-  SpiritBeastLevelZeroPrimaryControl,
-} from "./SpiritBeastBaseConfigControl";
+import { SpiritBeastAffinityControl } from "./SpiritBeastBaseConfigControl";
 import SpiritBeastCalculationScope from "./SpiritBeastCalculationScope";
 import SpiritBeastDestinyControl from "./SpiritBeastDestinyControl";
 import SpiritBeastEquipmentControl from "./SpiritBeastEquipmentControl";
@@ -225,6 +225,31 @@ const formatPanelAttribute = (value: number) =>
 const formatBonus = (value: number) =>
   `${value > 0 ? "+" : ""}${formatAttribute(value)}`;
 
+type ResettableInitialPrimaryDraft = Record<
+  SpiritBeastPrimaryAttribute,
+  string
+>;
+
+const createResettableInitialPrimaryDraft = (
+  primary: SpiritBeastCalculatorState["resettableInitialPrimary"],
+): ResettableInitialPrimaryDraft =>
+  Object.fromEntries(
+    SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => [
+      attribute,
+      String(primary[attribute]),
+    ]),
+  ) as ResettableInitialPrimaryDraft;
+
+const parseResettableInitialPrimaryDraft = (
+  draft: ResettableInitialPrimaryDraft,
+): SpiritBeastCalculatorState["resettableInitialPrimary"] =>
+  Object.fromEntries(
+    SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => [
+      attribute,
+      draft[attribute] === "" ? 0 : Number(draft[attribute]),
+    ]),
+  ) as SpiritBeastCalculatorState["resettableInitialPrimary"];
+
 const loadSpiritBeastState = (): SpiritBeastCalculatorState =>
   loadCalculatorState(
     SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY,
@@ -234,25 +259,73 @@ const loadSpiritBeastState = (): SpiritBeastCalculatorState =>
 
 const SpiritBeastAttributeCalculator = () => {
   const [state, setState] = useState(loadSpiritBeastState);
+  const [resettableInitialPrimaryDraft, setResettableInitialPrimaryDraft] =
+    useState(() =>
+      createResettableInitialPrimaryDraft(state.resettableInitialPrimary),
+    );
   const [activeEditorId, setActiveEditorId] = useState<EditorId | null>(null);
   const [areBonusDetailsVisible, setAreBonusDetailsVisible] = useState(true);
   const { attributePanelRef: leftAttributePanelRef, rightRailStyle } =
     useAttributePanelHeight();
 
+  const resettableInitialPrimaryDraftValues = useMemo(
+    () => parseResettableInitialPrimaryDraft(resettableInitialPrimaryDraft),
+    [resettableInitialPrimaryDraft],
+  );
   const calculated = useMemo(
-    () => calculateSpiritBeastAttributes(state),
-    [state],
+    () =>
+      calculateSpiritBeastAttributes({
+        ...state,
+        resettableInitialPrimary: resettableInitialPrimaryDraftValues,
+      }),
+    [resettableInitialPrimaryDraftValues, state],
   );
   const customValidationError = getCustomCharacterAllocationValidationError(
     state.customAllocation,
     state.customAllocationScheme,
   );
-  const levelZeroValidationError =
-    getSpiritBeastLevelZeroPrimaryValidationError(state.levelZeroPrimary);
+  const resettableInitialPrimaryTotal =
+    getSpiritBeastResettableInitialPrimaryTotal(
+      resettableInitialPrimaryDraftValues,
+    );
+  const resettableInitialPrimaryValidationError =
+    getSpiritBeastResettableInitialPrimaryValidationError(
+      resettableInitialPrimaryDraftValues,
+    );
 
   useEffect(() => {
     saveCalculatorState(SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY, state);
   }, [state]);
+
+  const updateResettableInitialPrimary = (
+    attribute: SpiritBeastPrimaryAttribute,
+    inputValue: string,
+  ) => {
+    const value = Number(inputValue);
+
+    if (
+      inputValue !== "" &&
+      (!Number.isInteger(value) || value < 0 || value > 100)
+    ) {
+      return;
+    }
+
+    const nextDraft = {
+      ...resettableInitialPrimaryDraft,
+      [attribute]: inputValue,
+    };
+    const nextValues = parseResettableInitialPrimaryDraft(nextDraft);
+    setResettableInitialPrimaryDraft(nextDraft);
+
+    if (
+      getSpiritBeastResettableInitialPrimaryValidationError(nextValues) === null
+    ) {
+      setState((current) => ({
+        ...current,
+        resettableInitialPrimary: nextValues,
+      }));
+    }
+  };
 
   const selectedPreset =
     SPIRIT_BEAST_ALLOCATION_PRESETS.find(
@@ -724,11 +797,35 @@ const SpiritBeastAttributeCalculator = () => {
                     <span className="text-xs font-medium text-amber-600">
                       资质公式待复核
                     </span>
+                    <span
+                      id="spirit-beast-resettable-initial-primary-status"
+                      className={`text-xs font-medium ${
+                        resettableInitialPrimaryValidationError
+                          ? "text-rose-600"
+                          : "text-emerald-600"
+                      }`}
+                      aria-live="polite"
+                    >
+                      可重置初值 {resettableInitialPrimaryTotal} /{" "}
+                      {SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL}
+                    </span>
                   </div>
                   <p className="mt-1.5 text-xs leading-5 text-slate-500">
-                    当前值 = 0 级五维初值 + {state.level} 次固定成长 + 潜力点 +
-                    属性加成。
+                    当前值 = 固定初值{" "}
+                    {SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE} +
+                    可重置初值 + {state.level} 次固定成长 + 潜力点 + 属性加成。
                   </p>
+                  {resettableInitialPrimaryValidationError ? (
+                    <p
+                      className="mt-1.5 text-xs leading-5 text-rose-600"
+                      role="alert"
+                    >
+                      {resettableInitialPrimaryValidationError}
+                      当前面板仅预览这组输入；调整到合计{" "}
+                      {SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL}{" "}
+                      后才会保存。
+                    </p>
+                  ) : null}
                 </div>
 
                 <div className="flex w-full shrink-0 items-stretch gap-2 sm:w-auto">
@@ -777,7 +874,7 @@ const SpiritBeastAttributeCalculator = () => {
                   {DERIVED_ATTRIBUTE_COLUMNS.map((attribute) => (
                     <div
                       key={attribute}
-                      className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2.5"
+                      className="flex min-h-13 min-w-0 items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2.5"
                     >
                       <span className="shrink-0 text-xs text-slate-600 sm:text-sm">
                         {DERIVED_LABELS[attribute]}
@@ -805,40 +902,90 @@ const SpiritBeastAttributeCalculator = () => {
                     <div
                       key={attribute}
                       className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2.5"
+                      role="group"
+                      aria-label={`${PRIMARY_LABELS[attribute]}五维属性`}
                     >
                       <span className="shrink-0 text-xs text-slate-600 sm:text-sm">
                         {PRIMARY_LABELS[attribute]}
                       </span>
-                      <AttributeValueLayout
-                        bonuses={
-                          areBonusDetailsVisible ? (
-                            <>
-                              {calculated.allocation[attribute] !== 0 && (
-                                <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-emerald-600">
-                                  潜力{" "}
-                                  {formatBonus(
-                                    calculated.allocation[attribute],
-                                  )}
-                                </span>
-                              )}
-                              {renderBonusDetails(attribute)}
-                            </>
-                          ) : null
-                        }
-                        value={
-                          <strong
-                            className={`shrink-0 text-sm ${
-                              calculated.allocation[attribute] > 0
-                                ? "text-emerald-600"
-                                : "text-slate-900"
-                            }`}
+                      <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
+                        <label
+                          className={`flex h-8 w-12 shrink-0 items-center gap-1 rounded-md border bg-white px-1.5 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 sm:w-20 ${
+                            resettableInitialPrimaryValidationError
+                              ? "border-rose-300"
+                              : "border-slate-200"
+                          }`}
+                          title={`可重置${PRIMARY_LABELS[attribute]}初始值，固定初值另加 ${SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE}`}
+                        >
+                          <span className="sr-only">
+                            可重置{PRIMARY_LABELS[attribute]}初始值
+                          </span>
+                          <span
+                            className="hidden shrink-0 text-[10px] font-medium text-blue-600 sm:inline"
+                            aria-hidden="true"
                           >
-                            {formatPanelAttribute(
-                              calculated.primary[attribute],
-                            )}
-                          </strong>
-                        }
-                      />
+                            初值
+                          </span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL}
+                            step={1}
+                            inputMode="numeric"
+                            className="min-w-0 flex-1 bg-transparent text-center text-xs font-semibold text-slate-800 outline-none sm:text-sm"
+                            aria-label={`可重置${PRIMARY_LABELS[attribute]}初始值`}
+                            aria-describedby="spirit-beast-resettable-initial-primary-status"
+                            aria-invalid={
+                              resettableInitialPrimaryValidationError
+                                ? true
+                                : undefined
+                            }
+                            value={resettableInitialPrimaryDraft[attribute]}
+                            placeholder="0"
+                            onChange={(event) =>
+                              updateResettableInitialPrimary(
+                                attribute,
+                                event.target.value,
+                              )
+                            }
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.currentTarget.blur();
+                              }
+                            }}
+                          />
+                        </label>
+                        <AttributeValueLayout
+                          bonuses={
+                            areBonusDetailsVisible ? (
+                              <>
+                                {calculated.allocation[attribute] !== 0 && (
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-emerald-600">
+                                    潜力{" "}
+                                    {formatBonus(
+                                      calculated.allocation[attribute],
+                                    )}
+                                  </span>
+                                )}
+                                {renderBonusDetails(attribute)}
+                              </>
+                            ) : null
+                          }
+                          value={
+                            <strong
+                              className={`shrink-0 text-sm ${
+                                calculated.allocation[attribute] > 0
+                                  ? "text-emerald-600"
+                                  : "text-slate-900"
+                              }`}
+                            >
+                              {formatPanelAttribute(
+                                calculated.primary[attribute],
+                              )}
+                            </strong>
+                          }
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -895,17 +1042,11 @@ const SpiritBeastAttributeCalculator = () => {
         <EditorDialog
           title="潜力点分配"
           isCloseDisabled={
-            levelZeroValidationError !== null ||
-            (state.allocationMode === "custom" &&
-              customValidationError !== null)
+            state.allocationMode === "custom" && customValidationError !== null
           }
           onClose={() => setActiveEditorId(null)}
         >
           <div className="space-y-4">
-            <SpiritBeastLevelZeroPrimaryControl
-              state={state}
-              onChange={setState}
-            />
             <PotentialAllocationControl
               title="潜力点分配"
               presets={SPIRIT_BEAST_ALLOCATION_PRESETS}

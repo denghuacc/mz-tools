@@ -1,10 +1,13 @@
 import {
   SPIRIT_BEAST_GROWTH_MAX,
   SPIRIT_BEAST_GROWTH_MIN,
+  SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE,
+  SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_TOTAL,
   SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL,
   SPIRIT_BEAST_POTENTIAL_POINTS_PER_LEVEL,
   SPIRIT_BEAST_QUALIFICATION_MAX,
   SPIRIT_BEAST_QUALIFICATION_MIN,
+  SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL,
   getSpiritBeastPotentialPoints,
 } from "../utils/spiritBeastAttributes";
 import CalculationScopePanel from "./CalculationScopePanel";
@@ -54,8 +57,10 @@ const SpiritBeastCalculationScope = ({
     <CalculationScopePanel
       summary={
         <>
-          当前计算基于现有 1 级属性与升级预览样本；0 级五维总和暂按{" "}
-          {SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL}，升一级五维各增加 2 点，并获得{" "}
+          0 级五维总和按 {SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL}{" "}
+          点计算，其中固定 {SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_TOTAL}{" "}
+          点平均分配、另外 {SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL}{" "}
+          点可重置；升一级五维各增加 2 点，并获得{" "}
           {SPIRIT_BEAST_POTENTIAL_POINTS_PER_LEVEL} 点潜力。当前 {level} 级共有{" "}
           {totalPotentialPoints}{" "}
           点潜力；资质、成长和法力公式仍待更多样本复核。数据仅供参考，以实际游戏数据为准。
@@ -74,12 +79,20 @@ const SpiritBeastCalculationScope = ({
         </section>
 
         <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-          <h3 className="font-semibold text-slate-900">0 级五维与升级</h3>
+          <h3 className="font-semibold text-slate-900">初始五维与升级</h3>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
-              0 级体、灵、力、耐、敏总和暂按{" "}
-              {SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL}
-              ；实际分配存在随机差异，默认各 40 仅用于建立可编辑草稿。
+              0 级五维总和为 {SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL} 点，其中{" "}
+              {SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_TOTAL}{" "}
+              点不可重置，固定按体、灵、力、耐、敏各{" "}
+              {SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE} 点分配。
+            </li>
+            <li>
+              游戏“重置属性”入口显示的是另外{" "}
+              {SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL}{" "}
+              点可重置初值；计算器面板输入框对应这部分，五项合计必须为{" "}
+              {SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL}，默认各{" "}
+              {SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE} 点。
             </li>
             <li>
               从 0 级起，每升一级五维各固定增加 2 点，并获得{" "}
