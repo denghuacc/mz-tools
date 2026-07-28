@@ -19,6 +19,7 @@ import {
   SPIRIT_BEAST_ALLOCATION_PRESETS,
   SPIRIT_BEAST_PRIMARY_ATTRIBUTES,
   calculateSpiritBeastAttributes,
+  calculateSpiritBeastStructuredMountBonuses,
   calculateSpiritBeastStructuredSkillBonuses,
   createDefaultSpiritBeastState,
   createEmptySpiritBeastBonusSources,
@@ -28,6 +29,7 @@ import {
   getSpiritBeastDestinyBonusTotal,
   getSpiritBeastEquipmentBonusTotal,
   getSpiritBeastLevelZeroPrimaryValidationError,
+  getSpiritBeastMountFixedBonusTotal,
   normalizeSpiritBeastCalculatorState,
 } from "../utils/spiritBeastAttributes";
 import type {
@@ -57,6 +59,10 @@ import {
   createEmptySpiritBeastSkills,
 } from "../utils/spiritBeastSkills";
 import {
+  countConfiguredSpiritBeastMountSkills,
+  createEmptySpiritBeastMountConfig,
+} from "../utils/spiritBeastMount";
+import {
   SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY,
   loadCalculatorState,
   saveCalculatorState,
@@ -77,6 +83,7 @@ import {
 import SpiritBeastCalculationScope from "./SpiritBeastCalculationScope";
 import SpiritBeastDestinyControl from "./SpiritBeastDestinyControl";
 import SpiritBeastEquipmentControl from "./SpiritBeastEquipmentControl";
+import SpiritBeastMountControl from "./SpiritBeastMountControl";
 import SpiritBeastQualificationPanel from "./SpiritBeastQualificationPanel";
 import SpiritBeastSkillControl from "./SpiritBeastSkillControl";
 import {
@@ -99,7 +106,6 @@ const BONUS_SOURCE_CONFIG: Record<
   {
     title: string;
     shortTitle: string;
-    description: string;
     badge?: string;
     colorClass: string;
   }
@@ -107,32 +113,26 @@ const BONUS_SOURCE_CONFIG: Record<
   equipment: {
     title: "装备",
     shortTitle: "装备",
-    description: "录入 3 件灵兽装备提供的属性合计。",
     colorClass: "text-blue-700",
   },
   accessory: {
     title: "灵饰",
     shortTitle: "灵饰",
-    description:
-      "分别录入 1 阶和 2 阶灵饰；固定全资质自动计算，随机属性按实际数值填写。",
     colorClass: "text-violet-600",
   },
   skill: {
     title: "技能",
     shortTitle: "技能",
-    description: "选择威能、速度、气血和六系亲和技能。",
     colorClass: "text-emerald-600",
   },
   destiny: {
     title: "命格",
     shortTitle: "命格",
-    description: "配置 1 个本命技和 6 个命技槽位。",
     colorClass: "text-orange-600",
   },
   mount: {
     title: "坐骑统御",
     shortTitle: "坐骑",
-    description: "录入坐骑统御提供的直接属性加成。",
     colorClass: "text-pink-600",
   },
 };
@@ -269,6 +269,10 @@ const SpiritBeastAttributeCalculator = () => {
     () => calculateSpiritBeastStructuredSkillBonuses(state),
     [state],
   );
+  const structuredMountBonuses = useMemo(
+    () => calculateSpiritBeastStructuredMountBonuses(state),
+    [state],
+  );
   const structuredDestinyBonuses = useMemo(
     () => calculateSpiritBeastDestinyBonuses(state.destiny, state.level),
     [state.destiny, state.level],
@@ -277,6 +281,10 @@ const SpiritBeastAttributeCalculator = () => {
   const configuredDestinySkillCount = countConfiguredSpiritBeastDestinySkills(
     state.destiny,
   );
+  const configuredMountSkillCount = countConfiguredSpiritBeastMountSkills(
+    state.mount,
+  );
+  const configuredMountFixedAttributeCount = state.mount.fixedAttributes.length;
 
   const attributeBonusSources: readonly AttributeBonusSummarySource<SpiritBeastBonusSourceId>[] =
     SPIRIT_BEAST_BONUS_SOURCE_IDS.map((sourceId) => {
@@ -291,9 +299,15 @@ const SpiritBeastAttributeCalculator = () => {
         sourceId === "skill" ? structuredSkillBonuses : null;
       const detailedDestinyBonuses =
         sourceId === "destiny" ? structuredDestinyBonuses : null;
+      const getDirectSourceValue = (attribute: SpiritBeastBonusAttribute) =>
+        sourceId === "skill"
+          ? 0
+          : sourceId === "mount"
+            ? getSpiritBeastMountFixedBonusTotal(state, attribute) +
+              structuredMountBonuses[attribute]
+            : state.bonusSources[sourceId][attribute];
       const standardItems = ALL_BONUS_FIELDS.filter(({ attribute }) => {
-        const directSourceValue =
-          sourceId === "skill" ? 0 : state.bonusSources[sourceId][attribute];
+        const directSourceValue = getDirectSourceValue(attribute);
         const detailedEquipmentValue =
           detailedEquipmentBonuses && attribute in detailedEquipmentBonuses
             ? detailedEquipmentBonuses[
@@ -325,8 +339,7 @@ const SpiritBeastAttributeCalculator = () => {
           0
         );
       }).map(({ attribute }) => {
-        const directSourceValue =
-          sourceId === "skill" ? 0 : state.bonusSources[sourceId][attribute];
+        const directSourceValue = getDirectSourceValue(attribute);
         const detailedEquipmentValue =
           detailedEquipmentBonuses && attribute in detailedEquipmentBonuses
             ? detailedEquipmentBonuses[
@@ -404,7 +417,9 @@ const SpiritBeastAttributeCalculator = () => {
                 ? `${configuredSkillCount} 项`
                 : sourceId === "destiny"
                   ? `${configuredDestinySkillCount}/6`
-                  : config.badge,
+                  : sourceId === "mount"
+                    ? `${configuredMountFixedAttributeCount}/2 · ${configuredMountSkillCount} 技能`
+                    : config.badge,
         details:
           sourceId === "equipment"
             ? "宝衣和宝冠各录入两条装备属性；宝衣、宝链启灵录入五维；宝冠另录入副属性、百炼与属性特效。宝链技能统一在“技能”来源录入。"
@@ -414,7 +429,9 @@ const SpiritBeastAttributeCalculator = () => {
                 ? "威能按灵点增加法攻；迅捷与迟钝调整速度；健壮与吉星调整气血；低级和高级亲和技能分别增加 15、25 点对应亲和。同名低级与高级同时存在时只应用高级效果。"
                 : sourceId === "destiny"
                   ? "命格包含 1 个本命技和 6 个命技。面板命技分为普通、变异和 1～5 级，同一属性只能出现一次；被动·神机妙算按灵兽等级减少速度。"
-                  : undefined,
+                  : sourceId === "mount"
+                    ? "坐骑统御一般从气血、法力、物攻、法攻、物防、法防、速度中选择两项固定加成；疾风每级增加 1% 速度，迟钝术每级减少 2% 速度，可单选、全选或都不选。"
+                    : undefined,
         items,
       };
     });
@@ -459,7 +476,10 @@ const SpiritBeastAttributeCalculator = () => {
               ? structuredSkillBonuses[attribute]
               : sourceId === "destiny"
                 ? getSpiritBeastDestinyBonusTotal(state, attribute)
-                : state.bonusSources[sourceId][attribute];
+                : sourceId === "mount"
+                  ? getSpiritBeastMountFixedBonusTotal(state, attribute) +
+                    structuredMountBonuses[attribute]
+                  : state.bonusSources[sourceId][attribute];
       if (value === 0) return null;
 
       const config = BONUS_SOURCE_CONFIG[sourceId];
@@ -519,6 +539,7 @@ const SpiritBeastAttributeCalculator = () => {
                 accessories: createEmptySpiritBeastAccessories(),
                 skills: createEmptySpiritBeastSkills(),
                 destiny: createEmptySpiritBeastDestiny(),
+                mount: createEmptySpiritBeastMountConfig(),
                 bonusSources: createEmptySpiritBeastBonusSources(),
               }))
             }
@@ -953,27 +974,33 @@ const SpiritBeastAttributeCalculator = () => {
         </EditorDialog>
       )}
 
-      {activeSourceId &&
-        activeSourceId !== "equipment" &&
-        activeSourceId !== "accessory" &&
-        activeSourceId !== "skill" &&
-        activeSourceId !== "destiny" && (
-          <EditorDialog
-            title={BONUS_SOURCE_CONFIG[activeSourceId].title}
-            onClose={() => setActiveEditorId(null)}
-          >
-            <AttributeBonusCard
-              title={BONUS_SOURCE_CONFIG[activeSourceId].title}
-              description={BONUS_SOURCE_CONFIG[activeSourceId].description}
-              fields={ALL_BONUS_FIELDS}
-              values={state.bonusSources[activeSourceId]}
-              onChange={(attribute, value) =>
-                updateBonus(activeSourceId, attribute, value)
-              }
-              onReset={() => resetBonusSource(activeSourceId)}
-            />
-          </EditorDialog>
-        )}
+      {activeSourceId === "mount" && (
+        <EditorDialog
+          title={BONUS_SOURCE_CONFIG.mount.title}
+          onClose={() => setActiveEditorId(null)}
+        >
+          <SpiritBeastMountControl
+            mount={state.mount}
+            onChange={(mount) => setState((current) => ({ ...current, mount }))}
+          />
+          {ALL_BONUS_FIELDS.some(
+            ({ attribute }) => state.bonusSources.mount[attribute] !== 0,
+          ) && (
+            <div className="mt-3">
+              <AttributeBonusCard
+                title="旧版坐骑统御汇总修正"
+                description="这是旧版坐骑统御合计输入的兼容数据；确认结构化固定属性已覆盖这些数值后可以清空。"
+                fields={ALL_BONUS_FIELDS}
+                values={state.bonusSources.mount}
+                onChange={(attribute, value) =>
+                  updateBonus("mount", attribute, value)
+                }
+                onReset={() => resetBonusSource("mount")}
+              />
+            </div>
+          )}
+        </EditorDialog>
+      )}
 
       <SpiritBeastCalculationScope level={state.level} />
     </div>

@@ -451,6 +451,106 @@ describe("SpiritBeastAttributeCalculator", () => {
     ).toBeChecked();
   });
 
+  it("应该配置坐骑统御固定属性与两个速度技能并在刷新后恢复", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<SpiritBeastAttributeCalculator />);
+
+    const mountCard = screen
+      .getByRole("heading", { name: "坐骑统御" })
+      .closest("article");
+    expect(mountCard).not.toBeNull();
+    expect(within(mountCard!).getByText("0/2 · 0 技能")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "编辑坐骑统御" }));
+    let dialog = screen.getByRole("dialog", { name: "编辑坐骑统御" });
+    expect(
+      within(dialog).getByRole("checkbox", { name: "启用疾风" }),
+    ).not.toBeChecked();
+    expect(
+      within(dialog).getByRole("checkbox", { name: "启用迟钝术" }),
+    ).not.toBeChecked();
+    expect(dialog).toHaveTextContent(
+      "两项都不启用时，表示坐骑选择了其它不影响面板的战斗技能",
+    );
+    expect(
+      within(dialog)
+        .getByRole("combobox", { name: "迟钝术比例" })
+        .querySelectorAll("option"),
+    ).toHaveLength(10);
+    expect(
+      within(dialog).queryByRole("option", { name: "-3%" }),
+    ).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "气血" }));
+    await user.click(within(dialog).getByRole("button", { name: "速度" }));
+
+    expect(within(dialog).getByRole("button", { name: "法力" })).toBeDisabled();
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "坐骑统御：气血数值",
+      }),
+      { target: { value: "63" } },
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "坐骑统御：速度数值",
+      }),
+      { target: { value: "10" } },
+    );
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: "启用疾风" }),
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "疾风比例" }),
+      "10",
+    );
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: "启用迟钝术" }),
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "迟钝术比例" }),
+      "20",
+    );
+    await user.click(within(dialog).getByRole("button", { name: "完成" }));
+
+    expect(within(mountCard!).getByText("2/2 · 2 技能")).toBeInTheDocument();
+    expect(within(mountCard!).getByText("气血 +63")).toBeInTheDocument();
+    expect(within(mountCard!).getByText("速度 +5.02")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("group", { name: "派生属性列" })).getByText("44"),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY) ??
+          "{}",
+      );
+      expect(stored.mount).toEqual({
+        fixedAttributes: [
+          { attribute: "health", value: 63 },
+          { attribute: "speed", value: 10 },
+        ],
+        gale: { enabled: true, percentage: 10 },
+        slownessSpell: { enabled: true, percentage: 20 },
+      });
+    });
+
+    unmount();
+    render(<SpiritBeastAttributeCalculator />);
+    expect(screen.getByText("2/2 · 2 技能")).toBeInTheDocument();
+    expect(screen.getByText("气血 +63")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "编辑坐骑统御" }));
+    dialog = screen.getByRole("dialog", { name: "编辑坐骑统御" });
+    expect(
+      within(dialog).getByRole("button", { name: "气血" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(dialog).getByRole("checkbox", { name: "启用疾风" }),
+    ).toBeChecked();
+    expect(
+      within(dialog).getByRole("combobox", { name: "迟钝术比例" }),
+    ).toHaveValue("20");
+  });
+
   it("应该分别录入两件灵饰并在重新挂载后恢复", async () => {
     const user = userEvent.setup();
     const { unmount } = render(<SpiritBeastAttributeCalculator />);

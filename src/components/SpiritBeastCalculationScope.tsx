@@ -172,6 +172,23 @@ const SpiritBeastCalculationScope = ({
         </section>
 
         <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <h3 className="font-semibold text-slate-900">坐骑统御</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>
+              固定属性通常从气血、法力、物攻、法攻、物防、法防、速度中选择两项，按实际数值直接叠加。
+            </li>
+            <li>
+              疾风每级增加 1% 速度，范围 1%～10%；迟钝术每级减少 2% 速度，可选
+              2%、4% …
+              20%。两者可单独启用、同时启用或都不启用，未启用时可视为选择其它不影响面板的战斗技能。
+            </li>
+            <li>
+              两者同时启用时按同一份技能结算前精确速度相减，并与迅捷、迟钝的速度比例共同加减。
+            </li>
+          </ul>
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
           <h3 className="font-semibold text-slate-900">命格</h3>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
@@ -194,15 +211,15 @@ const SpiritBeastCalculationScope = ({
           <h3 className="font-semibold text-slate-900">加成与取整顺序</h3>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
             <li>
-              装备和坐骑统御按来源录入；灵饰按 1 阶和 2
-              阶分别录入；技能与命格按结构化配置计算。
+              装备按三件分别录入，灵饰按 1 阶和 2
+              阶分别录入；技能、命格与坐骑统御按结构化配置计算。
             </li>
             <li>
               五维加成先进入资质与成长公式；灵饰全资质先增加公式中的资质，面板属性加成在公式结果后直接叠加。
             </li>
             <li>命格命技固定值和“被动·神机妙算”减速作为直接面板属性先结算。</li>
             <li>
-              结构化技能最后结算：威能按汇总后的灵点计算，百分比气血和速度按技能前的精确面板值计算。
+              结构化技能最后结算：威能按汇总后的灵点计算，灵兽与坐骑的百分比气血、速度技能按技能前的精确面板值计算。
             </li>
             <li>
               六系亲和汇总初值、来源加成和亲和技能，当前不随等级自动成长。

@@ -43,6 +43,13 @@ import {
   normalizeSpiritBeastSkills,
 } from "./spiritBeastSkills";
 import type { SpiritBeastSkills } from "./spiritBeastSkills";
+import {
+  calculateSpiritBeastMountFixedBonuses,
+  calculateSpiritBeastMountSpeedBonus,
+  createEmptySpiritBeastMountConfig,
+  normalizeSpiritBeastMountConfig,
+} from "./spiritBeastMount";
+import type { SpiritBeastMountConfig } from "./spiritBeastMount";
 
 export const SPIRIT_BEAST_LEVEL_MIN = 1;
 export const SPIRIT_BEAST_LEVEL_MAX = 115;
@@ -161,6 +168,7 @@ export type SpiritBeastCalculatorState = {
   accessories: SpiritBeastAccessories;
   skills: SpiritBeastSkills;
   destiny: SpiritBeastDestiny;
+  mount: SpiritBeastMountConfig;
   bonusSources: SpiritBeastBonusSources;
 };
 
@@ -243,6 +251,7 @@ export const createDefaultSpiritBeastState =
     accessories: createEmptySpiritBeastAccessories(),
     skills: createEmptySpiritBeastSkills(),
     destiny: createEmptySpiritBeastDestiny(),
+    mount: createEmptySpiritBeastMountConfig(),
     bonusSources: createEmptySpiritBeastBonusSources(),
   });
 
@@ -533,6 +542,7 @@ export const normalizeSpiritBeastCalculatorState = (
     accessories: normalizeSpiritBeastAccessories(value.accessories),
     skills: normalizeSpiritBeastSkills(value.skills),
     destiny: normalizeSpiritBeastDestiny(value.destiny),
+    mount: normalizeSpiritBeastMountConfig(value.mount),
     bonusSources: normalizeBonusSources(value.bonusSources),
   };
 };
@@ -596,6 +606,24 @@ export const getSpiritBeastDestinyBonusTotal = (
   return detailedValue + state.bonusSources.destiny[attribute];
 };
 
+export const getSpiritBeastMountFixedBonusTotal = (
+  state: SpiritBeastCalculatorState,
+  attribute: SpiritBeastBonusAttribute,
+): number => {
+  const fixedBonuses = calculateSpiritBeastMountFixedBonuses(state.mount);
+  const detailedValue =
+    attribute in fixedBonuses
+      ? fixedBonuses[
+          attribute as keyof ReturnType<
+            typeof calculateSpiritBeastMountFixedBonuses
+          >
+        ]
+      : 0;
+
+  // v2 曾允许直接录入坐骑统御汇总，继续叠加可避免旧缓存和存档丢失。
+  return detailedValue + state.bonusSources.mount[attribute];
+};
+
 export const getSpiritBeastBonusTotal = (
   state: SpiritBeastCalculatorState,
   attribute: SpiritBeastBonusAttribute,
@@ -611,6 +639,9 @@ export const getSpiritBeastBonusTotal = (
     }
     if (sourceId === "destiny") {
       return total + getSpiritBeastDestinyBonusTotal(state, attribute);
+    }
+    if (sourceId === "mount") {
+      return total + getSpiritBeastMountFixedBonusTotal(state, attribute);
     }
 
     return total + state.bonusSources[sourceId][attribute];
@@ -730,11 +761,33 @@ const calculateStructuredSkillBonusesFromBase = (
   return bonuses;
 };
 
+const calculateStructuredMountBonusesFromBase = (
+  state: SpiritBeastCalculatorState,
+  base: SpiritBeastCalculatedAttributes,
+): SpiritBeastBonuses => {
+  const bonuses = createEmptySpiritBeastBonuses();
+  bonuses.speed = calculateSpiritBeastMountSpeedBonus(
+    state.mount,
+    base.derived.speed,
+  );
+
+  return bonuses;
+};
+
 /** 返回结构化面板技能的实际数值加成，供计算结果和来源明细共用。 */
 export const calculateSpiritBeastStructuredSkillBonuses = (
   state: SpiritBeastCalculatorState,
 ): SpiritBeastBonuses =>
   calculateStructuredSkillBonusesFromBase(
+    state,
+    calculateBaseSpiritBeastAttributes(state),
+  );
+
+/** 返回坐骑疾风、迟钝术的实际速度加成，供计算结果和来源明细共用。 */
+export const calculateSpiritBeastStructuredMountBonuses = (
+  state: SpiritBeastCalculatorState,
+): SpiritBeastBonuses =>
+  calculateStructuredMountBonusesFromBase(
     state,
     calculateBaseSpiritBeastAttributes(state),
   );
@@ -748,11 +801,12 @@ export const calculateSpiritBeastAttributes = (
 ): SpiritBeastCalculatedAttributes => {
   const base = calculateBaseSpiritBeastAttributes(state);
   const skillBonuses = calculateStructuredSkillBonusesFromBase(state, base);
+  const mountBonuses = calculateStructuredMountBonusesFromBase(state, base);
   const derived = {
     ...base.derived,
     health: base.derived.health + skillBonuses.health,
     magicalAttack: base.derived.magicalAttack + skillBonuses.magicalAttack,
-    speed: base.derived.speed + skillBonuses.speed,
+    speed: base.derived.speed + skillBonuses.speed + mountBonuses.speed,
   };
   const affinities = Object.fromEntries(
     SPIRIT_BEAST_AFFINITIES.map((attribute) => [

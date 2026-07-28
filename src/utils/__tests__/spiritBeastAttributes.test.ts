@@ -204,6 +204,26 @@ describe("灵兽面板计算", () => {
     expect(result.affinities.fireAffinity).toBe(25);
   });
 
+  it("应该先计入坐骑固定属性，再叠加坐骑与面板速度技能", () => {
+    const state = createDefaultSpiritBeastState();
+    const baseline = calculateSpiritBeastAttributes(state);
+    state.mount.fixedAttributes = [
+      { attribute: "health", value: 63 },
+      { attribute: "speed", value: 10 },
+    ];
+    const fixedOnly = calculateSpiritBeastAttributes(state);
+
+    expect(fixedOnly.derived.health - baseline.derived.health).toBe(63);
+    expect(fixedOnly.derived.speed - baseline.derived.speed).toBe(10);
+
+    state.mount.gale = { enabled: true, percentage: 10 };
+    state.mount.slownessSpell = { enabled: true, percentage: 20 };
+    state.skills.swiftness.advanced = true;
+    const withSkills = calculateSpiritBeastAttributes(state);
+
+    expect(withSkills.derived.speed).toBeCloseTo(fixedOnly.derived.speed * 1.1);
+  });
+
   it("应该先叠加灵饰全资质，再把随机属性直接计入面板", () => {
     const state = createDefaultSpiritBeastState();
     const baseline = calculateSpiritBeastAttributes(state);
@@ -310,6 +330,22 @@ describe("灵兽面板计算", () => {
           advanced: true,
         },
       },
+      mount: {
+        fixedAttributes: [
+          { attribute: "speed", value: 8 },
+          { attribute: "speed", value: 99 },
+          { attribute: "mana", value: 30 },
+          { attribute: "health", value: 50 },
+        ],
+        gale: {
+          enabled: true,
+          percentage: 99,
+        },
+        slownessSpell: {
+          enabled: true,
+          percentage: 19,
+        },
+      },
     });
 
     expect(normalized).not.toBeNull();
@@ -321,6 +357,20 @@ describe("灵兽面板计算", () => {
     expect(normalized?.skills.swiftness).toEqual({
       normal: true,
       advanced: true,
+    });
+    expect(normalized?.mount).toEqual({
+      fixedAttributes: [
+        { attribute: "speed", value: 8 },
+        { attribute: "mana", value: 30 },
+      ],
+      gale: {
+        enabled: true,
+        percentage: 10,
+      },
+      slownessSpell: {
+        enabled: true,
+        percentage: 18,
+      },
     });
     expect(
       normalized && getSpiritBeastAllocationTotal(normalized.customAllocation),
