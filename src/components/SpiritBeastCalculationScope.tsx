@@ -114,15 +114,15 @@ const SpiritBeastCalculationScope = ({
           <h3 className="font-semibold text-slate-900">资质、成长与法力</h3>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
-              物攻、物防、气血、灵力和速度基础资质当前可录入{" "}
+              物攻、物防、气血、灵力和速度最终资质当前可录入{" "}
               {SPIRIT_BEAST_QUALIFICATION_MIN}～{SPIRIT_BEAST_QUALIFICATION_MAX}
               ，成长可录入 {SPIRIT_BEAST_GROWTH_MIN.toFixed(3)}～
               {SPIRIT_BEAST_GROWTH_MAX.toFixed(3)}
               ；这些是当前计算器边界，不代表已核验的游戏极限。
             </li>
             <li>
-              已启用的 1 阶、2 阶灵饰分别在五项基础资质上增加 10、20
-              点，再进入对应资质公式。
+              1 阶、2 阶灵饰分别记录全资质 10、20
+              点；灵兽资质输入值已包含这些加成，因此只作对照，不会在资质公式中再次叠加。灵饰随机面板属性仍会直接计入结果。
             </li>
             <li>
               仙府点化固定选择两项不同资质，但灵兽资质输入值已包含点化加成，因此这里只记录实际点数，不会在资质公式中再次叠加；仙府风水等上限暂不自动推算。
@@ -247,10 +247,10 @@ const SpiritBeastCalculationScope = ({
           <h3 className="font-semibold text-slate-900">加成与取整顺序</h3>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
             <li>
-              道具培养、仙府点化、三件装备、两件灵饰、技能、命格与坐骑统御均按结构化配置记录；仙府点化资质只作对照。
+              道具培养、仙府点化、三件装备、两件灵饰、技能、命格与坐骑统御均按结构化配置记录；灵饰全资质和仙府点化资质只作对照。
             </li>
             <li>
-              点化和其它五维加成先进入资质与成长公式；灵饰全资质先增加公式中的资质，点化资质不重复叠加，面板属性加成在公式结果后直接叠加。
+              点化和其它五维加成先进入资质与成长公式；灵饰全资质和点化资质不重复叠加，面板属性加成在公式结果后直接叠加。
             </li>
             <li>命格命技固定值和“被动·神机妙算”减速作为直接面板属性先结算。</li>
             <li>

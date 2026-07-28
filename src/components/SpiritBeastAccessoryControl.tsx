@@ -128,7 +128,7 @@ const SpiritBeastAccessoryControl = ({
   <div className="space-y-3" aria-label="灵兽灵饰配置">
     <div className="flex items-center justify-between gap-4 rounded-xl border border-violet-100 bg-violet-50/60 px-4 py-3">
       <p className="text-xs leading-5 text-violet-800">
-        全资质会同时增加物攻、物防、气血、灵力和速度资质；随机属性按游戏内实际数值录入。
+        全资质仅作记录，不会再次计入公式；灵兽资质请填写游戏内已包含灵饰的最终值。随机属性按实际数值录入并直接计入面板。
       </p>
       <ResetButton
         confirmationTitle="确认重置两件灵兽灵饰？"

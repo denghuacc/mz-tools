@@ -765,10 +765,6 @@ const calculateBaseSpiritBeastAttributes = (
     state.level,
   );
   const fixedGrowth = state.level * FIXED_ATTRIBUTE_POINTS_PER_LEVEL;
-  const accessoryQualificationBonus =
-    getSpiritBeastAccessoryQualificationBonus(state);
-  const getQualification = (qualification: SpiritBeastQualification) =>
-    state.qualifications[qualification] + accessoryQualificationBonus;
   const primary = Object.fromEntries(
     SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => [
       attribute,
@@ -786,7 +782,7 @@ const calculateBaseSpiritBeastAttributes = (
   const derived: Record<SpiritBeastDerivedAttribute, number> = {
     health:
       50 +
-      (getQualification("health") * state.level * 10) / 1000 +
+      (state.qualifications.health * state.level * 10) / 1000 +
       primary.constitution * 3 * state.growth +
       getSpiritBeastBonusTotal(state, "health"),
     mana:
@@ -794,24 +790,24 @@ const calculateBaseSpiritBeastAttributes = (
       getSpiritBeastBonusTotal(state, "mana"),
     physicalAttack:
       100 +
-      (getQualification("physicalAttack") * state.level * 5) / 1000 +
+      (state.qualifications.physicalAttack * state.level * 5) / 1000 +
       primary.strength * 0.5 * state.growth +
       getSpiritBeastBonusTotal(state, "physicalAttack"),
     magicalAttack:
       80 +
-      (getQualification("spirit") * state.level * 1.425) / 1000 +
+      (state.qualifications.spirit * state.level * 1.425) / 1000 +
       sharedMagicalGrowth * state.growth +
       getSpiritBeastBonusTotal(state, "magicalAttack"),
     physicalDefense:
-      (getQualification("physicalDefense") * state.level * 3.33) / 1000 +
+      (state.qualifications.physicalDefense * state.level * 3.33) / 1000 +
       primary.endurance * state.growth +
       getSpiritBeastBonusTotal(state, "physicalDefense"),
     magicalDefense:
-      (getQualification("spirit") * state.level * 0.62) / 1000 +
+      (state.qualifications.spirit * state.level * 0.62) / 1000 +
       sharedMagicalGrowth * state.growth +
       getSpiritBeastBonusTotal(state, "magicalDefense"),
     speed:
-      (getQualification("speed") * state.level * 2.215) / 1000 +
+      (state.qualifications.speed * state.level * 2.215) / 1000 +
       ((primary.constitution + primary.strength + primary.endurance) * 0.1 +
         primary.spirit * 0.05 +
         primary.agility * 0.5) *

@@ -38,9 +38,7 @@ describe("SpiritBeastAttributeCalculator", () => {
     expect(dialog).toHaveTextContent(
       /法力增量 =（等级 - 1）×（12 \+ 10 ×\s*成长）；1 级基础法力尚未计入/,
     );
-    expect(dialog).toHaveTextContent(
-      "灵饰全资质先增加公式中的资质，点化资质不重复叠加",
-    );
+    expect(dialog).toHaveTextContent("灵饰全资质和点化资质不重复叠加");
     expect(dialog).toHaveTextContent(
       "灵兽资质输入值已包含点化加成，因此这里只记录实际点数",
     );
@@ -813,6 +811,9 @@ describe("SpiritBeastAttributeCalculator", () => {
 
     expect(dialog).toHaveTextContent("固定属性：全资质 +10");
     expect(dialog).toHaveTextContent("固定属性：全资质 +20");
+    expect(dialog).toHaveTextContent(
+      "全资质仅作记录，不会再次计入公式；灵兽资质请填写游戏内已包含灵饰的最终值",
+    );
     await user.click(
       within(dialog).getByRole("checkbox", { name: "1阶灵饰：计入灵饰" }),
     );
@@ -845,7 +846,9 @@ describe("SpiritBeastAttributeCalculator", () => {
     expect(within(accessoryCard!).getByText("全资质 +30")).toBeInTheDocument();
     expect(within(accessoryCard!).getByText("气血 +48")).toBeInTheDocument();
     expect(
-      screen.getByText("已启用灵饰额外提供全资质 +30，计算时自动叠加。"),
+      screen.getByText(
+        "灵饰记录：全资质 +30。这些数值已包含在灵兽资质输入值中，仅作对照，不会再次叠加。",
+      ),
     ).toBeInTheDocument();
 
     await waitFor(() => {

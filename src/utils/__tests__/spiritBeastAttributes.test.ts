@@ -281,7 +281,7 @@ describe("灵兽面板计算", () => {
     expect(withSkills.derived.speed).toBeCloseTo(fixedOnly.derived.speed * 1.1);
   });
 
-  it("应该先叠加灵饰全资质，再把随机属性直接计入面板", () => {
+  it("应该只记录灵饰全资质，并把随机属性直接计入面板", () => {
     const state = createDefaultSpiritBeastState();
     const baseline = calculateSpiritBeastAttributes(state);
     state.accessories.tierOne = {
@@ -298,20 +298,14 @@ describe("灵兽面板计算", () => {
     const result = calculateSpiritBeastAttributes(state);
 
     expect(getSpiritBeastAccessoryQualificationBonus(state)).toBe(30);
-    expect(result.derived.health - baseline.derived.health).toBeCloseTo(48.3);
-    expect(
-      result.derived.physicalAttack - baseline.derived.physicalAttack,
-    ).toBeCloseTo(0.15);
-    expect(
-      result.derived.magicalAttack - baseline.derived.magicalAttack,
-    ).toBeCloseTo(0.04275);
-    expect(
-      result.derived.physicalDefense - baseline.derived.physicalDefense,
-    ).toBeCloseTo(0.0999);
-    expect(
-      result.derived.magicalDefense - baseline.derived.magicalDefense,
-    ).toBeCloseTo(0.0186);
-    expect(result.derived.speed - baseline.derived.speed).toBeCloseTo(0.06645);
+    expect(result.derived.health - baseline.derived.health).toBe(48);
+    expect(result.derived.physicalAttack).toBe(baseline.derived.physicalAttack);
+    expect(result.derived.magicalAttack).toBe(baseline.derived.magicalAttack);
+    expect(result.derived.physicalDefense).toBe(
+      baseline.derived.physicalDefense,
+    );
+    expect(result.derived.magicalDefense).toBe(baseline.derived.magicalDefense);
+    expect(result.derived.speed).toBe(baseline.derived.speed);
   });
 
   it("应该只叠加仙府点化五维，资质加成仅用于记录", () => {
