@@ -150,6 +150,7 @@ export const SPIRIT_BEAST_BONUS_SOURCE_IDS = [
   "skill",
   "destiny",
   "mount",
+  "itemTraining",
   "enlightenment",
 ] as const;
 
@@ -157,7 +158,7 @@ export type SpiritBeastBonusSourceId =
   (typeof SPIRIT_BEAST_BONUS_SOURCE_IDS)[number];
 export type SpiritBeastManualBonusSourceId = Exclude<
   SpiritBeastBonusSourceId,
-  "enlightenment"
+  "itemTraining" | "enlightenment"
 >;
 export type SpiritBeastBonusSources = Record<
   SpiritBeastManualBonusSourceId,
@@ -173,6 +174,7 @@ export type SpiritBeastCalculatorState = {
   selectedPresetId: SpiritBeastAllocationPresetId;
   customAllocationScheme: CustomCharacterAllocationScheme;
   customAllocation: CharacterAllocation;
+  itemTraining: SpiritBeastPrimaryAttributes;
   affinities: SpiritBeastAffinities;
   enlightenment: SpiritBeastEnlightenment;
   isEquipmentIncluded: boolean;
@@ -217,6 +219,15 @@ export const DEFAULT_SPIRIT_BEAST_QUALIFICATIONS: SpiritBeastQualifications = {
   speed: 1400,
 };
 
+export const createEmptySpiritBeastItemTraining =
+  (): SpiritBeastPrimaryAttributes => ({
+    constitution: 0,
+    spirit: 0,
+    strength: 0,
+    endurance: 0,
+    agility: 0,
+  });
+
 export const createEmptySpiritBeastBonuses = (): SpiritBeastBonuses => ({
   health: 0,
   mana: 0,
@@ -257,6 +268,7 @@ export const createDefaultSpiritBeastState =
     selectedPresetId: "10-strength",
     customAllocationScheme: "strength-or-spirit",
     customAllocation: { ...DEFAULT_CUSTOM_CHARACTER_ALLOCATION },
+    itemTraining: createEmptySpiritBeastItemTraining(),
     affinities: { ...EMPTY_SPIRIT_BEAST_AFFINITIES },
     enlightenment: createEmptySpiritBeastEnlightenment(),
     isEquipmentIncluded: true,
@@ -426,6 +438,31 @@ const normalizeAllocation = (
     : { ...fallback };
 };
 
+const normalizeItemTraining = (
+  value: unknown,
+): SpiritBeastPrimaryAttributes => {
+  const source = isRecord(value) ? value : {};
+  const normalize = (attribute: SpiritBeastPrimaryAttribute) => {
+    const rawValue = source[attribute];
+    const parsed =
+      typeof rawValue === "number"
+        ? rawValue
+        : typeof rawValue === "string" && rawValue.trim() !== ""
+          ? Number(rawValue)
+          : Number.NaN;
+
+    return Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
+  };
+
+  return {
+    constitution: normalize("constitution"),
+    spirit: normalize("spirit"),
+    strength: normalize("strength"),
+    endurance: normalize("endurance"),
+    agility: normalize("agility"),
+  };
+};
+
 const normalizeAffinities = (
   value: unknown,
   fallback: SpiritBeastAffinities,
@@ -549,6 +586,7 @@ export const normalizeSpiritBeastCalculatorState = (
       value.customAllocation,
       customAllocationScheme,
     ),
+    itemTraining: normalizeItemTraining(value.itemTraining),
     affinities: normalizeAffinities(value.affinities, fallback.affinities),
     enlightenment: normalizeSpiritBeastEnlightenment(value.enlightenment),
     isEquipmentIncluded: value.isEquipmentIncluded !== false,
@@ -665,6 +703,14 @@ export const getSpiritBeastBonusTotal = (
 ): number =>
   SPIRIT_BEAST_BONUS_SOURCE_IDS.reduce((total, sourceId) => {
     if (!isBonusSourceEnabled(sourceId, state)) return total;
+    if (sourceId === "itemTraining") {
+      return (
+        total +
+        (attribute in state.itemTraining
+          ? state.itemTraining[attribute as SpiritBeastPrimaryAttribute]
+          : 0)
+      );
+    }
     if (sourceId === "enlightenment") {
       return total + getSpiritBeastEnlightenmentPrimaryBonus(state, attribute);
     }

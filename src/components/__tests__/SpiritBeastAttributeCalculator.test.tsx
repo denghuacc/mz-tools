@@ -38,6 +38,7 @@ describe("SpiritBeastAttributeCalculator", () => {
     expect(dialog).toHaveTextContent(
       "灵饰全资质先增加公式中的资质，面板属性加成在公式结果后直接叠加",
     );
+    expect(dialog).toHaveTextContent("道具培养当前不限制单项与总加点");
     expect(dialog).toHaveTextContent(
       "同名低级与高级技能同时存在时只按高级技能计算",
     );
@@ -96,7 +97,15 @@ describe("SpiritBeastAttributeCalculator", () => {
       within(attributeBonusSection!)
         .getAllByRole("heading", { level: 3 })
         .map((heading) => heading.textContent),
-    ).toEqual(["装备", "灵饰", "技能", "命格", "坐骑统御", "仙府点化"]);
+    ).toEqual([
+      "装备",
+      "灵饰",
+      "技能",
+      "命格",
+      "坐骑统御",
+      "道具培养",
+      "仙府点化",
+    ]);
     expect(screen.getByLabelText("物攻资质滑杆")).toHaveAttribute("min", "900");
     expect(screen.getByLabelText("成长滑杆")).toHaveAttribute("max", "1.5");
     expect(
@@ -246,6 +255,69 @@ describe("SpiritBeastAttributeCalculator", () => {
         }),
       ).toHaveValue(40);
     });
+  });
+
+  it("应该录入无上限的道具培养五维并在重新挂载后恢复", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<SpiritBeastAttributeCalculator />);
+    const itemTrainingCard = screen
+      .getByRole("heading", { name: "道具培养" })
+      .closest("article");
+
+    expect(itemTrainingCard).not.toBeNull();
+    expect(within(itemTrainingCard!).getByText("尚未添加")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "编辑道具培养" }));
+    let dialog = screen.getByRole("dialog", { name: "编辑道具培养" });
+    const strengthInput = within(dialog).getByRole("spinbutton", {
+      name: "道具培养：力",
+    });
+    const agilityInput = within(dialog).getByRole("spinbutton", {
+      name: "道具培养：敏",
+    });
+
+    expect(strengthInput).toHaveAttribute("min", "0");
+    expect(strengthInput).toHaveAttribute("step", "1");
+    expect(strengthInput).not.toHaveAttribute("max");
+    fireEvent.change(strengthInput, { target: { value: "1000000" } });
+    fireEvent.change(agilityInput, { target: { value: "12" } });
+    await user.click(within(dialog).getByRole("button", { name: "完成" }));
+
+    expect(
+      within(itemTrainingCard!).getByText("力 +1000000"),
+    ).toBeInTheDocument();
+    expect(within(itemTrainingCard!).getByText("敏 +12")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("group", { name: "五维属性列" })).getByText(
+        "1000052",
+      ),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY) ??
+          "{}",
+      );
+      expect(stored.itemTraining).toEqual({
+        constitution: 0,
+        spirit: 0,
+        strength: 1_000_000,
+        endurance: 0,
+        agility: 12,
+      });
+    });
+
+    unmount();
+    render(<SpiritBeastAttributeCalculator />);
+    expect(screen.getByText("力 +1000000")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "编辑道具培养" }));
+    dialog = screen.getByRole("dialog", { name: "编辑道具培养" });
+    expect(
+      within(dialog).getByRole("spinbutton", { name: "道具培养：力" }),
+    ).toHaveValue(1_000_000);
+    expect(
+      within(dialog).getByRole("spinbutton", { name: "道具培养：敏" }),
+    ).toHaveValue(12);
   });
 
   it("亲和编辑器应该只保留六系亲和设置", async () => {

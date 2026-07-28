@@ -25,6 +25,7 @@ import {
   createDefaultSpiritBeastState,
   createEmptySpiritBeastBonusSources,
   createEmptySpiritBeastBonuses,
+  createEmptySpiritBeastItemTraining,
   getSpiritBeastAccessoryBonusTotal,
   getSpiritBeastAccessoryQualificationBonus,
   getSpiritBeastDestinyBonusTotal,
@@ -41,6 +42,7 @@ import type {
   SpiritBeastCalculatorState,
   SpiritBeastDerivedAttribute,
   SpiritBeastManualBonusSourceId,
+  SpiritBeastPrimaryAttribute,
 } from "../utils/spiritBeastAttributes";
 import {
   calculateSpiritBeastAccessoryBonuses,
@@ -120,6 +122,11 @@ const BONUS_SOURCE_CONFIG: Record<
     colorClass: string;
   }
 > = {
+  itemTraining: {
+    title: "道具培养",
+    shortTitle: "培养",
+    colorClass: "text-amber-600",
+  },
   enlightenment: {
     title: "仙府点化",
     shortTitle: "点化",
@@ -163,6 +170,14 @@ const PRIMARY_FIELDS = SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => ({
   label: PRIMARY_LABELS[attribute],
   allowNegative: true,
 })) satisfies readonly AttributeBonusField<SpiritBeastBonusAttribute>[];
+
+const ITEM_TRAINING_FIELDS = SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map(
+  (attribute) => ({
+    attribute,
+    label: PRIMARY_LABELS[attribute],
+    integerOnly: true,
+  }),
+) satisfies readonly AttributeBonusField<SpiritBeastPrimaryAttribute>[];
 
 const AFFINITY_FIELDS = SPIRIT_BEAST_AFFINITIES.map((attribute) => ({
   attribute,
@@ -320,14 +335,18 @@ const SpiritBeastAttributeCalculator = () => {
       const detailedDestinyBonuses =
         sourceId === "destiny" ? structuredDestinyBonuses : null;
       const getDirectSourceValue = (attribute: SpiritBeastBonusAttribute) =>
-        sourceId === "enlightenment"
-          ? getSpiritBeastEnlightenmentPrimaryBonus(state, attribute)
-          : sourceId === "skill"
-            ? 0
-            : sourceId === "mount"
-              ? getSpiritBeastMountFixedBonusTotal(state, attribute) +
-                structuredMountBonuses[attribute]
-              : state.bonusSources[sourceId][attribute];
+        sourceId === "itemTraining"
+          ? attribute in state.itemTraining
+            ? state.itemTraining[attribute as SpiritBeastPrimaryAttribute]
+            : 0
+          : sourceId === "enlightenment"
+            ? getSpiritBeastEnlightenmentPrimaryBonus(state, attribute)
+            : sourceId === "skill"
+              ? 0
+              : sourceId === "mount"
+                ? getSpiritBeastMountFixedBonusTotal(state, attribute) +
+                  structuredMountBonuses[attribute]
+                : state.bonusSources[sourceId][attribute];
       const standardItems = ALL_BONUS_FIELDS.filter(({ attribute }) => {
         const directSourceValue = getDirectSourceValue(attribute);
         const detailedEquipmentValue =
@@ -442,35 +461,39 @@ const SpiritBeastAttributeCalculator = () => {
         id: sourceId,
         title: config.title,
         badge:
-          sourceId === "enlightenment"
-            ? state.enlightenment.star > 0
-              ? `${state.enlightenment.star}星`
-              : "未点化"
-            : sourceId === "equipment"
-              ? `${enabledEquipmentCount}/3`
-              : sourceId === "accessory"
-                ? `${enabledAccessoryCount}/2`
-                : sourceId === "skill" && configuredSkillCount > 0
-                  ? `${configuredSkillCount} 项`
-                  : sourceId === "destiny"
-                    ? `${configuredDestinySkillCount}/6`
-                    : sourceId === "mount"
-                      ? `${configuredMountFixedAttributeCount}/2 · ${configuredMountSkillCount} 技能`
-                      : config.badge,
+          sourceId === "itemTraining"
+            ? undefined
+            : sourceId === "enlightenment"
+              ? state.enlightenment.star > 0
+                ? `${state.enlightenment.star}星`
+                : "未点化"
+              : sourceId === "equipment"
+                ? `${enabledEquipmentCount}/3`
+                : sourceId === "accessory"
+                  ? `${enabledAccessoryCount}/2`
+                  : sourceId === "skill" && configuredSkillCount > 0
+                    ? `${configuredSkillCount} 项`
+                    : sourceId === "destiny"
+                      ? `${configuredDestinySkillCount}/6`
+                      : sourceId === "mount"
+                        ? `${configuredMountFixedAttributeCount}/2 · ${configuredMountSkillCount} 技能`
+                        : config.badge,
         details:
-          sourceId === "enlightenment"
-            ? "仙府点化固定获得两项不同资质加成；属性星级决定五维词条数量与范围。资质按游戏内实际点数录入，五维先进入面板公式。"
-            : sourceId === "equipment"
-              ? "宝衣和宝冠各录入两条装备属性；宝衣、宝链启灵录入五维；宝冠另录入副属性、百炼与属性特效。宝链技能统一在“技能”来源录入。"
-              : sourceId === "accessory"
-                ? "1 阶灵饰固定增加全资质 10，2 阶灵饰固定增加全资质 20；每件另有一条物攻、法攻、物防、法防、速度或气血随机属性。"
-                : sourceId === "skill"
-                  ? "威能按灵点增加法攻；迅捷与迟钝调整速度；健壮与吉星调整气血；低级和高级亲和技能分别增加 15、25 点对应亲和。同名低级与高级同时存在时只应用高级效果。"
-                  : sourceId === "destiny"
-                    ? "命格包含 1 个本命技和 6 个命技。面板命技分为普通、变异和 1～5 级，同一属性只能出现一次；被动·神机妙算按灵兽等级减少速度。"
-                    : sourceId === "mount"
-                      ? "坐骑统御一般从气血、法力、物攻、法攻、物防、法防、速度中选择两项固定加成；疾风每级增加 1% 速度，迟钝术每级减少 2% 速度，可单选、全选或都不选。"
-                      : undefined,
+          sourceId === "itemTraining"
+            ? "道具可以任意增加体、灵、力、耐、敏。按游戏内加成总览录入已增加的属性点；当前计算器不限制单项与总加点。"
+            : sourceId === "enlightenment"
+              ? "仙府点化固定获得两项不同资质加成；属性星级决定五维词条数量与范围。资质按游戏内实际点数录入，五维先进入面板公式。"
+              : sourceId === "equipment"
+                ? "宝衣和宝冠各录入两条装备属性；宝衣、宝链启灵录入五维；宝冠另录入副属性、百炼与属性特效。宝链技能统一在“技能”来源录入。"
+                : sourceId === "accessory"
+                  ? "1 阶灵饰固定增加全资质 10，2 阶灵饰固定增加全资质 20；每件另有一条物攻、法攻、物防、法防、速度或气血随机属性。"
+                  : sourceId === "skill"
+                    ? "威能按灵点增加法攻；迅捷与迟钝调整速度；健壮与吉星调整气血；低级和高级亲和技能分别增加 15、25 点对应亲和。同名低级与高级同时存在时只应用高级效果。"
+                    : sourceId === "destiny"
+                      ? "命格包含 1 个本命技和 6 个命技。面板命技分为普通、变异和 1～5 级，同一属性只能出现一次；被动·神机妙算按灵兽等级减少速度。"
+                      : sourceId === "mount"
+                        ? "坐骑统御一般从气血、法力、物攻、法攻、物防、法防、速度中选择两项固定加成；疾风每级增加 1% 速度，迟钝术每级减少 2% 速度，可单选、全选或都不选。"
+                        : undefined,
         items,
         validationError:
           sourceId === "enlightenment"
@@ -511,20 +534,24 @@ const SpiritBeastAttributeCalculator = () => {
       if (sourceId === "equipment" && !state.isEquipmentIncluded) return null;
 
       const value =
-        sourceId === "enlightenment"
-          ? getSpiritBeastEnlightenmentPrimaryBonus(state, attribute)
-          : sourceId === "equipment"
-            ? getSpiritBeastEquipmentBonusTotal(state, attribute)
-            : sourceId === "accessory"
-              ? getSpiritBeastAccessoryBonusTotal(state, attribute)
-              : sourceId === "skill"
-                ? structuredSkillBonuses[attribute]
-                : sourceId === "destiny"
-                  ? getSpiritBeastDestinyBonusTotal(state, attribute)
-                  : sourceId === "mount"
-                    ? getSpiritBeastMountFixedBonusTotal(state, attribute) +
-                      structuredMountBonuses[attribute]
-                    : state.bonusSources[sourceId][attribute];
+        sourceId === "itemTraining"
+          ? attribute in state.itemTraining
+            ? state.itemTraining[attribute as SpiritBeastPrimaryAttribute]
+            : 0
+          : sourceId === "enlightenment"
+            ? getSpiritBeastEnlightenmentPrimaryBonus(state, attribute)
+            : sourceId === "equipment"
+              ? getSpiritBeastEquipmentBonusTotal(state, attribute)
+              : sourceId === "accessory"
+                ? getSpiritBeastAccessoryBonusTotal(state, attribute)
+                : sourceId === "skill"
+                  ? structuredSkillBonuses[attribute]
+                  : sourceId === "destiny"
+                    ? getSpiritBeastDestinyBonusTotal(state, attribute)
+                    : sourceId === "mount"
+                      ? getSpiritBeastMountFixedBonusTotal(state, attribute) +
+                        structuredMountBonuses[attribute]
+                      : state.bonusSources[sourceId][attribute];
       if (value === 0) return null;
 
       const config = BONUS_SOURCE_CONFIG[sourceId];
@@ -583,6 +610,7 @@ const SpiritBeastAttributeCalculator = () => {
             onReset={() =>
               setState((current) => ({
                 ...current,
+                itemTraining: createEmptySpiritBeastItemTraining(),
                 enlightenment: createEmptySpiritBeastEnlightenment(),
                 equipment: createEmptySpiritBeastEquipmentSet(),
                 accessories: createEmptySpiritBeastAccessories(),
@@ -915,6 +943,35 @@ const SpiritBeastAttributeCalculator = () => {
               ) => setState((current) => ({ ...current, customAllocation }))}
             />
           </div>
+        </EditorDialog>
+      )}
+
+      {activeSourceId === "itemTraining" && (
+        <EditorDialog
+          title={BONUS_SOURCE_CONFIG.itemTraining.title}
+          onClose={() => setActiveEditorId(null)}
+        >
+          <AttributeBonusCard
+            title="道具培养"
+            description="按游戏内“加成总览”录入五维已增加的属性点。仅支持非负整数，当前不限制单项与总加点。"
+            fields={ITEM_TRAINING_FIELDS}
+            values={state.itemTraining}
+            onChange={(attribute, value) =>
+              setState((current) => ({
+                ...current,
+                itemTraining: {
+                  ...current.itemTraining,
+                  [attribute]: value,
+                },
+              }))
+            }
+            onReset={() =>
+              setState((current) => ({
+                ...current,
+                itemTraining: createEmptySpiritBeastItemTraining(),
+              }))
+            }
+          />
         </EditorDialog>
       )}
 

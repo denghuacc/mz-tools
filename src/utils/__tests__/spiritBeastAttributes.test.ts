@@ -140,6 +140,42 @@ describe("灵兽面板计算", () => {
     expect(Math.floor(excluded.derived.physicalAttack)).toBe(153);
   });
 
+  it("应该把不设上限的道具培养五维先计入面板公式", () => {
+    const state = createDefaultSpiritBeastState();
+    const baseline = calculateSpiritBeastAttributes(state);
+    state.itemTraining = {
+      constitution: 3,
+      spirit: 7,
+      strength: 52,
+      endurance: 5,
+      agility: 11,
+    };
+
+    const result = calculateSpiritBeastAttributes(state);
+
+    expect(result.primary).toEqual({
+      constitution: baseline.primary.constitution + 3,
+      spirit: baseline.primary.spirit + 7,
+      strength: baseline.primary.strength + 52,
+      endurance: baseline.primary.endurance + 5,
+      agility: baseline.primary.agility + 11,
+    });
+    expect(result.derived.health - baseline.derived.health).toBe(9);
+    expect(
+      result.derived.physicalAttack - baseline.derived.physicalAttack,
+    ).toBe(26);
+    expect(
+      result.derived.physicalDefense - baseline.derived.physicalDefense,
+    ).toBe(5);
+    expect(
+      result.derived.magicalAttack - baseline.derived.magicalAttack,
+    ).toBeCloseTo(19.9);
+    expect(
+      result.derived.magicalDefense - baseline.derived.magicalDefense,
+    ).toBeCloseTo(19.9);
+    expect(result.derived.speed - baseline.derived.speed).toBeCloseTo(11.85);
+  });
+
   it("应该把结构化命格命技和本命技计入面板", () => {
     const state = createDefaultSpiritBeastState();
     state.level = 69;
@@ -354,6 +390,13 @@ describe("灵兽面板计算", () => {
         spirit: 8,
         strength: 8,
       },
+      itemTraining: {
+        constitution: -10,
+        spirit: 12.9,
+        strength: 1_000_000,
+        endurance: "31",
+        agility: "bad",
+      },
       affinities: {
         fireAffinity: -10,
       },
@@ -404,6 +447,13 @@ describe("灵兽面板计算", () => {
     expect(normalized?.qualifications.physicalAttack).toBe(1800);
     expect(normalized?.qualifications.physicalDefense).toBe(900);
     expect(normalized?.affinities.fireAffinity).toBe(-10);
+    expect(normalized?.itemTraining).toEqual({
+      constitution: 0,
+      spirit: 12,
+      strength: 1_000_000,
+      endurance: 31,
+      agility: 0,
+    });
     expect(normalized?.bonusSources.skill.health).toBe(0);
     expect(normalized?.skills.swiftness).toEqual({
       normal: true,

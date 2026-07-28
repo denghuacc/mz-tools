@@ -42,6 +42,7 @@ describe("spiritBeastProfiles", () => {
   it("应该持久化三个存档并安全读写灵兽面板快照", () => {
     const state = createDefaultSpiritBeastState();
     state.qualifications.physicalAttack = 1600;
+    state.itemTraining.strength = 52;
     state.accessories.tierOne = {
       enabled: true,
       attribute: "health",

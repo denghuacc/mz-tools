@@ -2,6 +2,7 @@ export type AttributeBonusField<Attribute extends string = string> = {
   attribute: Attribute;
   label: string;
   allowNegative?: boolean;
+  integerOnly?: boolean;
 };
 
 type AttributeBonusCardProps<Attribute extends string> = {
@@ -30,6 +31,7 @@ const AttributeBonusCard = <Attribute extends string>({
     attribute: Attribute,
     inputValue: string,
     allowNegative: boolean,
+    integerOnly: boolean,
   ) => {
     if (inputValue === "") {
       onChange(attribute, 0);
@@ -38,7 +40,7 @@ const AttributeBonusCard = <Attribute extends string>({
 
     const nextValue = Number(inputValue);
     if (Number.isFinite(nextValue) && (allowNegative || nextValue >= 0)) {
-      onChange(attribute, nextValue);
+      onChange(attribute, integerOnly ? Math.floor(nextValue) : nextValue);
     }
   };
 
@@ -60,31 +62,43 @@ const AttributeBonusCard = <Attribute extends string>({
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-2">
-        {fields.map(({ attribute, label, allowNegative = false }) => (
-          <label key={attribute} className="block">
-            <span className="mb-1.5 block text-xs font-medium text-slate-600">
-              {label}
-            </span>
-            <span className="flex h-10 items-center rounded-lg border border-slate-200 bg-white px-3 transition focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
-              <span className="mr-2 text-sm text-slate-400">
-                {allowNegative ? "±" : "+"}
+        {fields.map(
+          ({
+            attribute,
+            label,
+            allowNegative = false,
+            integerOnly = false,
+          }) => (
+            <label key={attribute} className="block">
+              <span className="mb-1.5 block text-xs font-medium text-slate-600">
+                {label}
               </span>
-              <input
-                aria-label={`${title}：${label}`}
-                type="number"
-                min={allowNegative ? undefined : 0}
-                step="any"
-                inputMode="decimal"
-                className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-300"
-                placeholder="0"
-                value={values[attribute] || ""}
-                onChange={(event) =>
-                  handleChange(attribute, event.target.value, allowNegative)
-                }
-              />
-            </span>
-          </label>
-        ))}
+              <span className="flex h-10 items-center rounded-lg border border-slate-200 bg-white px-3 transition focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
+                <span className="mr-2 text-sm text-slate-400">
+                  {allowNegative ? "±" : "+"}
+                </span>
+                <input
+                  aria-label={`${title}：${label}`}
+                  type="number"
+                  min={allowNegative ? undefined : 0}
+                  step={integerOnly ? 1 : "any"}
+                  inputMode={integerOnly ? "numeric" : "decimal"}
+                  className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-300"
+                  placeholder="0"
+                  value={values[attribute] || ""}
+                  onChange={(event) =>
+                    handleChange(
+                      attribute,
+                      event.target.value,
+                      allowNegative,
+                      integerOnly,
+                    )
+                  }
+                />
+              </span>
+            </label>
+          ),
+        )}
       </div>
 
       {validationError && (
