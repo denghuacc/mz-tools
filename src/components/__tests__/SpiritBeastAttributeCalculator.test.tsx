@@ -88,6 +88,15 @@ describe("SpiritBeastAttributeCalculator", () => {
     expect(
       screen.getByRole("heading", { name: "属性加成" }),
     ).toBeInTheDocument();
+    const attributeBonusSection = screen
+      .getByRole("heading", { name: "属性加成" })
+      .closest("section");
+    expect(attributeBonusSection).not.toBeNull();
+    expect(
+      within(attributeBonusSection!)
+        .getAllByRole("heading", { level: 3 })
+        .map((heading) => heading.textContent),
+    ).toEqual(["装备", "灵饰", "技能", "命格", "坐骑统御", "仙府点化"]);
     expect(screen.getByLabelText("物攻资质滑杆")).toHaveAttribute("min", "900");
     expect(screen.getByLabelText("成长滑杆")).toHaveAttribute("max", "1.5");
     expect(
@@ -331,6 +340,121 @@ describe("SpiritBeastAttributeCalculator", () => {
     expect(
       within(restoredDialog).getByRole("combobox", { name: "命技1品质" }),
     ).toHaveValue("mutated");
+  });
+
+  it("应该录入仙府点化的两项资质和星级五维并在刷新后恢复", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<SpiritBeastAttributeCalculator />);
+    const enlightenmentCard = screen
+      .getByRole("heading", { name: "仙府点化" })
+      .closest("article");
+
+    expect(enlightenmentCard).not.toBeNull();
+    expect(within(enlightenmentCard!).getByText("未点化")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "编辑仙府点化" }));
+    let dialog = screen.getByRole("dialog", { name: "编辑仙府点化" });
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "点化属性星级" }),
+      "5",
+    );
+    expect(dialog).toHaveTextContent("仙府点化必须选择 2 项不同资质");
+
+    await user.click(within(dialog).getByRole("button", { name: "气血资质" }));
+    await user.click(within(dialog).getByRole("button", { name: "物攻资质" }));
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "仙府点化：气血资质数值",
+      }),
+      { target: { value: "5" } },
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "仙府点化：物攻资质数值",
+      }),
+      { target: { value: "23" } },
+    );
+
+    await user.click(within(dialog).getByRole("button", { name: "灵" }));
+    await user.click(within(dialog).getByRole("button", { name: "力" }));
+    await user.click(within(dialog).getByRole("button", { name: "体" }));
+    const spiritInput = within(dialog).getByRole("spinbutton", {
+      name: "仙府点化：灵属性数值",
+    });
+    const strengthInput = within(dialog).getByRole("spinbutton", {
+      name: "仙府点化：力属性数值",
+    });
+    const constitutionInput = within(dialog).getByRole("spinbutton", {
+      name: "仙府点化：体属性数值",
+    });
+    expect(spiritInput).toHaveAttribute("max", "20");
+    expect(strengthInput).toHaveAttribute("max", "15");
+    expect(constitutionInput).toHaveAttribute("max", "15");
+    fireEvent.change(spiritInput, { target: { value: "13" } });
+    fireEvent.change(strengthInput, { target: { value: "15" } });
+    fireEvent.change(constitutionInput, { target: { value: "13" } });
+    expect(dialog).not.toHaveTextContent("数值超出当前星级范围");
+
+    await user.click(within(dialog).getByRole("button", { name: "完成" }));
+
+    expect(within(enlightenmentCard!).getByText("5星")).toBeInTheDocument();
+    expect(
+      within(enlightenmentCard!).getByText("气血资质 +5"),
+    ).toBeInTheDocument();
+    expect(
+      within(enlightenmentCard!).getByText("物攻资质 +23"),
+    ).toBeInTheDocument();
+    expect(within(enlightenmentCard!).getByText("灵 +13")).toBeInTheDocument();
+    expect(within(enlightenmentCard!).getByText("力 +15")).toBeInTheDocument();
+    expect(within(enlightenmentCard!).getByText("体 +13")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "仙府点化额外提供 物攻资质 +23 · 气血资质 +5，计算时自动叠加。",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("group", { name: "五维属性列" })).getAllByText(
+        "55",
+      ),
+    ).toHaveLength(2);
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY) ??
+          "{}",
+      );
+      expect(stored.enlightenment).toEqual({
+        star: 5,
+        qualificationBonuses: [
+          { qualification: "health", value: 5 },
+          { qualification: "physicalAttack", value: 23 },
+        ],
+        primaryBonuses: [
+          { attribute: "spirit", value: 13 },
+          { attribute: "strength", value: 15 },
+          { attribute: "constitution", value: 13 },
+        ],
+      });
+    });
+
+    unmount();
+    render(<SpiritBeastAttributeCalculator />);
+    expect(screen.getByText("5星")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "编辑仙府点化" }));
+    dialog = screen.getByRole("dialog", { name: "编辑仙府点化" });
+    expect(
+      within(dialog).getByRole("combobox", { name: "点化属性星级" }),
+    ).toHaveValue("5");
+    expect(
+      within(dialog).getByRole("spinbutton", {
+        name: "仙府点化：物攻资质数值",
+      }),
+    ).toHaveValue(23);
+    expect(
+      within(dialog).getByRole("spinbutton", {
+        name: "仙府点化：体属性数值",
+      }),
+    ).toHaveValue(13);
   });
 
   it("命格中的普通和变异命技应该共用属性唯一约束", async () => {

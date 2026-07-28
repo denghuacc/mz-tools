@@ -112,6 +112,9 @@ const SpiritBeastCalculationScope = ({
               点，再进入对应资质公式。
             </li>
             <li>
+              仙府点化固定选择两项不同资质，按游戏内当前效果显示的实际点数叠加后，再进入对应资质公式；仙府风水等上限暂不自动推算。
+            </li>
+            <li>
               五维先叠加固定成长、潜力和来源加成，再与资质、成长共同计算气血和五项派生属性。
             </li>
             <li>
@@ -120,6 +123,23 @@ const SpiritBeastCalculationScope = ({
             </li>
             <li>
               现有公式可以复现部分样本，但仍存在未解释差异，不会为单个截图反向调整初值。
+            </li>
+          </ul>
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <h3 className="font-semibold text-slate-900">仙府点化</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>
+              1～2 星出现 1 条五维属性，3～4 星出现 2 条，5 星出现 3
+              条；同一效果中的五维不重复。
+            </li>
+            <li>
+              1、2、3 星属性范围分别为 1～5、1～10、1～15；4～5 星首条为
+              1～20，其余为 1～15。
+            </li>
+            <li>
+              点化五维与装备五维等来源一起先进入资质和成长公式，内部计算保留完整精度。
             </li>
           </ul>
         </section>
@@ -211,11 +231,10 @@ const SpiritBeastCalculationScope = ({
           <h3 className="font-semibold text-slate-900">加成与取整顺序</h3>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
             <li>
-              装备按三件分别录入，灵饰按 1 阶和 2
-              阶分别录入；技能、命格与坐骑统御按结构化配置计算。
+              仙府点化、三件装备、两件灵饰、技能、命格与坐骑统御均按结构化配置计算。
             </li>
             <li>
-              五维加成先进入资质与成长公式；灵饰全资质先增加公式中的资质，面板属性加成在公式结果后直接叠加。
+              点化和其它五维加成先进入资质与成长公式；点化资质与灵饰全资质先增加公式中的资质，面板属性加成在公式结果后直接叠加。
             </li>
             <li>命格命技固定值和“被动·神机妙算”减速作为直接面板属性先结算。</li>
             <li>

@@ -47,6 +47,14 @@ describe("spiritBeastProfiles", () => {
       attribute: "health",
       value: 17,
     };
+    state.enlightenment = {
+      star: 1,
+      qualificationBonuses: [
+        { qualification: "health", value: 5 },
+        { qualification: "physicalAttack", value: 23 },
+      ],
+      primaryBonuses: [{ attribute: "constitution", value: 3 }],
+    };
     state.destiny.birthSkill = "divineCalculation";
     state.destiny.skills[0] = {
       attribute: "physicalAttack",

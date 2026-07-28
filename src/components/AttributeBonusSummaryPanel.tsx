@@ -74,7 +74,7 @@ const AttributeBonusSummaryPanel = <SourceId extends string>({
         </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
+      <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {sources.map((source) => (
           <AttributeBonusSummaryCard
             key={source.id}

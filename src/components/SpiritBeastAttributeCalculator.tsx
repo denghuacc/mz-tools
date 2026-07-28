@@ -18,6 +18,7 @@ import {
   SPIRIT_BEAST_LEVEL_MIN,
   SPIRIT_BEAST_ALLOCATION_PRESETS,
   SPIRIT_BEAST_PRIMARY_ATTRIBUTES,
+  SPIRIT_BEAST_QUALIFICATIONS,
   calculateSpiritBeastAttributes,
   calculateSpiritBeastStructuredMountBonuses,
   calculateSpiritBeastStructuredSkillBonuses,
@@ -27,6 +28,7 @@ import {
   getSpiritBeastAccessoryBonusTotal,
   getSpiritBeastAccessoryQualificationBonus,
   getSpiritBeastDestinyBonusTotal,
+  getSpiritBeastEnlightenmentPrimaryBonus,
   getSpiritBeastEquipmentBonusTotal,
   getSpiritBeastLevelZeroPrimaryValidationError,
   getSpiritBeastMountFixedBonusTotal,
@@ -38,6 +40,7 @@ import type {
   SpiritBeastBonusSourceId,
   SpiritBeastCalculatorState,
   SpiritBeastDerivedAttribute,
+  SpiritBeastManualBonusSourceId,
 } from "../utils/spiritBeastAttributes";
 import {
   calculateSpiritBeastAccessoryBonuses,
@@ -49,6 +52,11 @@ import {
   SPIRIT_BEAST_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS,
 } from "../utils/spiritBeastEquipment";
 import type { SpiritBeastEquipmentBonusAttribute } from "../utils/spiritBeastEquipment";
+import {
+  calculateSpiritBeastEnlightenmentBonuses,
+  createEmptySpiritBeastEnlightenment,
+  getSpiritBeastEnlightenmentValidationError,
+} from "../utils/spiritBeastEnlightenment";
 import {
   calculateSpiritBeastDestinyBonuses,
   countConfiguredSpiritBeastDestinySkills,
@@ -83,6 +91,7 @@ import {
 import SpiritBeastCalculationScope from "./SpiritBeastCalculationScope";
 import SpiritBeastDestinyControl from "./SpiritBeastDestinyControl";
 import SpiritBeastEquipmentControl from "./SpiritBeastEquipmentControl";
+import SpiritBeastEnlightenmentControl from "./SpiritBeastEnlightenmentControl";
 import SpiritBeastMountControl from "./SpiritBeastMountControl";
 import SpiritBeastQualificationPanel from "./SpiritBeastQualificationPanel";
 import SpiritBeastSkillControl from "./SpiritBeastSkillControl";
@@ -90,6 +99,7 @@ import {
   SPIRIT_BEAST_AFFINITY_LABELS as AFFINITY_LABELS,
   SPIRIT_BEAST_DERIVED_LABELS as DERIVED_LABELS,
   SPIRIT_BEAST_PRIMARY_LABELS as PRIMARY_LABELS,
+  SPIRIT_BEAST_QUALIFICATION_LABELS,
 } from "./spiritBeastLabels";
 
 const AFFINITY_CLASSES: Record<SpiritBeastAffinity, string> = {
@@ -110,6 +120,11 @@ const BONUS_SOURCE_CONFIG: Record<
     colorClass: string;
   }
 > = {
+  enlightenment: {
+    title: "仙府点化",
+    shortTitle: "点化",
+    colorClass: "text-cyan-600",
+  },
   equipment: {
     title: "装备",
     shortTitle: "装备",
@@ -265,6 +280,11 @@ const SpiritBeastAttributeCalculator = () => {
   const accessoryBonuses = calculateSpiritBeastAccessoryBonuses(
     state.accessories,
   );
+  const enlightenmentBonuses = calculateSpiritBeastEnlightenmentBonuses(
+    state.enlightenment,
+  );
+  const enlightenmentValidationError =
+    getSpiritBeastEnlightenmentValidationError(state.enlightenment);
   const structuredSkillBonuses = useMemo(
     () => calculateSpiritBeastStructuredSkillBonuses(state),
     [state],
@@ -300,12 +320,14 @@ const SpiritBeastAttributeCalculator = () => {
       const detailedDestinyBonuses =
         sourceId === "destiny" ? structuredDestinyBonuses : null;
       const getDirectSourceValue = (attribute: SpiritBeastBonusAttribute) =>
-        sourceId === "skill"
-          ? 0
-          : sourceId === "mount"
-            ? getSpiritBeastMountFixedBonusTotal(state, attribute) +
-              structuredMountBonuses[attribute]
-            : state.bonusSources[sourceId][attribute];
+        sourceId === "enlightenment"
+          ? getSpiritBeastEnlightenmentPrimaryBonus(state, attribute)
+          : sourceId === "skill"
+            ? 0
+            : sourceId === "mount"
+              ? getSpiritBeastMountFixedBonusTotal(state, attribute) +
+                structuredMountBonuses[attribute]
+              : state.bonusSources[sourceId][attribute];
       const standardItems = ALL_BONUS_FIELDS.filter(({ attribute }) => {
         const directSourceValue = getDirectSourceValue(attribute);
         const detailedEquipmentValue =
@@ -393,7 +415,18 @@ const SpiritBeastAttributeCalculator = () => {
               },
             ]
           : [];
+      const enlightenmentQualificationItems =
+        sourceId === "enlightenment"
+          ? SPIRIT_BEAST_QUALIFICATIONS.filter(
+              (qualification) =>
+                enlightenmentBonuses.qualifications[qualification] !== 0,
+            ).map((qualification) => ({
+              label: `${SPIRIT_BEAST_QUALIFICATION_LABELS[qualification]}`,
+              value: enlightenmentBonuses.qualifications[qualification],
+            }))
+          : [];
       const calculatedItems = [
+        ...enlightenmentQualificationItems,
         ...accessoryQualificationItems,
         ...standardItems,
         ...equipmentOnlyItems,
@@ -409,35 +442,45 @@ const SpiritBeastAttributeCalculator = () => {
         id: sourceId,
         title: config.title,
         badge:
-          sourceId === "equipment"
-            ? `${enabledEquipmentCount}/3`
-            : sourceId === "accessory"
-              ? `${enabledAccessoryCount}/2`
-              : sourceId === "skill" && configuredSkillCount > 0
-                ? `${configuredSkillCount} 项`
-                : sourceId === "destiny"
-                  ? `${configuredDestinySkillCount}/6`
-                  : sourceId === "mount"
-                    ? `${configuredMountFixedAttributeCount}/2 · ${configuredMountSkillCount} 技能`
-                    : config.badge,
+          sourceId === "enlightenment"
+            ? state.enlightenment.star > 0
+              ? `${state.enlightenment.star}星`
+              : "未点化"
+            : sourceId === "equipment"
+              ? `${enabledEquipmentCount}/3`
+              : sourceId === "accessory"
+                ? `${enabledAccessoryCount}/2`
+                : sourceId === "skill" && configuredSkillCount > 0
+                  ? `${configuredSkillCount} 项`
+                  : sourceId === "destiny"
+                    ? `${configuredDestinySkillCount}/6`
+                    : sourceId === "mount"
+                      ? `${configuredMountFixedAttributeCount}/2 · ${configuredMountSkillCount} 技能`
+                      : config.badge,
         details:
-          sourceId === "equipment"
-            ? "宝衣和宝冠各录入两条装备属性；宝衣、宝链启灵录入五维；宝冠另录入副属性、百炼与属性特效。宝链技能统一在“技能”来源录入。"
-            : sourceId === "accessory"
-              ? "1 阶灵饰固定增加全资质 10，2 阶灵饰固定增加全资质 20；每件另有一条物攻、法攻、物防、法防、速度或气血随机属性。"
-              : sourceId === "skill"
-                ? "威能按灵点增加法攻；迅捷与迟钝调整速度；健壮与吉星调整气血；低级和高级亲和技能分别增加 15、25 点对应亲和。同名低级与高级同时存在时只应用高级效果。"
-                : sourceId === "destiny"
-                  ? "命格包含 1 个本命技和 6 个命技。面板命技分为普通、变异和 1～5 级，同一属性只能出现一次；被动·神机妙算按灵兽等级减少速度。"
-                  : sourceId === "mount"
-                    ? "坐骑统御一般从气血、法力、物攻、法攻、物防、法防、速度中选择两项固定加成；疾风每级增加 1% 速度，迟钝术每级减少 2% 速度，可单选、全选或都不选。"
-                    : undefined,
+          sourceId === "enlightenment"
+            ? "仙府点化固定获得两项不同资质加成；属性星级决定五维词条数量与范围。资质按游戏内实际点数录入，五维先进入面板公式。"
+            : sourceId === "equipment"
+              ? "宝衣和宝冠各录入两条装备属性；宝衣、宝链启灵录入五维；宝冠另录入副属性、百炼与属性特效。宝链技能统一在“技能”来源录入。"
+              : sourceId === "accessory"
+                ? "1 阶灵饰固定增加全资质 10，2 阶灵饰固定增加全资质 20；每件另有一条物攻、法攻、物防、法防、速度或气血随机属性。"
+                : sourceId === "skill"
+                  ? "威能按灵点增加法攻；迅捷与迟钝调整速度；健壮与吉星调整气血；低级和高级亲和技能分别增加 15、25 点对应亲和。同名低级与高级同时存在时只应用高级效果。"
+                  : sourceId === "destiny"
+                    ? "命格包含 1 个本命技和 6 个命技。面板命技分为普通、变异和 1～5 级，同一属性只能出现一次；被动·神机妙算按灵兽等级减少速度。"
+                    : sourceId === "mount"
+                      ? "坐骑统御一般从气血、法力、物攻、法攻、物防、法防、速度中选择两项固定加成；疾风每级增加 1% 速度，迟钝术每级减少 2% 速度，可单选、全选或都不选。"
+                      : undefined,
         items,
+        validationError:
+          sourceId === "enlightenment"
+            ? enlightenmentValidationError
+            : undefined,
       };
     });
 
   const updateBonus = (
-    sourceId: SpiritBeastBonusSourceId,
+    sourceId: SpiritBeastManualBonusSourceId,
     attribute: SpiritBeastBonusAttribute,
     value: number,
   ) => {
@@ -453,7 +496,7 @@ const SpiritBeastAttributeCalculator = () => {
     }));
   };
 
-  const resetBonusSource = (sourceId: SpiritBeastBonusSourceId) => {
+  const resetBonusSource = (sourceId: SpiritBeastManualBonusSourceId) => {
     setState((current) => ({
       ...current,
       bonusSources: {
@@ -468,18 +511,20 @@ const SpiritBeastAttributeCalculator = () => {
       if (sourceId === "equipment" && !state.isEquipmentIncluded) return null;
 
       const value =
-        sourceId === "equipment"
-          ? getSpiritBeastEquipmentBonusTotal(state, attribute)
-          : sourceId === "accessory"
-            ? getSpiritBeastAccessoryBonusTotal(state, attribute)
-            : sourceId === "skill"
-              ? structuredSkillBonuses[attribute]
-              : sourceId === "destiny"
-                ? getSpiritBeastDestinyBonusTotal(state, attribute)
-                : sourceId === "mount"
-                  ? getSpiritBeastMountFixedBonusTotal(state, attribute) +
-                    structuredMountBonuses[attribute]
-                  : state.bonusSources[sourceId][attribute];
+        sourceId === "enlightenment"
+          ? getSpiritBeastEnlightenmentPrimaryBonus(state, attribute)
+          : sourceId === "equipment"
+            ? getSpiritBeastEquipmentBonusTotal(state, attribute)
+            : sourceId === "accessory"
+              ? getSpiritBeastAccessoryBonusTotal(state, attribute)
+              : sourceId === "skill"
+                ? structuredSkillBonuses[attribute]
+                : sourceId === "destiny"
+                  ? getSpiritBeastDestinyBonusTotal(state, attribute)
+                  : sourceId === "mount"
+                    ? getSpiritBeastMountFixedBonusTotal(state, attribute) +
+                      structuredMountBonuses[attribute]
+                    : state.bonusSources[sourceId][attribute];
       if (value === 0) return null;
 
       const config = BONUS_SOURCE_CONFIG[sourceId];
@@ -515,6 +560,9 @@ const SpiritBeastAttributeCalculator = () => {
             accessoryQualificationBonus={getSpiritBeastAccessoryQualificationBonus(
               state,
             )}
+            enlightenmentQualificationBonuses={
+              enlightenmentBonuses.qualifications
+            }
             onQualificationsChange={(qualifications) =>
               setState((current) => ({ ...current, qualifications }))
             }
@@ -535,6 +583,7 @@ const SpiritBeastAttributeCalculator = () => {
             onReset={() =>
               setState((current) => ({
                 ...current,
+                enlightenment: createEmptySpiritBeastEnlightenment(),
                 equipment: createEmptySpiritBeastEquipmentSet(),
                 accessories: createEmptySpiritBeastAccessories(),
                 skills: createEmptySpiritBeastSkills(),
@@ -896,6 +945,20 @@ const SpiritBeastAttributeCalculator = () => {
               />
             </div>
           )}
+        </EditorDialog>
+      )}
+
+      {activeSourceId === "enlightenment" && (
+        <EditorDialog
+          title={BONUS_SOURCE_CONFIG.enlightenment.title}
+          onClose={() => setActiveEditorId(null)}
+        >
+          <SpiritBeastEnlightenmentControl
+            enlightenment={state.enlightenment}
+            onChange={(enlightenment) =>
+              setState((current) => ({ ...current, enlightenment }))
+            }
+          />
         </EditorDialog>
       )}
 

@@ -117,6 +117,7 @@ type SpiritBeastQualificationPanelProps = {
   qualifications: SpiritBeastQualifications;
   growth: number;
   accessoryQualificationBonus?: number;
+  enlightenmentQualificationBonuses?: SpiritBeastQualifications;
   onQualificationsChange: (qualifications: SpiritBeastQualifications) => void;
   onGrowthChange: (growth: number) => void;
 };
@@ -126,56 +127,74 @@ const SpiritBeastQualificationPanel = ({
   qualifications,
   growth,
   accessoryQualificationBonus = 0,
+  enlightenmentQualificationBonuses,
   onQualificationsChange,
   onGrowthChange,
-}: SpiritBeastQualificationPanelProps) => (
-  <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-    <div>
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-base font-semibold text-slate-900">灵兽资质</h2>
-        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-          公式待复核
-        </span>
-      </div>
-      <p className="mt-1 text-xs leading-5 text-slate-500">
-        拖动滑杆快速调整，也可以直接输入精确数值。
-      </p>
-      {accessoryQualificationBonus > 0 ? (
-        <p className="mt-1 text-xs font-medium text-violet-600">
-          已启用灵饰额外提供全资质 +{accessoryQualificationBonus}
-          ，计算时自动叠加。
-        </p>
-      ) : null}
-    </div>
+}: SpiritBeastQualificationPanelProps) => {
+  const enlightenmentSummary = SPIRIT_BEAST_QUALIFICATIONS.filter(
+    (qualification) =>
+      (enlightenmentQualificationBonuses?.[qualification] ?? 0) > 0,
+  )
+    .map(
+      (qualification) =>
+        `${QUALIFICATION_LABELS[qualification]} +${enlightenmentQualificationBonuses?.[qualification] ?? 0}`,
+    )
+    .join(" · ");
 
-    <div className="mt-3 grid grid-cols-2 gap-2.5">
-      {SPIRIT_BEAST_QUALIFICATIONS.map((qualification) => (
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-base font-semibold text-slate-900">灵兽资质</h2>
+          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+            公式待复核
+          </span>
+        </div>
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          拖动滑杆快速调整，也可以直接输入精确数值。
+        </p>
+        {accessoryQualificationBonus > 0 ? (
+          <p className="mt-1 text-xs font-medium text-violet-600">
+            已启用灵饰额外提供全资质 +{accessoryQualificationBonus}
+            ，计算时自动叠加。
+          </p>
+        ) : null}
+        {enlightenmentSummary ? (
+          <p className="mt-1 text-xs font-medium text-cyan-600">
+            仙府点化额外提供 {enlightenmentSummary}，计算时自动叠加。
+          </p>
+        ) : null}
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2.5">
+        {SPIRIT_BEAST_QUALIFICATIONS.map((qualification) => (
+          <SliderNumberField
+            key={qualification}
+            label={QUALIFICATION_LABELS[qualification]}
+            value={qualifications[qualification]}
+            minimum={SPIRIT_BEAST_QUALIFICATION_MIN}
+            maximum={SPIRIT_BEAST_QUALIFICATION_MAX}
+            step={1}
+            onChange={(value) =>
+              onQualificationsChange({
+                ...qualifications,
+                [qualification]: value,
+              })
+            }
+          />
+        ))}
         <SliderNumberField
-          key={qualification}
-          label={QUALIFICATION_LABELS[qualification]}
-          value={qualifications[qualification]}
-          minimum={SPIRIT_BEAST_QUALIFICATION_MIN}
-          maximum={SPIRIT_BEAST_QUALIFICATION_MAX}
-          step={1}
-          onChange={(value) =>
-            onQualificationsChange({
-              ...qualifications,
-              [qualification]: value,
-            })
-          }
+          label="成长"
+          value={growth}
+          minimum={SPIRIT_BEAST_GROWTH_MIN}
+          maximum={SPIRIT_BEAST_GROWTH_MAX}
+          step={0.001}
+          precision={3}
+          onChange={onGrowthChange}
         />
-      ))}
-      <SliderNumberField
-        label="成长"
-        value={growth}
-        minimum={SPIRIT_BEAST_GROWTH_MIN}
-        maximum={SPIRIT_BEAST_GROWTH_MAX}
-        step={0.001}
-        precision={3}
-        onChange={onGrowthChange}
-      />
-    </div>
-  </section>
-);
+      </div>
+    </section>
+  );
+};
 
 export default SpiritBeastQualificationPanel;

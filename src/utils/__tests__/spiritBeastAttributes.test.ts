@@ -3,6 +3,7 @@ import {
   createDefaultSpiritBeastState,
   createRandomSpiritBeastLevelZeroPrimary,
   getSpiritBeastAccessoryQualificationBonus,
+  getSpiritBeastEnlightenmentQualificationBonus,
   getSpiritBeastEquipmentBonusTotal,
   getSpiritBeastAllocationTotal,
   getSpiritBeastLevelZeroPrimaryTotal,
@@ -257,6 +258,43 @@ describe("灵兽面板计算", () => {
     expect(result.derived.speed - baseline.derived.speed).toBeCloseTo(0.06645);
   });
 
+  it("应该先叠加仙府点化资质和五维，再进入灵兽面板公式", () => {
+    const state = createDefaultSpiritBeastState();
+    const baseline = calculateSpiritBeastAttributes(state);
+    state.enlightenment = {
+      star: 5,
+      qualificationBonuses: [
+        { qualification: "health", value: 5 },
+        { qualification: "physicalAttack", value: 23 },
+      ],
+      primaryBonuses: [
+        { attribute: "spirit", value: 13 },
+        { attribute: "strength", value: 15 },
+        { attribute: "constitution", value: 13 },
+      ],
+    };
+
+    const result = calculateSpiritBeastAttributes(state);
+
+    expect(getSpiritBeastEnlightenmentQualificationBonus(state, "health")).toBe(
+      5,
+    );
+    expect(
+      getSpiritBeastEnlightenmentQualificationBonus(state, "physicalAttack"),
+    ).toBe(23);
+    expect(result.primary).toEqual({
+      constitution: baseline.primary.constitution + 13,
+      spirit: baseline.primary.spirit + 13,
+      strength: baseline.primary.strength + 15,
+      endurance: baseline.primary.endurance,
+      agility: baseline.primary.agility,
+    });
+    expect(result.derived.health - baseline.derived.health).toBeCloseTo(39.05);
+    expect(
+      result.derived.physicalAttack - baseline.derived.physicalAttack,
+    ).toBeCloseTo(7.615);
+  });
+
   it("应该把三件详细装备与旧版装备汇总一起接入灵兽面板", () => {
     const state = createDefaultSpiritBeastState();
     state.equipment.garment.baseAttributes = [
@@ -346,6 +384,19 @@ describe("灵兽面板计算", () => {
           percentage: 19,
         },
       },
+      enlightenment: {
+        star: 4,
+        qualificationBonuses: [
+          { qualification: "health", value: 5 },
+          { qualification: "health", value: 8 },
+          { qualification: "speed", value: 6 },
+        ],
+        primaryBonuses: [
+          { attribute: "constitution", value: 99 },
+          { attribute: "spirit", value: 99 },
+          { attribute: "strength", value: 10 },
+        ],
+      },
     });
 
     expect(normalized).not.toBeNull();
@@ -371,6 +422,17 @@ describe("灵兽面板计算", () => {
         enabled: true,
         percentage: 18,
       },
+    });
+    expect(normalized?.enlightenment).toEqual({
+      star: 4,
+      qualificationBonuses: [
+        { qualification: "health", value: 5 },
+        { qualification: "speed", value: 6 },
+      ],
+      primaryBonuses: [
+        { attribute: "constitution", value: 20 },
+        { attribute: "spirit", value: 15 },
+      ],
     });
     expect(
       normalized && getSpiritBeastAllocationTotal(normalized.customAllocation),

@@ -29,6 +29,12 @@ import type {
   SpiritBeastEquipmentSet,
 } from "./spiritBeastEquipment";
 import {
+  calculateSpiritBeastEnlightenmentBonuses,
+  createEmptySpiritBeastEnlightenment,
+  normalizeSpiritBeastEnlightenment,
+} from "./spiritBeastEnlightenment";
+import type { SpiritBeastEnlightenment } from "./spiritBeastEnlightenment";
+import {
   calculateSpiritBeastDestinyBonuses,
   createEmptySpiritBeastDestiny,
   normalizeSpiritBeastDestiny,
@@ -144,12 +150,17 @@ export const SPIRIT_BEAST_BONUS_SOURCE_IDS = [
   "skill",
   "destiny",
   "mount",
+  "enlightenment",
 ] as const;
 
 export type SpiritBeastBonusSourceId =
   (typeof SPIRIT_BEAST_BONUS_SOURCE_IDS)[number];
-export type SpiritBeastBonusSources = Record<
+export type SpiritBeastManualBonusSourceId = Exclude<
   SpiritBeastBonusSourceId,
+  "enlightenment"
+>;
+export type SpiritBeastBonusSources = Record<
+  SpiritBeastManualBonusSourceId,
   SpiritBeastBonuses
 >;
 
@@ -163,6 +174,7 @@ export type SpiritBeastCalculatorState = {
   customAllocationScheme: CustomCharacterAllocationScheme;
   customAllocation: CharacterAllocation;
   affinities: SpiritBeastAffinities;
+  enlightenment: SpiritBeastEnlightenment;
   isEquipmentIncluded: boolean;
   equipment: SpiritBeastEquipmentSet;
   accessories: SpiritBeastAccessories;
@@ -246,6 +258,7 @@ export const createDefaultSpiritBeastState =
     customAllocationScheme: "strength-or-spirit",
     customAllocation: { ...DEFAULT_CUSTOM_CHARACTER_ALLOCATION },
     affinities: { ...EMPTY_SPIRIT_BEAST_AFFINITIES },
+    enlightenment: createEmptySpiritBeastEnlightenment(),
     isEquipmentIncluded: true,
     equipment: createEmptySpiritBeastEquipmentSet(),
     accessories: createEmptySpiritBeastAccessories(),
@@ -537,6 +550,7 @@ export const normalizeSpiritBeastCalculatorState = (
       customAllocationScheme,
     ),
     affinities: normalizeAffinities(value.affinities, fallback.affinities),
+    enlightenment: normalizeSpiritBeastEnlightenment(value.enlightenment),
     isEquipmentIncluded: value.isEquipmentIncluded !== false,
     equipment: normalizeSpiritBeastEquipmentSet(value.equipment),
     accessories: normalizeSpiritBeastAccessories(value.accessories),
@@ -572,6 +586,27 @@ export const getSpiritBeastAccessoryQualificationBonus = (
   state: SpiritBeastCalculatorState,
 ): number =>
   calculateSpiritBeastAccessoryBonuses(state.accessories).qualification;
+
+export const getSpiritBeastEnlightenmentQualificationBonus = (
+  state: SpiritBeastCalculatorState,
+  qualification: SpiritBeastQualification,
+): number =>
+  calculateSpiritBeastEnlightenmentBonuses(state.enlightenment).qualifications[
+    qualification
+  ];
+
+export const getSpiritBeastEnlightenmentPrimaryBonus = (
+  state: SpiritBeastCalculatorState,
+  attribute: SpiritBeastBonusAttribute,
+): number => {
+  const primary = calculateSpiritBeastEnlightenmentBonuses(
+    state.enlightenment,
+  ).primary;
+
+  return attribute in primary
+    ? primary[attribute as SpiritBeastPrimaryAttribute]
+    : 0;
+};
 
 export const getSpiritBeastAccessoryBonusTotal = (
   state: SpiritBeastCalculatorState,
@@ -630,6 +665,9 @@ export const getSpiritBeastBonusTotal = (
 ): number =>
   SPIRIT_BEAST_BONUS_SOURCE_IDS.reduce((total, sourceId) => {
     if (!isBonusSourceEnabled(sourceId, state)) return total;
+    if (sourceId === "enlightenment") {
+      return total + getSpiritBeastEnlightenmentPrimaryBonus(state, attribute);
+    }
     if (sourceId === "skill") return total;
     if (sourceId === "equipment") {
       return total + getSpiritBeastEquipmentBonusTotal(state, attribute);
@@ -664,6 +702,10 @@ const calculateBaseSpiritBeastAttributes = (
   const fixedGrowth = state.level * FIXED_ATTRIBUTE_POINTS_PER_LEVEL;
   const accessoryQualificationBonus =
     getSpiritBeastAccessoryQualificationBonus(state);
+  const getQualification = (qualification: SpiritBeastQualification) =>
+    state.qualifications[qualification] +
+    accessoryQualificationBonus +
+    getSpiritBeastEnlightenmentQualificationBonus(state, qualification);
   const primary = Object.fromEntries(
     SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => [
       attribute,
@@ -680,10 +722,7 @@ const calculateBaseSpiritBeastAttributes = (
   const derived: Record<SpiritBeastDerivedAttribute, number> = {
     health:
       50 +
-      ((state.qualifications.health + accessoryQualificationBonus) *
-        state.level *
-        10) /
-        1000 +
+      (getQualification("health") * state.level * 10) / 1000 +
       primary.constitution * 3 * state.growth +
       getSpiritBeastBonusTotal(state, "health"),
     mana:
@@ -691,39 +730,24 @@ const calculateBaseSpiritBeastAttributes = (
       getSpiritBeastBonusTotal(state, "mana"),
     physicalAttack:
       100 +
-      ((state.qualifications.physicalAttack + accessoryQualificationBonus) *
-        state.level *
-        5) /
-        1000 +
+      (getQualification("physicalAttack") * state.level * 5) / 1000 +
       primary.strength * 0.5 * state.growth +
       getSpiritBeastBonusTotal(state, "physicalAttack"),
     magicalAttack:
       80 +
-      ((state.qualifications.spirit + accessoryQualificationBonus) *
-        state.level *
-        1.425) /
-        1000 +
+      (getQualification("spirit") * state.level * 1.425) / 1000 +
       sharedMagicalGrowth * state.growth +
       getSpiritBeastBonusTotal(state, "magicalAttack"),
     physicalDefense:
-      ((state.qualifications.physicalDefense + accessoryQualificationBonus) *
-        state.level *
-        3.33) /
-        1000 +
+      (getQualification("physicalDefense") * state.level * 3.33) / 1000 +
       primary.endurance * state.growth +
       getSpiritBeastBonusTotal(state, "physicalDefense"),
     magicalDefense:
-      ((state.qualifications.spirit + accessoryQualificationBonus) *
-        state.level *
-        0.62) /
-        1000 +
+      (getQualification("spirit") * state.level * 0.62) / 1000 +
       sharedMagicalGrowth * state.growth +
       getSpiritBeastBonusTotal(state, "magicalDefense"),
     speed:
-      ((state.qualifications.speed + accessoryQualificationBonus) *
-        state.level *
-        2.215) /
-        1000 +
+      (getQualification("speed") * state.level * 2.215) / 1000 +
       ((primary.constitution + primary.strength + primary.endurance) * 0.1 +
         primary.spirit * 0.05 +
         primary.agility * 0.5) *
