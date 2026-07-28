@@ -2,6 +2,7 @@ import {
   calculateSpiritBeastAttributes,
   createDefaultSpiritBeastState,
   createRandomSpiritBeastLevelZeroPrimary,
+  getSpiritBeastAccessoryQualificationBonus,
   getSpiritBeastEquipmentBonusTotal,
   getSpiritBeastAllocationTotal,
   getSpiritBeastLevelZeroPrimaryTotal,
@@ -136,6 +137,39 @@ describe("灵兽面板计算", () => {
     const excluded = calculateSpiritBeastAttributes(state);
     expect(excluded.primary.strength).toBe(52);
     expect(Math.floor(excluded.derived.physicalAttack)).toBe(153);
+  });
+
+  it("应该先叠加灵饰全资质，再把随机属性直接计入面板", () => {
+    const state = createDefaultSpiritBeastState();
+    const baseline = calculateSpiritBeastAttributes(state);
+    state.accessories.tierOne = {
+      enabled: true,
+      attribute: "health",
+      value: 17,
+    };
+    state.accessories.tierTwo = {
+      enabled: true,
+      attribute: "health",
+      value: 31,
+    };
+
+    const result = calculateSpiritBeastAttributes(state);
+
+    expect(getSpiritBeastAccessoryQualificationBonus(state)).toBe(30);
+    expect(result.derived.health - baseline.derived.health).toBeCloseTo(48.3);
+    expect(
+      result.derived.physicalAttack - baseline.derived.physicalAttack,
+    ).toBeCloseTo(0.15);
+    expect(
+      result.derived.magicalAttack - baseline.derived.magicalAttack,
+    ).toBeCloseTo(0.04275);
+    expect(
+      result.derived.physicalDefense - baseline.derived.physicalDefense,
+    ).toBeCloseTo(0.0999);
+    expect(
+      result.derived.magicalDefense - baseline.derived.magicalDefense,
+    ).toBeCloseTo(0.0186);
+    expect(result.derived.speed - baseline.derived.speed).toBeCloseTo(0.06645);
   });
 
   it("应该把三件详细装备与旧版装备汇总一起接入灵兽面板", () => {

@@ -101,11 +101,15 @@ const SpiritBeastCalculationScope = ({
           <h3 className="font-semibold text-slate-900">资质、成长与法力</h3>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
-              物攻、物防、气血、灵力和速度资质当前可录入{" "}
+              物攻、物防、气血、灵力和速度基础资质当前可录入{" "}
               {SPIRIT_BEAST_QUALIFICATION_MIN}～{SPIRIT_BEAST_QUALIFICATION_MAX}
               ，成长可录入 {SPIRIT_BEAST_GROWTH_MIN.toFixed(3)}～
               {SPIRIT_BEAST_GROWTH_MAX.toFixed(3)}
               ；这些是当前计算器边界，不代表已核验的游戏极限。
+            </li>
+            <li>
+              已启用的 1 阶、2 阶灵饰分别在五项基础资质上增加 10、20
+              点，再进入对应资质公式。
             </li>
             <li>
               五维先叠加固定成长、潜力和来源加成，再与资质、成长共同计算气血和五项派生属性。
@@ -148,9 +152,12 @@ const SpiritBeastCalculationScope = ({
         <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
           <h3 className="font-semibold text-slate-900">加成与取整顺序</h3>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
-            <li>装备、灵饰、技能、命格和坐骑统御按来源录入合计加成。</li>
             <li>
-              五维加成先进入资质与成长公式，面板属性加成在公式结果后直接叠加。
+              装备、技能、命格和坐骑统御按来源录入加成；灵饰按 1 阶和 2
+              阶分别录入。
+            </li>
+            <li>
+              五维加成先进入资质与成长公式；灵饰全资质先增加公式中的资质，面板属性加成在公式结果后直接叠加。
             </li>
             <li>六系亲和只汇总初值和来源加成，当前不随等级自动成长。</li>
             <li>内部计算保留完整精度，灵兽面板最终展示值统一向下取整。</li>

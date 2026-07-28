@@ -14,6 +14,12 @@ import type {
   PrimaryAttribute,
 } from "./characterAttributes";
 import {
+  calculateSpiritBeastAccessoryBonuses,
+  createEmptySpiritBeastAccessories,
+  normalizeSpiritBeastAccessories,
+} from "./spiritBeastAccessories";
+import type { SpiritBeastAccessories } from "./spiritBeastAccessories";
+import {
   calculateSpiritBeastEquipmentBonuses,
   createEmptySpiritBeastEquipmentSet,
   normalizeSpiritBeastEquipmentSet,
@@ -137,6 +143,7 @@ export type SpiritBeastCalculatorState = {
   affinities: SpiritBeastAffinities;
   isEquipmentIncluded: boolean;
   equipment: SpiritBeastEquipmentSet;
+  accessories: SpiritBeastAccessories;
   bonusSources: SpiritBeastBonusSources;
 };
 
@@ -216,6 +223,7 @@ export const createDefaultSpiritBeastState =
     affinities: { ...EMPTY_SPIRIT_BEAST_AFFINITIES },
     isEquipmentIncluded: true,
     equipment: createEmptySpiritBeastEquipmentSet(),
+    accessories: createEmptySpiritBeastAccessories(),
     bonusSources: createEmptySpiritBeastBonusSources(),
   });
 
@@ -502,6 +510,7 @@ export const normalizeSpiritBeastCalculatorState = (
     affinities: normalizeAffinities(value.affinities, fallback.affinities),
     isEquipmentIncluded: value.isEquipmentIncluded !== false,
     equipment: normalizeSpiritBeastEquipmentSet(value.equipment),
+    accessories: normalizeSpiritBeastAccessories(value.accessories),
     bonusSources: normalizeBonusSources(value.bonusSources),
   };
 };
@@ -527,6 +536,27 @@ export const getSpiritBeastEquipmentBonusTotal = (
   return detailedValue + state.bonusSources.equipment[attribute];
 };
 
+export const getSpiritBeastAccessoryQualificationBonus = (
+  state: SpiritBeastCalculatorState,
+): number =>
+  calculateSpiritBeastAccessoryBonuses(state.accessories).qualification;
+
+export const getSpiritBeastAccessoryBonusTotal = (
+  state: SpiritBeastCalculatorState,
+  attribute: SpiritBeastBonusAttribute,
+): number => {
+  const detailedBonuses = calculateSpiritBeastAccessoryBonuses(
+    state.accessories,
+  ).panelAttributes;
+  const detailedValue =
+    attribute in detailedBonuses
+      ? detailedBonuses[attribute as keyof typeof detailedBonuses]
+      : 0;
+
+  // v2 曾允许直接录入灵饰汇总，继续叠加可避免旧缓存和存档丢失。
+  return detailedValue + state.bonusSources.accessory[attribute];
+};
+
 export const getSpiritBeastBonusTotal = (
   state: SpiritBeastCalculatorState,
   attribute: SpiritBeastBonusAttribute,
@@ -535,6 +565,9 @@ export const getSpiritBeastBonusTotal = (
     if (!isBonusSourceEnabled(sourceId, state)) return total;
     if (sourceId === "equipment") {
       return total + getSpiritBeastEquipmentBonusTotal(state, attribute);
+    }
+    if (sourceId === "accessory") {
+      return total + getSpiritBeastAccessoryBonusTotal(state, attribute);
     }
 
     return total + state.bonusSources[sourceId][attribute];
@@ -559,6 +592,8 @@ export const calculateSpiritBeastAttributes = (
     state.level,
   );
   const fixedGrowth = state.level * FIXED_ATTRIBUTE_POINTS_PER_LEVEL;
+  const accessoryQualificationBonus =
+    getSpiritBeastAccessoryQualificationBonus(state);
   const primary = Object.fromEntries(
     SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => [
       attribute,
@@ -575,7 +610,10 @@ export const calculateSpiritBeastAttributes = (
   const derived: Record<SpiritBeastDerivedAttribute, number> = {
     health:
       50 +
-      (state.qualifications.health * state.level * 10) / 1000 +
+      ((state.qualifications.health + accessoryQualificationBonus) *
+        state.level *
+        10) /
+        1000 +
       primary.constitution * 3 * state.growth +
       getSpiritBeastBonusTotal(state, "health"),
     mana:
@@ -583,24 +621,39 @@ export const calculateSpiritBeastAttributes = (
       getSpiritBeastBonusTotal(state, "mana"),
     physicalAttack:
       100 +
-      (state.qualifications.physicalAttack * state.level * 5) / 1000 +
+      ((state.qualifications.physicalAttack + accessoryQualificationBonus) *
+        state.level *
+        5) /
+        1000 +
       primary.strength * 0.5 * state.growth +
       getSpiritBeastBonusTotal(state, "physicalAttack"),
     magicalAttack:
       80 +
-      (state.qualifications.spirit * state.level * 1.425) / 1000 +
+      ((state.qualifications.spirit + accessoryQualificationBonus) *
+        state.level *
+        1.425) /
+        1000 +
       sharedMagicalGrowth * state.growth +
       getSpiritBeastBonusTotal(state, "magicalAttack"),
     physicalDefense:
-      (state.qualifications.physicalDefense * state.level * 3.33) / 1000 +
+      ((state.qualifications.physicalDefense + accessoryQualificationBonus) *
+        state.level *
+        3.33) /
+        1000 +
       primary.endurance * state.growth +
       getSpiritBeastBonusTotal(state, "physicalDefense"),
     magicalDefense:
-      (state.qualifications.spirit * state.level * 0.62) / 1000 +
+      ((state.qualifications.spirit + accessoryQualificationBonus) *
+        state.level *
+        0.62) /
+        1000 +
       sharedMagicalGrowth * state.growth +
       getSpiritBeastBonusTotal(state, "magicalDefense"),
     speed:
-      (state.qualifications.speed * state.level * 2.215) / 1000 +
+      ((state.qualifications.speed + accessoryQualificationBonus) *
+        state.level *
+        2.215) /
+        1000 +
       ((primary.constitution + primary.strength + primary.endurance) * 0.1 +
         primary.spirit * 0.05 +
         primary.agility * 0.5) *

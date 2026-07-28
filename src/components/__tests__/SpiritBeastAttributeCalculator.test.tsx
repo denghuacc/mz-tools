@@ -36,7 +36,7 @@ describe("SpiritBeastAttributeCalculator", () => {
       /法力增量 =（等级 - 1）×（12 \+ 10 ×\s*成长）；1 级基础法力尚未计入/,
     );
     expect(dialog).toHaveTextContent(
-      "五维加成先进入资质与成长公式，面板属性加成在公式结果后直接叠加",
+      "灵饰全资质先增加公式中的资质，面板属性加成在公式结果后直接叠加",
     );
     const conversionFormulas =
       within(dialog).getByLabelText("灵兽五维转换公式");
@@ -287,6 +287,92 @@ describe("SpiritBeastAttributeCalculator", () => {
         "218",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("应该分别录入两件灵饰并在重新挂载后恢复", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<SpiritBeastAttributeCalculator />);
+
+    const accessoryCard = screen
+      .getByRole("heading", { name: "灵饰" })
+      .closest("article");
+    expect(accessoryCard).not.toBeNull();
+    expect(within(accessoryCard!).getByText("0/2")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "编辑灵饰" }));
+    let dialog = screen.getByRole("dialog", { name: "编辑灵饰" });
+
+    expect(dialog).toHaveTextContent("固定属性：全资质 +10");
+    expect(dialog).toHaveTextContent("固定属性：全资质 +20");
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: "1阶灵饰：计入灵饰" }),
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "1阶灵饰：随机属性" }),
+      "health",
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "1阶灵饰：随机属性数值",
+      }),
+      { target: { value: "17" } },
+    );
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: "2阶灵饰：计入灵饰" }),
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "2阶灵饰：随机属性" }),
+      "health",
+    );
+    fireEvent.change(
+      within(dialog).getByRole("spinbutton", {
+        name: "2阶灵饰：随机属性数值",
+      }),
+      { target: { value: "31" } },
+    );
+    await user.click(within(dialog).getByRole("button", { name: "完成" }));
+
+    expect(within(accessoryCard!).getByText("2/2")).toBeInTheDocument();
+    expect(within(accessoryCard!).getByText("全资质 +30")).toBeInTheDocument();
+    expect(within(accessoryCard!).getByText("气血 +48")).toBeInTheDocument();
+    expect(
+      screen.getByText("已启用灵饰额外提供全资质 +30，计算时自动叠加。"),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY) ??
+          "{}",
+      );
+      expect(stored.accessories.tierOne).toEqual({
+        enabled: true,
+        attribute: "health",
+        value: 17,
+      });
+      expect(stored.accessories.tierTwo).toEqual({
+        enabled: true,
+        attribute: "health",
+        value: 31,
+      });
+    });
+
+    unmount();
+    render(<SpiritBeastAttributeCalculator />);
+
+    expect(screen.getByText("全资质 +30")).toBeInTheDocument();
+    expect(screen.getByText("气血 +48")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "编辑灵饰" }));
+    dialog = screen.getByRole("dialog", { name: "编辑灵饰" });
+    expect(
+      within(dialog).getByRole("spinbutton", {
+        name: "1阶灵饰：随机属性数值",
+      }),
+    ).toHaveValue(17);
+    expect(
+      within(dialog).getByRole("spinbutton", {
+        name: "2阶灵饰：随机属性数值",
+      }),
+    ).toHaveValue(31);
   });
 
   it("应该详细录入三件装备并在重新挂载后恢复原始配置", async () => {

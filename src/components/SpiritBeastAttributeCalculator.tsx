@@ -22,6 +22,8 @@ import {
   createDefaultSpiritBeastState,
   createEmptySpiritBeastBonusSources,
   createEmptySpiritBeastBonuses,
+  getSpiritBeastAccessoryBonusTotal,
+  getSpiritBeastAccessoryQualificationBonus,
   getSpiritBeastEquipmentBonusTotal,
   getSpiritBeastLevelZeroPrimaryValidationError,
   normalizeSpiritBeastCalculatorState,
@@ -33,6 +35,10 @@ import type {
   SpiritBeastCalculatorState,
   SpiritBeastDerivedAttribute,
 } from "../utils/spiritBeastAttributes";
+import {
+  calculateSpiritBeastAccessoryBonuses,
+  createEmptySpiritBeastAccessories,
+} from "../utils/spiritBeastAccessories";
 import {
   calculateSpiritBeastEquipmentBonuses,
   createEmptySpiritBeastEquipmentSet,
@@ -52,6 +58,7 @@ import AttributeValueLayout from "./AttributeValueLayout";
 import EditorDialog from "./EditorDialog";
 import EditIconButton from "./EditIconButton";
 import PotentialAllocationControl from "./PotentialAllocationControl";
+import SpiritBeastAccessoryControl from "./SpiritBeastAccessoryControl";
 import {
   SpiritBeastAffinityControl,
   SpiritBeastLevelZeroPrimaryControl,
@@ -93,8 +100,8 @@ const BONUS_SOURCE_CONFIG: Record<
   accessory: {
     title: "灵饰",
     shortTitle: "灵饰",
-    description: "录入 2 件灵兽灵饰提供的属性合计。",
-    badge: "2 件",
+    description:
+      "分别录入 1 阶和 2 阶灵饰；固定全资质自动计算，随机属性按实际数值填写。",
     colorClass: "text-violet-600",
   },
   skill: {
@@ -238,6 +245,13 @@ const SpiritBeastAttributeCalculator = () => {
     state.equipment.necklace.enabled,
     state.equipment.crown.enabled,
   ].filter(Boolean).length;
+  const enabledAccessoryCount = [
+    state.accessories.tierOne.enabled,
+    state.accessories.tierTwo.enabled,
+  ].filter(Boolean).length;
+  const accessoryBonuses = calculateSpiritBeastAccessoryBonuses(
+    state.accessories,
+  );
 
   const attributeBonusSources: readonly AttributeBonusSummarySource<SpiritBeastBonusSourceId>[] =
     SPIRIT_BEAST_BONUS_SOURCE_IDS.map((sourceId) => {
@@ -246,26 +260,48 @@ const SpiritBeastAttributeCalculator = () => {
         sourceId === "equipment"
           ? calculateSpiritBeastEquipmentBonuses(state.equipment)
           : null;
+      const detailedAccessoryBonuses =
+        sourceId === "accessory" ? accessoryBonuses.panelAttributes : null;
       const standardItems = ALL_BONUS_FIELDS.filter(({ attribute }) => {
-        const detailedValue =
+        const detailedEquipmentValue =
           detailedEquipmentBonuses && attribute in detailedEquipmentBonuses
             ? detailedEquipmentBonuses[
                 attribute as SpiritBeastEquipmentBonusAttribute
               ]
             : 0;
+        const detailedAccessoryValue =
+          detailedAccessoryBonuses && attribute in detailedAccessoryBonuses
+            ? detailedAccessoryBonuses[
+                attribute as keyof typeof detailedAccessoryBonuses
+              ]
+            : 0;
 
-        return state.bonusSources[sourceId][attribute] + detailedValue !== 0;
+        return (
+          state.bonusSources[sourceId][attribute] +
+            detailedEquipmentValue +
+            detailedAccessoryValue !==
+          0
+        );
       }).map(({ attribute }) => {
-        const detailedValue =
+        const detailedEquipmentValue =
           detailedEquipmentBonuses && attribute in detailedEquipmentBonuses
             ? detailedEquipmentBonuses[
                 attribute as SpiritBeastEquipmentBonusAttribute
+              ]
+            : 0;
+        const detailedAccessoryValue =
+          detailedAccessoryBonuses && attribute in detailedAccessoryBonuses
+            ? detailedAccessoryBonuses[
+                attribute as keyof typeof detailedAccessoryBonuses
               ]
             : 0;
 
         return {
           label: BONUS_FIELD_LABELS[attribute],
-          value: state.bonusSources[sourceId][attribute] + detailedValue,
+          value:
+            state.bonusSources[sourceId][attribute] +
+            detailedEquipmentValue +
+            detailedAccessoryValue,
         };
       });
       const equipmentOnlyItems =
@@ -280,7 +316,20 @@ const SpiritBeastAttributeCalculator = () => {
               unit,
             }))
           : [];
-      const items = [...standardItems, ...equipmentOnlyItems];
+      const accessoryQualificationItems =
+        sourceId === "accessory" && accessoryBonuses.qualification > 0
+          ? [
+              {
+                label: "全资质",
+                value: accessoryBonuses.qualification,
+              },
+            ]
+          : [];
+      const items = [
+        ...accessoryQualificationItems,
+        ...standardItems,
+        ...equipmentOnlyItems,
+      ];
 
       return {
         id: sourceId,
@@ -288,11 +337,15 @@ const SpiritBeastAttributeCalculator = () => {
         badge:
           sourceId === "equipment"
             ? `${enabledEquipmentCount}/3`
-            : config.badge,
+            : sourceId === "accessory"
+              ? `${enabledAccessoryCount}/2`
+              : config.badge,
         details:
           sourceId === "equipment"
             ? "宝衣和宝冠各录入两条装备属性；宝衣、宝链启灵录入五维；宝冠另录入副属性、百炼与属性特效。宝链技能统一在“技能”来源录入。"
-            : undefined,
+            : sourceId === "accessory"
+              ? "1 阶灵饰固定增加全资质 10，2 阶灵饰固定增加全资质 20；每件另有一条物攻、法攻、物防、法防、速度或气血随机属性。"
+              : undefined,
         items,
       };
     });
@@ -331,7 +384,9 @@ const SpiritBeastAttributeCalculator = () => {
       const value =
         sourceId === "equipment"
           ? getSpiritBeastEquipmentBonusTotal(state, attribute)
-          : state.bonusSources[sourceId][attribute];
+          : sourceId === "accessory"
+            ? getSpiritBeastAccessoryBonusTotal(state, attribute)
+            : state.bonusSources[sourceId][attribute];
       if (value === 0) return null;
 
       const config = BONUS_SOURCE_CONFIG[sourceId];
@@ -364,6 +419,9 @@ const SpiritBeastAttributeCalculator = () => {
           <SpiritBeastQualificationPanel
             qualifications={state.qualifications}
             growth={state.growth}
+            accessoryQualificationBonus={getSpiritBeastAccessoryQualificationBonus(
+              state,
+            )}
             onQualificationsChange={(qualifications) =>
               setState((current) => ({ ...current, qualifications }))
             }
@@ -385,6 +443,7 @@ const SpiritBeastAttributeCalculator = () => {
               setState((current) => ({
                 ...current,
                 equipment: createEmptySpiritBeastEquipmentSet(),
+                accessories: createEmptySpiritBeastAccessories(),
                 bonusSources: createEmptySpiritBeastBonusSources(),
               }))
             }
@@ -744,23 +803,55 @@ const SpiritBeastAttributeCalculator = () => {
         </EditorDialog>
       )}
 
-      {activeSourceId && activeSourceId !== "equipment" && (
+      {activeSourceId === "accessory" && (
         <EditorDialog
-          title={BONUS_SOURCE_CONFIG[activeSourceId].title}
+          title={BONUS_SOURCE_CONFIG.accessory.title}
           onClose={() => setActiveEditorId(null)}
         >
-          <AttributeBonusCard
-            title={BONUS_SOURCE_CONFIG[activeSourceId].title}
-            description={BONUS_SOURCE_CONFIG[activeSourceId].description}
-            fields={ALL_BONUS_FIELDS}
-            values={state.bonusSources[activeSourceId]}
-            onChange={(attribute, value) =>
-              updateBonus(activeSourceId, attribute, value)
+          <SpiritBeastAccessoryControl
+            accessories={state.accessories}
+            onChange={(accessories) =>
+              setState((current) => ({ ...current, accessories }))
             }
-            onReset={() => resetBonusSource(activeSourceId)}
           />
+          {ALL_BONUS_FIELDS.some(
+            ({ attribute }) => state.bonusSources.accessory[attribute] !== 0,
+          ) && (
+            <div className="mt-3">
+              <AttributeBonusCard
+                title="旧版灵饰汇总修正"
+                description="这是旧版灵饰合计输入的兼容数据；确认两件详细灵饰已覆盖这些数值后可以清空。"
+                fields={ALL_BONUS_FIELDS}
+                values={state.bonusSources.accessory}
+                onChange={(attribute, value) =>
+                  updateBonus("accessory", attribute, value)
+                }
+                onReset={() => resetBonusSource("accessory")}
+              />
+            </div>
+          )}
         </EditorDialog>
       )}
+
+      {activeSourceId &&
+        activeSourceId !== "equipment" &&
+        activeSourceId !== "accessory" && (
+          <EditorDialog
+            title={BONUS_SOURCE_CONFIG[activeSourceId].title}
+            onClose={() => setActiveEditorId(null)}
+          >
+            <AttributeBonusCard
+              title={BONUS_SOURCE_CONFIG[activeSourceId].title}
+              description={BONUS_SOURCE_CONFIG[activeSourceId].description}
+              fields={ALL_BONUS_FIELDS}
+              values={state.bonusSources[activeSourceId]}
+              onChange={(attribute, value) =>
+                updateBonus(activeSourceId, attribute, value)
+              }
+              onReset={() => resetBonusSource(activeSourceId)}
+            />
+          </EditorDialog>
+        )}
 
       <SpiritBeastCalculationScope level={state.level} />
     </div>

@@ -116,6 +116,7 @@ const SliderNumberField = ({
 type SpiritBeastQualificationPanelProps = {
   qualifications: SpiritBeastQualifications;
   growth: number;
+  accessoryQualificationBonus?: number;
   onQualificationsChange: (qualifications: SpiritBeastQualifications) => void;
   onGrowthChange: (growth: number) => void;
 };
@@ -124,6 +125,7 @@ type SpiritBeastQualificationPanelProps = {
 const SpiritBeastQualificationPanel = ({
   qualifications,
   growth,
+  accessoryQualificationBonus = 0,
   onQualificationsChange,
   onGrowthChange,
 }: SpiritBeastQualificationPanelProps) => (
@@ -138,6 +140,12 @@ const SpiritBeastQualificationPanel = ({
       <p className="mt-1 text-xs leading-5 text-slate-500">
         拖动滑杆快速调整，也可以直接输入精确数值。
       </p>
+      {accessoryQualificationBonus > 0 ? (
+        <p className="mt-1 text-xs font-medium text-violet-600">
+          已启用灵饰额外提供全资质 +{accessoryQualificationBonus}
+          ，计算时自动叠加。
+        </p>
+      ) : null}
     </div>
 
     <div className="mt-3 grid grid-cols-2 gap-2.5">
