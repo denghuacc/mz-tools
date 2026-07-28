@@ -172,15 +172,35 @@ const SpiritBeastCalculationScope = ({
         </section>
 
         <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <h3 className="font-semibold text-slate-900">命格</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>
+              每个命格有 1 个本命技和 6
+              个命技，但可能没有任何命技影响面板；计算器只按需添加实际面板命技，最多
+              6 条。
+            </li>
+            <li>
+              命技按截图中的普通 / 变异和 1～5
+              级固定值直接增加气血、法力、物攻、法攻、物防、法防或速度。
+            </li>
+            <li>
+              本命技“被动·神机妙算”减少等级 × 1
+              速度，其它不影响面板的本命技当前无需记录。
+            </li>
+          </ul>
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
           <h3 className="font-semibold text-slate-900">加成与取整顺序</h3>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
             <li>
-              装备、技能、命格和坐骑统御按来源录入加成；灵饰按 1 阶和 2
-              阶分别录入。
+              装备和坐骑统御按来源录入；灵饰按 1 阶和 2
+              阶分别录入；技能与命格按结构化配置计算。
             </li>
             <li>
               五维加成先进入资质与成长公式；灵饰全资质先增加公式中的资质，面板属性加成在公式结果后直接叠加。
             </li>
+            <li>命格命技固定值和“被动·神机妙算”减速作为直接面板属性先结算。</li>
             <li>
               结构化技能最后结算：威能按汇总后的灵点计算，百分比气血和速度按技能前的精确面板值计算。
             </li>

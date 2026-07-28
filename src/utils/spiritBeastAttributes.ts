@@ -29,6 +29,15 @@ import type {
   SpiritBeastEquipmentSet,
 } from "./spiritBeastEquipment";
 import {
+  calculateSpiritBeastDestinyBonuses,
+  createEmptySpiritBeastDestiny,
+  normalizeSpiritBeastDestiny,
+} from "./spiritBeastDestiny";
+import type {
+  SpiritBeastDestiny,
+  SpiritBeastDestinySkillAttribute,
+} from "./spiritBeastDestiny";
+import {
   calculateSpiritBeastSkillEffects,
   createEmptySpiritBeastSkills,
   normalizeSpiritBeastSkills,
@@ -151,6 +160,7 @@ export type SpiritBeastCalculatorState = {
   equipment: SpiritBeastEquipmentSet;
   accessories: SpiritBeastAccessories;
   skills: SpiritBeastSkills;
+  destiny: SpiritBeastDestiny;
   bonusSources: SpiritBeastBonusSources;
 };
 
@@ -232,6 +242,7 @@ export const createDefaultSpiritBeastState =
     equipment: createEmptySpiritBeastEquipmentSet(),
     accessories: createEmptySpiritBeastAccessories(),
     skills: createEmptySpiritBeastSkills(),
+    destiny: createEmptySpiritBeastDestiny(),
     bonusSources: createEmptySpiritBeastBonusSources(),
   });
 
@@ -521,6 +532,7 @@ export const normalizeSpiritBeastCalculatorState = (
     equipment: normalizeSpiritBeastEquipmentSet(value.equipment),
     accessories: normalizeSpiritBeastAccessories(value.accessories),
     skills: normalizeSpiritBeastSkills(value.skills),
+    destiny: normalizeSpiritBeastDestiny(value.destiny),
     bonusSources: normalizeBonusSources(value.bonusSources),
   };
 };
@@ -567,6 +579,23 @@ export const getSpiritBeastAccessoryBonusTotal = (
   return detailedValue + state.bonusSources.accessory[attribute];
 };
 
+export const getSpiritBeastDestinyBonusTotal = (
+  state: SpiritBeastCalculatorState,
+  attribute: SpiritBeastBonusAttribute,
+): number => {
+  const detailedBonuses = calculateSpiritBeastDestinyBonuses(
+    state.destiny,
+    state.level,
+  );
+  const detailedValue =
+    attribute in detailedBonuses
+      ? detailedBonuses[attribute as SpiritBeastDestinySkillAttribute]
+      : 0;
+
+  // v2 曾允许直接录入命格汇总，继续叠加可避免旧缓存和存档丢失。
+  return detailedValue + state.bonusSources.destiny[attribute];
+};
+
 export const getSpiritBeastBonusTotal = (
   state: SpiritBeastCalculatorState,
   attribute: SpiritBeastBonusAttribute,
@@ -579,6 +608,9 @@ export const getSpiritBeastBonusTotal = (
     }
     if (sourceId === "accessory") {
       return total + getSpiritBeastAccessoryBonusTotal(state, attribute);
+    }
+    if (sourceId === "destiny") {
+      return total + getSpiritBeastDestinyBonusTotal(state, attribute);
     }
 
     return total + state.bonusSources[sourceId][attribute];

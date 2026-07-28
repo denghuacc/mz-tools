@@ -25,6 +25,7 @@ import {
   createEmptySpiritBeastBonuses,
   getSpiritBeastAccessoryBonusTotal,
   getSpiritBeastAccessoryQualificationBonus,
+  getSpiritBeastDestinyBonusTotal,
   getSpiritBeastEquipmentBonusTotal,
   getSpiritBeastLevelZeroPrimaryValidationError,
   normalizeSpiritBeastCalculatorState,
@@ -46,6 +47,11 @@ import {
   SPIRIT_BEAST_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS,
 } from "../utils/spiritBeastEquipment";
 import type { SpiritBeastEquipmentBonusAttribute } from "../utils/spiritBeastEquipment";
+import {
+  calculateSpiritBeastDestinyBonuses,
+  countConfiguredSpiritBeastDestinySkills,
+  createEmptySpiritBeastDestiny,
+} from "../utils/spiritBeastDestiny";
 import {
   countConfiguredSpiritBeastSkills,
   createEmptySpiritBeastSkills,
@@ -69,6 +75,7 @@ import {
   SpiritBeastLevelZeroPrimaryControl,
 } from "./SpiritBeastBaseConfigControl";
 import SpiritBeastCalculationScope from "./SpiritBeastCalculationScope";
+import SpiritBeastDestinyControl from "./SpiritBeastDestinyControl";
 import SpiritBeastEquipmentControl from "./SpiritBeastEquipmentControl";
 import SpiritBeastQualificationPanel from "./SpiritBeastQualificationPanel";
 import SpiritBeastSkillControl from "./SpiritBeastSkillControl";
@@ -119,7 +126,7 @@ const BONUS_SOURCE_CONFIG: Record<
   destiny: {
     title: "命格",
     shortTitle: "命格",
-    description: "录入命格提供的直接属性加成。",
+    description: "配置 1 个本命技和 6 个命技槽位。",
     colorClass: "text-orange-600",
   },
   mount: {
@@ -262,7 +269,14 @@ const SpiritBeastAttributeCalculator = () => {
     () => calculateSpiritBeastStructuredSkillBonuses(state),
     [state],
   );
+  const structuredDestinyBonuses = useMemo(
+    () => calculateSpiritBeastDestinyBonuses(state.destiny, state.level),
+    [state.destiny, state.level],
+  );
   const configuredSkillCount = countConfiguredSpiritBeastSkills(state.skills);
+  const configuredDestinySkillCount = countConfiguredSpiritBeastDestinySkills(
+    state.destiny,
+  );
 
   const attributeBonusSources: readonly AttributeBonusSummarySource<SpiritBeastBonusSourceId>[] =
     SPIRIT_BEAST_BONUS_SOURCE_IDS.map((sourceId) => {
@@ -275,6 +289,8 @@ const SpiritBeastAttributeCalculator = () => {
         sourceId === "accessory" ? accessoryBonuses.panelAttributes : null;
       const detailedSkillBonuses =
         sourceId === "skill" ? structuredSkillBonuses : null;
+      const detailedDestinyBonuses =
+        sourceId === "destiny" ? structuredDestinyBonuses : null;
       const standardItems = ALL_BONUS_FIELDS.filter(({ attribute }) => {
         const directSourceValue =
           sourceId === "skill" ? 0 : state.bonusSources[sourceId][attribute];
@@ -293,12 +309,19 @@ const SpiritBeastAttributeCalculator = () => {
         const detailedSkillValue = detailedSkillBonuses
           ? detailedSkillBonuses[attribute]
           : 0;
+        const detailedDestinyValue =
+          detailedDestinyBonuses && attribute in detailedDestinyBonuses
+            ? detailedDestinyBonuses[
+                attribute as keyof typeof detailedDestinyBonuses
+              ]
+            : 0;
 
         return (
           directSourceValue +
             detailedEquipmentValue +
             detailedAccessoryValue +
-            detailedSkillValue !==
+            detailedSkillValue +
+            detailedDestinyValue !==
           0
         );
       }).map(({ attribute }) => {
@@ -319,6 +342,12 @@ const SpiritBeastAttributeCalculator = () => {
         const detailedSkillValue = detailedSkillBonuses
           ? detailedSkillBonuses[attribute]
           : 0;
+        const detailedDestinyValue =
+          detailedDestinyBonuses && attribute in detailedDestinyBonuses
+            ? detailedDestinyBonuses[
+                attribute as keyof typeof detailedDestinyBonuses
+              ]
+            : 0;
 
         return {
           label: BONUS_FIELD_LABELS[attribute],
@@ -326,7 +355,8 @@ const SpiritBeastAttributeCalculator = () => {
             directSourceValue +
             detailedEquipmentValue +
             detailedAccessoryValue +
-            detailedSkillValue,
+            detailedSkillValue +
+            detailedDestinyValue,
         };
       });
       const equipmentOnlyItems =
@@ -372,7 +402,9 @@ const SpiritBeastAttributeCalculator = () => {
               ? `${enabledAccessoryCount}/2`
               : sourceId === "skill" && configuredSkillCount > 0
                 ? `${configuredSkillCount} 项`
-                : config.badge,
+                : sourceId === "destiny"
+                  ? `${configuredDestinySkillCount}/6`
+                  : config.badge,
         details:
           sourceId === "equipment"
             ? "宝衣和宝冠各录入两条装备属性；宝衣、宝链启灵录入五维；宝冠另录入副属性、百炼与属性特效。宝链技能统一在“技能”来源录入。"
@@ -380,7 +412,9 @@ const SpiritBeastAttributeCalculator = () => {
               ? "1 阶灵饰固定增加全资质 10，2 阶灵饰固定增加全资质 20；每件另有一条物攻、法攻、物防、法防、速度或气血随机属性。"
               : sourceId === "skill"
                 ? "威能按灵点增加法攻；迅捷与迟钝调整速度；健壮与吉星调整气血；低级和高级亲和技能分别增加 15、25 点对应亲和。同名低级与高级同时存在时只应用高级效果。"
-                : undefined,
+                : sourceId === "destiny"
+                  ? "命格包含 1 个本命技和 6 个命技。面板命技分为普通、变异和 1～5 级，同一属性只能出现一次；被动·神机妙算按灵兽等级减少速度。"
+                  : undefined,
         items,
       };
     });
@@ -423,7 +457,9 @@ const SpiritBeastAttributeCalculator = () => {
             ? getSpiritBeastAccessoryBonusTotal(state, attribute)
             : sourceId === "skill"
               ? structuredSkillBonuses[attribute]
-              : state.bonusSources[sourceId][attribute];
+              : sourceId === "destiny"
+                ? getSpiritBeastDestinyBonusTotal(state, attribute)
+                : state.bonusSources[sourceId][attribute];
       if (value === 0) return null;
 
       const config = BONUS_SOURCE_CONFIG[sourceId];
@@ -482,6 +518,7 @@ const SpiritBeastAttributeCalculator = () => {
                 equipment: createEmptySpiritBeastEquipmentSet(),
                 accessories: createEmptySpiritBeastAccessories(),
                 skills: createEmptySpiritBeastSkills(),
+                destiny: createEmptySpiritBeastDestiny(),
                 bonusSources: createEmptySpiritBeastBonusSources(),
               }))
             }
@@ -885,10 +922,42 @@ const SpiritBeastAttributeCalculator = () => {
         </EditorDialog>
       )}
 
+      {activeSourceId === "destiny" && (
+        <EditorDialog
+          title={BONUS_SOURCE_CONFIG.destiny.title}
+          onClose={() => setActiveEditorId(null)}
+        >
+          <SpiritBeastDestinyControl
+            destiny={state.destiny}
+            spiritBeastLevel={state.level}
+            onChange={(destiny) =>
+              setState((current) => ({ ...current, destiny }))
+            }
+          />
+          {ALL_BONUS_FIELDS.some(
+            ({ attribute }) => state.bonusSources.destiny[attribute] !== 0,
+          ) && (
+            <div className="mt-3">
+              <AttributeBonusCard
+                title="旧版命格汇总修正"
+                description="这是旧版命格合计输入的兼容数据；确认结构化命格已覆盖这些数值后可以清空。"
+                fields={ALL_BONUS_FIELDS}
+                values={state.bonusSources.destiny}
+                onChange={(attribute, value) =>
+                  updateBonus("destiny", attribute, value)
+                }
+                onReset={() => resetBonusSource("destiny")}
+              />
+            </div>
+          )}
+        </EditorDialog>
+      )}
+
       {activeSourceId &&
         activeSourceId !== "equipment" &&
         activeSourceId !== "accessory" &&
-        activeSourceId !== "skill" && (
+        activeSourceId !== "skill" &&
+        activeSourceId !== "destiny" && (
           <EditorDialog
             title={BONUS_SOURCE_CONFIG[activeSourceId].title}
             onClose={() => setActiveEditorId(null)}

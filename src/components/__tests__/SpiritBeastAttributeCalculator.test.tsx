@@ -41,6 +41,10 @@ describe("SpiritBeastAttributeCalculator", () => {
     expect(dialog).toHaveTextContent(
       "同名低级与高级技能同时存在时只按高级技能计算",
     );
+    expect(dialog).toHaveTextContent(
+      "每个命格有 1 个本命技和 6 个命技，但可能没有任何命技影响面板",
+    );
+    expect(dialog).toHaveTextContent("本命技“被动·神机妙算”减少等级 × 1 速度");
     const conversionFormulas =
       within(dialog).getByLabelText("灵兽五维转换公式");
     expect(conversionFormulas).toHaveTextContent(
@@ -257,10 +261,28 @@ describe("SpiritBeastAttributeCalculator", () => {
 
     await user.click(screen.getByRole("button", { name: "编辑命格" }));
     const dialog = screen.getByRole("dialog", { name: "编辑命格" });
-    const healthBonusInput = within(dialog).getByRole("spinbutton", {
-      name: "命格：气血",
-    });
-    fireEvent.change(healthBonusInput, { target: { value: "28" } });
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "本命技" }),
+      "divineCalculation",
+    );
+    expect(
+      within(dialog).queryByRole("combobox", { name: "命技1属性" }),
+    ).not.toBeInTheDocument();
+    await user.click(
+      within(dialog).getByRole("button", { name: "添加面板命技" }),
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "命技1属性" }),
+      "health",
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "命技1等级" }),
+      "5",
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "命技1品质" }),
+      "mutated",
+    );
     await user.click(within(dialog).getByRole("button", { name: "完成" }));
 
     const physicalAttackInput = screen.getByRole("spinbutton", {
@@ -275,7 +297,12 @@ describe("SpiritBeastAttributeCalculator", () => {
           "{}",
       );
       expect(stored.qualifications.physicalAttack).toBe(1500);
-      expect(stored.bonusSources.destiny.health).toBe(28);
+      expect(stored.destiny.birthSkill).toBe("divineCalculation");
+      expect(stored.destiny.skills[0]).toEqual({
+        attribute: "health",
+        level: 5,
+        isMutated: true,
+      });
     });
 
     unmount();
@@ -284,12 +311,73 @@ describe("SpiritBeastAttributeCalculator", () => {
     expect(
       screen.getByRole("spinbutton", { name: "物攻资质数值" }),
     ).toHaveValue(1500);
-    expect(screen.getByText("气血 +28")).toBeInTheDocument();
+    expect(screen.getByText("气血 +160")).toBeInTheDocument();
+    expect(screen.getByText("速度 -1")).toBeInTheDocument();
     expect(
-      within(screen.getByRole("region", { name: "灵兽面板结果" })).getByText(
-        "218",
-      ),
+      within(screen.getByRole("group", { name: "气血数值" })).getByText("350"),
     ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "编辑命格" }));
+    const restoredDialog = screen.getByRole("dialog", { name: "编辑命格" });
+    expect(
+      within(restoredDialog).getByRole("combobox", { name: "本命技" }),
+    ).toHaveValue("divineCalculation");
+    expect(
+      within(restoredDialog).getByRole("combobox", { name: "命技1属性" }),
+    ).toHaveValue("health");
+    expect(
+      within(restoredDialog).getByRole("combobox", { name: "命技1等级" }),
+    ).toHaveValue("5");
+    expect(
+      within(restoredDialog).getByRole("combobox", { name: "命技1品质" }),
+    ).toHaveValue("mutated");
+  });
+
+  it("命格中的普通和变异命技应该共用属性唯一约束", async () => {
+    const user = userEvent.setup();
+    render(<SpiritBeastAttributeCalculator />);
+
+    await user.click(screen.getByRole("button", { name: "编辑命格" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑命格" });
+    expect(dialog).toHaveTextContent("尚未添加会影响面板的命技");
+    await user.click(
+      within(dialog).getByRole("button", { name: "添加面板命技" }),
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "命技1属性" }),
+      "physicalAttack",
+    );
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "命技1品质" }),
+      "mutated",
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "添加面板命技" }),
+    );
+
+    expect(
+      within(
+        within(dialog).getByRole("combobox", { name: "命技2属性" }),
+      ).getByRole("option", { name: "物攻" }),
+    ).toBeDisabled();
+
+    await user.selectOptions(
+      within(dialog).getByRole("combobox", { name: "命技2属性" }),
+      "magicalAttack",
+    );
+
+    await user.click(within(dialog).getByRole("button", { name: "删除命技1" }));
+    expect(
+      within(dialog).getByRole("combobox", { name: "命技1属性" }),
+    ).toHaveValue("magicalAttack");
+    expect(
+      within(dialog).queryByRole("combobox", { name: "命技2属性" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(
+        within(dialog).getByRole("combobox", { name: "命技1属性" }),
+      ).getByRole("option", { name: "物攻" }),
+    ).toBeEnabled();
   });
 
   it("应该选择低级和高级面板技能，并由高级技能覆盖同名低级技能", async () => {

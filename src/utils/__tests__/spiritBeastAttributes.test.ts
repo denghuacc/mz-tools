@@ -139,6 +139,36 @@ describe("灵兽面板计算", () => {
     expect(Math.floor(excluded.derived.physicalAttack)).toBe(153);
   });
 
+  it("应该把结构化命格命技和本命技计入面板", () => {
+    const state = createDefaultSpiritBeastState();
+    state.level = 69;
+    const baseline = calculateSpiritBeastAttributes(state);
+    state.destiny.birthSkill = "divineCalculation";
+    state.destiny.skills = [
+      { attribute: "health", level: 5, isMutated: true },
+      { attribute: "mana", level: 4, isMutated: false },
+      { attribute: "physicalAttack", level: 3, isMutated: true },
+      { attribute: "magicalAttack", level: 2, isMutated: false },
+      { attribute: "physicalDefense", level: 1, isMutated: true },
+      { attribute: "speed", level: 5, isMutated: true },
+    ];
+
+    const result = calculateSpiritBeastAttributes(state);
+
+    expect(result.derived.health - baseline.derived.health).toBe(160);
+    expect(result.derived.mana - baseline.derived.mana).toBe(135);
+    expect(
+      result.derived.physicalAttack - baseline.derived.physicalAttack,
+    ).toBe(30);
+    expect(result.derived.magicalAttack - baseline.derived.magicalAttack).toBe(
+      12,
+    );
+    expect(
+      result.derived.physicalDefense - baseline.derived.physicalDefense,
+    ).toBe(12);
+    expect(result.derived.speed - baseline.derived.speed).toBe(-53);
+  });
+
   it("旧版手填技能修正不应该继续影响面板", () => {
     const state = createDefaultSpiritBeastState();
     const baseline = calculateSpiritBeastAttributes(state);

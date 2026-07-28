@@ -47,6 +47,12 @@ describe("spiritBeastProfiles", () => {
       attribute: "health",
       value: 17,
     };
+    state.destiny.birthSkill = "divineCalculation";
+    state.destiny.skills[0] = {
+      attribute: "physicalAttack",
+      level: 5,
+      isMutated: true,
+    };
     const slots = [
       {
         name: "灵兽1",
