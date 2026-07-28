@@ -38,6 +38,9 @@ describe("SpiritBeastAttributeCalculator", () => {
     expect(dialog).toHaveTextContent(
       "灵饰全资质先增加公式中的资质，面板属性加成在公式结果后直接叠加",
     );
+    expect(dialog).toHaveTextContent(
+      "同名低级与高级技能同时存在时只按高级技能计算",
+    );
     const conversionFormulas =
       within(dialog).getByLabelText("灵兽五维转换公式");
     expect(conversionFormulas).toHaveTextContent(
@@ -252,10 +255,10 @@ describe("SpiritBeastAttributeCalculator", () => {
     const user = userEvent.setup();
     const { unmount } = render(<SpiritBeastAttributeCalculator />);
 
-    await user.click(screen.getByRole("button", { name: "编辑技能" }));
-    const dialog = screen.getByRole("dialog", { name: "编辑技能" });
+    await user.click(screen.getByRole("button", { name: "编辑命格" }));
+    const dialog = screen.getByRole("dialog", { name: "编辑命格" });
     const healthBonusInput = within(dialog).getByRole("spinbutton", {
-      name: "技能：气血",
+      name: "命格：气血",
     });
     fireEvent.change(healthBonusInput, { target: { value: "28" } });
     await user.click(within(dialog).getByRole("button", { name: "完成" }));
@@ -272,7 +275,7 @@ describe("SpiritBeastAttributeCalculator", () => {
           "{}",
       );
       expect(stored.qualifications.physicalAttack).toBe(1500);
-      expect(stored.bonusSources.skill.health).toBe(28);
+      expect(stored.bonusSources.destiny.health).toBe(28);
     });
 
     unmount();
@@ -287,6 +290,77 @@ describe("SpiritBeastAttributeCalculator", () => {
         "218",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("应该选择低级和高级面板技能，并由高级技能覆盖同名低级技能", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<SpiritBeastAttributeCalculator />);
+
+    await user.click(screen.getByRole("button", { name: "编辑技能" }));
+    let dialog = screen.getByRole("dialog", { name: "编辑技能" });
+
+    expect(
+      within(dialog).queryByRole("heading", { name: "其它技能修正" }),
+    ).not.toBeInTheDocument();
+    await user.click(within(dialog).getByRole("checkbox", { name: "迅捷" }));
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: "高级迅捷" }),
+    );
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: "高级健壮" }),
+    );
+    await user.click(
+      within(dialog).getByRole("checkbox", { name: "低级火亲和" }),
+    );
+
+    expect(
+      within(within(dialog).getByRole("group", { name: "迅捷" })).getByText(
+        "已被高级覆盖",
+      ),
+    ).toBeInTheDocument();
+    await user.click(within(dialog).getByRole("button", { name: "完成" }));
+
+    const skillCard = screen
+      .getByRole("heading", { name: "技能" })
+      .closest("article");
+    expect(skillCard).not.toBeNull();
+    expect(within(skillCard!).getByText("4 项")).toBeInTheDocument();
+    expect(within(skillCard!).getByText("速度 +7.96")).toBeInTheDocument();
+    expect(within(skillCard!).getByText("气血 +47.5")).toBeInTheDocument();
+    expect(within(skillCard!).getByText("火亲和 +15")).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("group", { name: "派生属性列" })).getByText("47"),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("group", { name: "气血数值" })).getByText("237"),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY) ??
+          "{}",
+      );
+      expect(stored.skills.swiftness).toEqual({
+        normal: true,
+        advanced: true,
+      });
+      expect(stored.skills.robustness.advanced).toBe(true);
+      expect(stored.skills.affinities.fireAffinity.normal).toBe(true);
+    });
+
+    unmount();
+    render(<SpiritBeastAttributeCalculator />);
+    await user.click(screen.getByRole("button", { name: "编辑技能" }));
+    dialog = screen.getByRole("dialog", { name: "编辑技能" });
+    expect(
+      within(dialog).getByRole("checkbox", { name: "迅捷" }),
+    ).toBeChecked();
+    expect(
+      within(dialog).getByRole("checkbox", { name: "高级迅捷" }),
+    ).toBeChecked();
+    expect(
+      within(dialog).getByRole("checkbox", { name: "低级火亲和" }),
+    ).toBeChecked();
   });
 
   it("应该分别录入两件灵饰并在重新挂载后恢复", async () => {

@@ -91,7 +91,7 @@ describe("灵兽面板计算", () => {
       1759,
     );
 
-    state.bonusSources.skill.mana = 20;
+    state.bonusSources.destiny.mana = 20;
     expect(Math.floor(calculateSpiritBeastAttributes(state).derived.mana)).toBe(
       1779,
     );
@@ -125,7 +125,7 @@ describe("灵兽面板计算", () => {
   it("应该先把五维加成计入公式，并可单独排除装备", () => {
     const state = createDefaultSpiritBeastState();
     state.bonusSources.equipment.strength = 10;
-    state.bonusSources.skill.physicalAttack = 20;
+    state.bonusSources.destiny.physicalAttack = 20;
     state.bonusSources.mount.fireAffinity = 5;
 
     const included = calculateSpiritBeastAttributes(state);
@@ -137,6 +137,41 @@ describe("灵兽面板计算", () => {
     const excluded = calculateSpiritBeastAttributes(state);
     expect(excluded.primary.strength).toBe(52);
     expect(Math.floor(excluded.derived.physicalAttack)).toBe(153);
+  });
+
+  it("旧版手填技能修正不应该继续影响面板", () => {
+    const state = createDefaultSpiritBeastState();
+    const baseline = calculateSpiritBeastAttributes(state);
+    state.bonusSources.skill.health = 100;
+    state.bonusSources.skill.spirit = 20;
+    state.bonusSources.skill.fireAffinity = 15;
+
+    expect(calculateSpiritBeastAttributes(state)).toEqual(baseline);
+  });
+
+  it("应该在其它来源结算后应用结构化面板技能", () => {
+    const state = createDefaultSpiritBeastState();
+    state.bonusSources.mount.health = 10;
+    state.bonusSources.mount.speed = 5;
+    state.bonusSources.mount.spirit = 8;
+    const baseline = calculateSpiritBeastAttributes(state);
+
+    state.skills.magicalPower.normal = true;
+    state.skills.robustness.advanced = true;
+    state.skills.swiftness.normal = true;
+    state.skills.affinities.fireAffinity.advanced = true;
+    const result = calculateSpiritBeastAttributes(state);
+
+    expect(result.derived.magicalAttack - baseline.derived.magicalAttack).toBe(
+      result.primary.spirit * 0.06,
+    );
+    expect(result.derived.health - baseline.derived.health).toBeCloseTo(
+      baseline.derived.health * 0.25,
+    );
+    expect(result.derived.speed - baseline.derived.speed).toBeCloseTo(
+      baseline.derived.speed * 0.1,
+    );
+    expect(result.affinities.fireAffinity).toBe(25);
   });
 
   it("应该先叠加灵饰全资质，再把随机属性直接计入面板", () => {
@@ -239,6 +274,12 @@ describe("灵兽面板计算", () => {
           health: "28",
         },
       },
+      skills: {
+        swiftness: {
+          normal: true,
+          advanced: true,
+        },
+      },
     });
 
     expect(normalized).not.toBeNull();
@@ -246,7 +287,11 @@ describe("灵兽面板计算", () => {
     expect(normalized?.qualifications.physicalAttack).toBe(1800);
     expect(normalized?.qualifications.physicalDefense).toBe(900);
     expect(normalized?.affinities.fireAffinity).toBe(-10);
-    expect(normalized?.bonusSources.skill.health).toBe(28);
+    expect(normalized?.bonusSources.skill.health).toBe(0);
+    expect(normalized?.skills.swiftness).toEqual({
+      normal: true,
+      advanced: true,
+    });
     expect(
       normalized && getSpiritBeastAllocationTotal(normalized.customAllocation),
     ).toBe(10);

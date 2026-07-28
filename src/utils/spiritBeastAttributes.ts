@@ -28,6 +28,12 @@ import type {
   SpiritBeastEquipmentBonusAttribute,
   SpiritBeastEquipmentSet,
 } from "./spiritBeastEquipment";
+import {
+  calculateSpiritBeastSkillEffects,
+  createEmptySpiritBeastSkills,
+  normalizeSpiritBeastSkills,
+} from "./spiritBeastSkills";
+import type { SpiritBeastSkills } from "./spiritBeastSkills";
 
 export const SPIRIT_BEAST_LEVEL_MIN = 1;
 export const SPIRIT_BEAST_LEVEL_MAX = 115;
@@ -144,6 +150,7 @@ export type SpiritBeastCalculatorState = {
   isEquipmentIncluded: boolean;
   equipment: SpiritBeastEquipmentSet;
   accessories: SpiritBeastAccessories;
+  skills: SpiritBeastSkills;
   bonusSources: SpiritBeastBonusSources;
 };
 
@@ -224,6 +231,7 @@ export const createDefaultSpiritBeastState =
     isEquipmentIncluded: true,
     equipment: createEmptySpiritBeastEquipmentSet(),
     accessories: createEmptySpiritBeastAccessories(),
+    skills: createEmptySpiritBeastSkills(),
     bonusSources: createEmptySpiritBeastBonusSources(),
   });
 
@@ -436,7 +444,8 @@ const normalizeBonusSources = (value: unknown): SpiritBeastBonusSources => {
   return {
     equipment: normalizeBonuses(source.equipment),
     accessory: normalizeBonuses(source.accessory),
-    skill: normalizeBonuses(source.skill),
+    // 旧版允许手填技能修正；当前技能已完整结构化，恢复时清除隐藏旧值。
+    skill: createEmptySpiritBeastBonuses(),
     destiny: normalizeBonuses(source.destiny),
     mount: normalizeBonuses(source.mount),
   };
@@ -511,6 +520,7 @@ export const normalizeSpiritBeastCalculatorState = (
     isEquipmentIncluded: value.isEquipmentIncluded !== false,
     equipment: normalizeSpiritBeastEquipmentSet(value.equipment),
     accessories: normalizeSpiritBeastAccessories(value.accessories),
+    skills: normalizeSpiritBeastSkills(value.skills),
     bonusSources: normalizeBonusSources(value.bonusSources),
   };
 };
@@ -563,6 +573,7 @@ export const getSpiritBeastBonusTotal = (
 ): number =>
   SPIRIT_BEAST_BONUS_SOURCE_IDS.reduce((total, sourceId) => {
     if (!isBonusSourceEnabled(sourceId, state)) return total;
+    if (sourceId === "skill") return total;
     if (sourceId === "equipment") {
       return total + getSpiritBeastEquipmentBonusTotal(state, attribute);
     }
@@ -580,11 +591,7 @@ export const getSpiritBeastBonusTotal = (
 export const getSpiritBeastManaGrowthPerLevel = (growth: number): number =>
   12 + growth * 10;
 
-/**
- * 五维沿用人物面板的“0 级初值 + 每级固定成长 + 每级潜力”规则。
- * 资质换算沿用当前截图提供的待复核公式。
- */
-export const calculateSpiritBeastAttributes = (
+const calculateBaseSpiritBeastAttributes = (
   state: SpiritBeastCalculatorState,
 ): SpiritBeastCalculatedAttributes => {
   const allocation = calculateSpiritBeastAllocation(
@@ -668,6 +675,66 @@ export const calculateSpiritBeastAttributes = (
   ) as SpiritBeastAffinities;
 
   return { allocation, primary, derived, affinities };
+};
+
+const calculateStructuredSkillBonusesFromBase = (
+  state: SpiritBeastCalculatorState,
+  base: SpiritBeastCalculatedAttributes,
+): SpiritBeastBonuses => {
+  const effects = calculateSpiritBeastSkillEffects(state.skills, {
+    spirit: base.primary.spirit,
+    health: base.derived.health,
+    speed: base.derived.speed,
+  });
+  const bonuses = createEmptySpiritBeastBonuses();
+
+  bonuses.magicalAttack = effects.magicalAttack;
+  bonuses.health = effects.health;
+  bonuses.speed = effects.speed;
+  SPIRIT_BEAST_AFFINITIES.forEach((affinity) => {
+    bonuses[affinity] = effects.affinities[affinity];
+  });
+
+  return bonuses;
+};
+
+/** 返回结构化面板技能的实际数值加成，供计算结果和来源明细共用。 */
+export const calculateSpiritBeastStructuredSkillBonuses = (
+  state: SpiritBeastCalculatorState,
+): SpiritBeastBonuses =>
+  calculateStructuredSkillBonusesFromBase(
+    state,
+    calculateBaseSpiritBeastAttributes(state),
+  );
+
+/**
+ * 五维沿用人物面板的“0 级初值 + 每级固定成长 + 每级潜力”规则。
+ * 资质换算沿用当前截图提供的待复核公式。
+ */
+export const calculateSpiritBeastAttributes = (
+  state: SpiritBeastCalculatorState,
+): SpiritBeastCalculatedAttributes => {
+  const base = calculateBaseSpiritBeastAttributes(state);
+  const skillBonuses = calculateStructuredSkillBonusesFromBase(state, base);
+  const derived = {
+    ...base.derived,
+    health: base.derived.health + skillBonuses.health,
+    magicalAttack: base.derived.magicalAttack + skillBonuses.magicalAttack,
+    speed: base.derived.speed + skillBonuses.speed,
+  };
+  const affinities = Object.fromEntries(
+    SPIRIT_BEAST_AFFINITIES.map((attribute) => [
+      attribute,
+      base.affinities[attribute] + skillBonuses[attribute],
+    ]),
+  ) as SpiritBeastAffinities;
+
+  return {
+    allocation: base.allocation,
+    primary: base.primary,
+    derived,
+    affinities,
+  };
 };
 
 export const EMPTY_SPIRIT_BEAST_ALLOCATION: SpiritBeastAllocation = {

@@ -19,6 +19,7 @@ import {
   SPIRIT_BEAST_ALLOCATION_PRESETS,
   SPIRIT_BEAST_PRIMARY_ATTRIBUTES,
   calculateSpiritBeastAttributes,
+  calculateSpiritBeastStructuredSkillBonuses,
   createDefaultSpiritBeastState,
   createEmptySpiritBeastBonusSources,
   createEmptySpiritBeastBonuses,
@@ -46,6 +47,10 @@ import {
 } from "../utils/spiritBeastEquipment";
 import type { SpiritBeastEquipmentBonusAttribute } from "../utils/spiritBeastEquipment";
 import {
+  countConfiguredSpiritBeastSkills,
+  createEmptySpiritBeastSkills,
+} from "../utils/spiritBeastSkills";
+import {
   SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY,
   loadCalculatorState,
   saveCalculatorState,
@@ -66,6 +71,7 @@ import {
 import SpiritBeastCalculationScope from "./SpiritBeastCalculationScope";
 import SpiritBeastEquipmentControl from "./SpiritBeastEquipmentControl";
 import SpiritBeastQualificationPanel from "./SpiritBeastQualificationPanel";
+import SpiritBeastSkillControl from "./SpiritBeastSkillControl";
 import {
   SPIRIT_BEAST_AFFINITY_LABELS as AFFINITY_LABELS,
   SPIRIT_BEAST_DERIVED_LABELS as DERIVED_LABELS,
@@ -107,7 +113,7 @@ const BONUS_SOURCE_CONFIG: Record<
   skill: {
     title: "技能",
     shortTitle: "技能",
-    description: "录入灵兽技能提供的直接属性加成。",
+    description: "选择威能、速度、气血和六系亲和技能。",
     colorClass: "text-emerald-600",
   },
   destiny: {
@@ -252,6 +258,11 @@ const SpiritBeastAttributeCalculator = () => {
   const accessoryBonuses = calculateSpiritBeastAccessoryBonuses(
     state.accessories,
   );
+  const structuredSkillBonuses = useMemo(
+    () => calculateSpiritBeastStructuredSkillBonuses(state),
+    [state],
+  );
+  const configuredSkillCount = countConfiguredSpiritBeastSkills(state.skills);
 
   const attributeBonusSources: readonly AttributeBonusSummarySource<SpiritBeastBonusSourceId>[] =
     SPIRIT_BEAST_BONUS_SOURCE_IDS.map((sourceId) => {
@@ -262,7 +273,11 @@ const SpiritBeastAttributeCalculator = () => {
           : null;
       const detailedAccessoryBonuses =
         sourceId === "accessory" ? accessoryBonuses.panelAttributes : null;
+      const detailedSkillBonuses =
+        sourceId === "skill" ? structuredSkillBonuses : null;
       const standardItems = ALL_BONUS_FIELDS.filter(({ attribute }) => {
+        const directSourceValue =
+          sourceId === "skill" ? 0 : state.bonusSources[sourceId][attribute];
         const detailedEquipmentValue =
           detailedEquipmentBonuses && attribute in detailedEquipmentBonuses
             ? detailedEquipmentBonuses[
@@ -275,14 +290,20 @@ const SpiritBeastAttributeCalculator = () => {
                 attribute as keyof typeof detailedAccessoryBonuses
               ]
             : 0;
+        const detailedSkillValue = detailedSkillBonuses
+          ? detailedSkillBonuses[attribute]
+          : 0;
 
         return (
-          state.bonusSources[sourceId][attribute] +
+          directSourceValue +
             detailedEquipmentValue +
-            detailedAccessoryValue !==
+            detailedAccessoryValue +
+            detailedSkillValue !==
           0
         );
       }).map(({ attribute }) => {
+        const directSourceValue =
+          sourceId === "skill" ? 0 : state.bonusSources[sourceId][attribute];
         const detailedEquipmentValue =
           detailedEquipmentBonuses && attribute in detailedEquipmentBonuses
             ? detailedEquipmentBonuses[
@@ -295,13 +316,17 @@ const SpiritBeastAttributeCalculator = () => {
                 attribute as keyof typeof detailedAccessoryBonuses
               ]
             : 0;
+        const detailedSkillValue = detailedSkillBonuses
+          ? detailedSkillBonuses[attribute]
+          : 0;
 
         return {
           label: BONUS_FIELD_LABELS[attribute],
           value:
-            state.bonusSources[sourceId][attribute] +
+            directSourceValue +
             detailedEquipmentValue +
-            detailedAccessoryValue,
+            detailedAccessoryValue +
+            detailedSkillValue,
         };
       });
       const equipmentOnlyItems =
@@ -325,11 +350,17 @@ const SpiritBeastAttributeCalculator = () => {
               },
             ]
           : [];
-      const items = [
+      const calculatedItems = [
         ...accessoryQualificationItems,
         ...standardItems,
         ...equipmentOnlyItems,
       ];
+      const items =
+        sourceId === "skill" &&
+        configuredSkillCount > 0 &&
+        calculatedItems.length === 0
+          ? [{ label: "面板净加成", value: 0 }]
+          : calculatedItems;
 
       return {
         id: sourceId,
@@ -339,13 +370,17 @@ const SpiritBeastAttributeCalculator = () => {
             ? `${enabledEquipmentCount}/3`
             : sourceId === "accessory"
               ? `${enabledAccessoryCount}/2`
-              : config.badge,
+              : sourceId === "skill" && configuredSkillCount > 0
+                ? `${configuredSkillCount} 项`
+                : config.badge,
         details:
           sourceId === "equipment"
             ? "宝衣和宝冠各录入两条装备属性；宝衣、宝链启灵录入五维；宝冠另录入副属性、百炼与属性特效。宝链技能统一在“技能”来源录入。"
             : sourceId === "accessory"
               ? "1 阶灵饰固定增加全资质 10，2 阶灵饰固定增加全资质 20；每件另有一条物攻、法攻、物防、法防、速度或气血随机属性。"
-              : undefined,
+              : sourceId === "skill"
+                ? "威能按灵点增加法攻；迅捷与迟钝调整速度；健壮与吉星调整气血；低级和高级亲和技能分别增加 15、25 点对应亲和。同名低级与高级同时存在时只应用高级效果。"
+                : undefined,
         items,
       };
     });
@@ -386,7 +421,9 @@ const SpiritBeastAttributeCalculator = () => {
           ? getSpiritBeastEquipmentBonusTotal(state, attribute)
           : sourceId === "accessory"
             ? getSpiritBeastAccessoryBonusTotal(state, attribute)
-            : state.bonusSources[sourceId][attribute];
+            : sourceId === "skill"
+              ? structuredSkillBonuses[attribute]
+              : state.bonusSources[sourceId][attribute];
       if (value === 0) return null;
 
       const config = BONUS_SOURCE_CONFIG[sourceId];
@@ -444,6 +481,7 @@ const SpiritBeastAttributeCalculator = () => {
                 ...current,
                 equipment: createEmptySpiritBeastEquipmentSet(),
                 accessories: createEmptySpiritBeastAccessories(),
+                skills: createEmptySpiritBeastSkills(),
                 bonusSources: createEmptySpiritBeastBonusSources(),
               }))
             }
@@ -833,9 +871,24 @@ const SpiritBeastAttributeCalculator = () => {
         </EditorDialog>
       )}
 
+      {activeSourceId === "skill" && (
+        <EditorDialog
+          title={BONUS_SOURCE_CONFIG.skill.title}
+          onClose={() => setActiveEditorId(null)}
+        >
+          <SpiritBeastSkillControl
+            skills={state.skills}
+            onChange={(skills) =>
+              setState((current) => ({ ...current, skills }))
+            }
+          />
+        </EditorDialog>
+      )}
+
       {activeSourceId &&
         activeSourceId !== "equipment" &&
-        activeSourceId !== "accessory" && (
+        activeSourceId !== "accessory" &&
+        activeSourceId !== "skill" && (
           <EditorDialog
             title={BONUS_SOURCE_CONFIG[activeSourceId].title}
             onClose={() => setActiveEditorId(null)}

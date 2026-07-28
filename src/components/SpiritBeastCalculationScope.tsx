@@ -150,6 +150,28 @@ const SpiritBeastCalculationScope = ({
         </section>
 
         <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <h3 className="font-semibold text-slate-900">面板技能</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>
+              低级 / 高级威能分别增加灵点 × 0.06 / 0.1
+              法攻；威能读取其它五维来源结算后的灵点。
+            </li>
+            <li>
+              低级 / 高级迅捷分别增加 10% / 20% 速度，低级 / 高级迟钝分别降低
+              10% / 20% 速度。
+            </li>
+            <li>
+              低级 / 高级健壮分别增加 15% / 25% 气血，低级 / 高级吉星分别增加 5%
+              / 10% 气血。
+            </li>
+            <li>低级 / 高级六系亲和技能分别增加对应亲和 15 / 25 点。</li>
+            <li>
+              同名低级与高级技能同时存在时只按高级技能计算；不同气血技能的比例相加，迅捷与迟钝的比例相减。
+            </li>
+          </ul>
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
           <h3 className="font-semibold text-slate-900">加成与取整顺序</h3>
           <ol className="mt-2 list-decimal space-y-1 pl-5">
             <li>
@@ -159,7 +181,12 @@ const SpiritBeastCalculationScope = ({
             <li>
               五维加成先进入资质与成长公式；灵饰全资质先增加公式中的资质，面板属性加成在公式结果后直接叠加。
             </li>
-            <li>六系亲和只汇总初值和来源加成，当前不随等级自动成长。</li>
+            <li>
+              结构化技能最后结算：威能按汇总后的灵点计算，百分比气血和速度按技能前的精确面板值计算。
+            </li>
+            <li>
+              六系亲和汇总初值、来源加成和亲和技能，当前不随等级自动成长。
+            </li>
             <li>内部计算保留完整精度，灵兽面板最终展示值统一向下取整。</li>
           </ol>
         </section>
