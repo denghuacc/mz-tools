@@ -59,10 +59,10 @@ import type { SpiritBeastMountConfig } from "./spiritBeastMount";
 
 export const SPIRIT_BEAST_LEVEL_MIN = 1;
 export const SPIRIT_BEAST_LEVEL_MAX = 115;
-export const SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL = 200;
+export const SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_MIN_TOTAL = 200;
 export const SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE = 20;
 export const SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_TOTAL = 100;
-export const SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL = 100;
+export const SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_MIN_TOTAL = 100;
 export const SPIRIT_BEAST_POTENTIAL_POINTS_PER_LEVEL = 10;
 
 /** 灵兽沿用人物常见方案，并额外支持纯生存向的 5 体 5 耐。 */
@@ -333,9 +333,9 @@ export const getSpiritBeastResettableInitialPrimaryValidationError = (
 ): string | null => {
   const total = getSpiritBeastResettableInitialPrimaryTotal(primary);
 
-  return total === SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL
+  return total >= SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_MIN_TOTAL
     ? null
-    : `可重置初始五维总和必须为 ${SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL}，当前为 ${total}。`;
+    : `可重置初始五维总和不能低于 ${SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_MIN_TOTAL}，当前为 ${total}。`;
 };
 
 export const calculateSpiritBeastAllocation = (
@@ -400,7 +400,12 @@ const normalizeResettableInitialPrimary = (
   const normalized = Object.fromEntries(
     SPIRIT_BEAST_PRIMARY_ATTRIBUTES.map((attribute) => [
       attribute,
-      clampInteger(source[attribute], 0, 100, fallback[attribute]),
+      clampInteger(
+        source[attribute],
+        0,
+        Number.MAX_SAFE_INTEGER,
+        fallback[attribute],
+      ),
     ]),
   ) as SpiritBeastPrimaryAttributes;
 
@@ -423,7 +428,7 @@ const migrateLegacyLevelZeroPrimary = (
   const legacyPrimary = normalizePrimaryAttributes(value, legacyDefault);
   const canMigrate =
     getSpiritBeastAllocationTotal(legacyPrimary) ===
-      SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL &&
+      SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_MIN_TOTAL &&
     SPIRIT_BEAST_PRIMARY_ATTRIBUTES.every(
       (attribute) =>
         legacyPrimary[attribute] >=

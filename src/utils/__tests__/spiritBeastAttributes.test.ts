@@ -1,7 +1,7 @@
 import {
   DEFAULT_SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY,
   SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE,
-  SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL,
+  SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_MIN_TOTAL,
   calculateSpiritBeastAttributes,
   createDefaultSpiritBeastState,
   getSpiritBeastAccessoryQualificationBonus,
@@ -380,7 +380,7 @@ describe("灵兽面板计算", () => {
     expect(calculateSpiritBeastAttributes(state).primary.strength).toBe(52);
   });
 
-  it("默认可重置初值应该平均分配 100 点并保持底层五维总和 200", () => {
+  it("默认可重置初值应该平均分配 100 点并达到初始五维下限 200", () => {
     const state = createDefaultSpiritBeastState();
     const resettableTotal = getSpiritBeastResettableInitialPrimaryTotal(
       state.resettableInitialPrimary,
@@ -392,7 +392,7 @@ describe("灵兽面板计算", () => {
     expect(resettableTotal).toBe(100);
     expect(
       resettableTotal + SPIRIT_BEAST_FIXED_INITIAL_PRIMARY_PER_ATTRIBUTE * 5,
-    ).toBe(SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_TOTAL);
+    ).toBe(SPIRIT_BEAST_LEVEL_ZERO_PRIMARY_MIN_TOTAL);
   });
 
   it("应该迁移有效的旧版 200 点初值，并让无效旧值安全回退", () => {
@@ -424,6 +424,23 @@ describe("灵兽面板计算", () => {
         },
       })?.resettableInitialPrimary,
     ).toEqual(DEFAULT_SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY);
+    expect(
+      normalizeSpiritBeastCalculatorState({
+        resettableInitialPrimary: {
+          constitution: 123,
+          spirit: 0,
+          strength: 0,
+          endurance: 0,
+          agility: 0,
+        },
+      })?.resettableInitialPrimary,
+    ).toEqual({
+      constitution: 123,
+      spirit: 0,
+      strength: 0,
+      endurance: 0,
+      agility: 0,
+    });
     expect(
       normalizeSpiritBeastCalculatorState({
         resettableInitialPrimary: {

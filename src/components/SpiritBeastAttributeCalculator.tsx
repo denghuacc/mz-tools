@@ -20,7 +20,7 @@ import {
   SPIRIT_BEAST_ALLOCATION_PRESETS,
   SPIRIT_BEAST_PRIMARY_ATTRIBUTES,
   SPIRIT_BEAST_QUALIFICATIONS,
-  SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL,
+  SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_MIN_TOTAL,
   calculateSpiritBeastAttributes,
   calculateSpiritBeastStructuredMountBonuses,
   calculateSpiritBeastStructuredSkillBonuses,
@@ -303,10 +303,7 @@ const SpiritBeastAttributeCalculator = () => {
   ) => {
     const value = Number(inputValue);
 
-    if (
-      inputValue !== "" &&
-      (!Number.isInteger(value) || value < 0 || value > 100)
-    ) {
+    if (inputValue !== "" && (!Number.isSafeInteger(value) || value < 0)) {
       return;
     }
 
@@ -797,18 +794,6 @@ const SpiritBeastAttributeCalculator = () => {
                     <span className="text-xs font-medium text-amber-600">
                       资质公式待复核
                     </span>
-                    <span
-                      id="spirit-beast-resettable-initial-primary-status"
-                      className={`text-xs font-medium ${
-                        resettableInitialPrimaryValidationError
-                          ? "text-rose-600"
-                          : "text-emerald-600"
-                      }`}
-                      aria-live="polite"
-                    >
-                      可重置初值 {resettableInitialPrimaryTotal} /{" "}
-                      {SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL}
-                    </span>
                   </div>
                   <p className="mt-1.5 text-xs leading-5 text-slate-500">
                     当前值 = 固定初值{" "}
@@ -821,8 +806,8 @@ const SpiritBeastAttributeCalculator = () => {
                       role="alert"
                     >
                       {resettableInitialPrimaryValidationError}
-                      当前面板仅预览这组输入；调整到合计{" "}
-                      {SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL}{" "}
+                      当前面板仅预览这组输入；调整到合计至少{" "}
+                      {SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_MIN_TOTAL}{" "}
                       后才会保存。
                     </p>
                   ) : null}
@@ -929,7 +914,6 @@ const SpiritBeastAttributeCalculator = () => {
                           <input
                             type="number"
                             min={0}
-                            max={SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_TOTAL}
                             step={1}
                             inputMode="numeric"
                             className="min-w-0 flex-1 bg-transparent text-center text-xs font-semibold text-slate-800 outline-none sm:text-sm"
@@ -988,6 +972,57 @@ const SpiritBeastAttributeCalculator = () => {
                       </div>
                     </div>
                   ))}
+                  <div
+                    id="spirit-beast-resettable-initial-primary-status"
+                    className={`min-h-13 min-w-0 rounded-lg border px-3 py-2.5 sm:flex sm:items-center sm:justify-between sm:gap-2 ${
+                      resettableInitialPrimaryValidationError
+                        ? "border-rose-200 bg-rose-50"
+                        : "border-blue-100 bg-blue-50/70"
+                    }`}
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <div className="flex items-baseline justify-between gap-2 sm:contents">
+                      <span
+                        className={`shrink-0 text-xs font-medium sm:text-sm ${
+                          resettableInitialPrimaryValidationError
+                            ? "text-rose-700"
+                            : "text-slate-700"
+                        }`}
+                      >
+                        初值总和
+                      </span>
+                      <strong
+                        className={`shrink-0 text-base ${
+                          resettableInitialPrimaryValidationError
+                            ? "text-rose-700"
+                            : "text-blue-700"
+                        }`}
+                      >
+                        {resettableInitialPrimaryTotal}
+                      </strong>
+                    </div>
+                    <span
+                      className={`mt-0.5 block whitespace-nowrap text-right text-[10px] font-medium sm:mt-0 sm:text-xs ${
+                        resettableInitialPrimaryValidationError
+                          ? "text-rose-600"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      {resettableInitialPrimaryValidationError
+                        ? `还差 ${
+                            SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_MIN_TOTAL -
+                            resettableInitialPrimaryTotal
+                          }`
+                        : resettableInitialPrimaryTotal >
+                            SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_MIN_TOTAL
+                          ? `合宠 +${
+                              resettableInitialPrimaryTotal -
+                              SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_MIN_TOTAL
+                            }`
+                          : `下限 ${SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY_MIN_TOTAL}`}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

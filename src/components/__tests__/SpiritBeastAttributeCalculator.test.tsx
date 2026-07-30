@@ -14,7 +14,7 @@ describe("SpiritBeastAttributeCalculator", () => {
     const user = userEvent.setup();
     render(<SpiritBeastAttributeCalculator />);
 
-    expect(screen.getByText(/0 级五维总和按 200 点计算/)).toHaveTextContent(
+    expect(screen.getByText(/0 级五维总和至少为 200 点/)).toHaveTextContent(
       "当前 1 级共有 10 点潜力",
     );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -27,11 +27,12 @@ describe("SpiritBeastAttributeCalculator", () => {
       name: "当前计算口径说明",
     });
     expect(dialog).toHaveTextContent(
-      "0 级五维总和为 200 点，其中 100 点不可重置",
+      "0 级五维总和至少为 200 点，其中 100 点不可重置",
     );
     expect(dialog).toHaveTextContent(
-      "计算器面板输入框对应这部分，五项合计必须为 100",
+      "计算器面板输入框对应这部分，五项合计不得低于 100",
     );
+    expect(dialog).toHaveTextContent("当前暂不设置上限");
     expect(dialog).toHaveTextContent(
       "这些是当前计算器边界，不代表已核验的游戏极限",
     );
@@ -209,7 +210,7 @@ describe("SpiritBeastAttributeCalculator", () => {
     ).toHaveLength(2);
   });
 
-  it("应该实时预览可重置初值，并只保存合计 100 的有效总数", async () => {
+  it("应该汇总合宠后的可重置初值，并只保存合计不低于 100 的输入", async () => {
     const user = userEvent.setup();
     const { unmount } = render(<SpiritBeastAttributeCalculator />);
     const primaryColumn = screen.getByRole("group", { name: "五维属性列" });
@@ -223,23 +224,30 @@ describe("SpiritBeastAttributeCalculator", () => {
       ).toHaveValue(20);
     });
     expect(within(primaryColumn).getAllByText("初值")).toHaveLength(5);
-    expect(screen.getByText("可重置初值 100 / 100")).toBeInTheDocument();
+    expect(within(primaryColumn).getByText("初值总和")).toBeInTheDocument();
+    expect(within(primaryColumn).getByText("下限 100")).toBeInTheDocument();
+    expect(
+      within(primaryColumn).getByRole("spinbutton", {
+        name: "可重置体初始值",
+      }),
+    ).not.toHaveAttribute("max");
 
     fireEvent.change(
       within(primaryColumn).getByRole("spinbutton", {
         name: "可重置体初始值",
       }),
-      { target: { value: "31" } },
+      { target: { value: "0" } },
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "可重置初始五维总和必须为 100，当前为 111",
+      "可重置初始五维总和不能低于 100，当前为 80",
     );
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "当前面板仅预览这组输入；调整到合计 100 后才会保存",
+      "当前面板仅预览这组输入；调整到合计至少 100 后才会保存",
     );
+    expect(within(primaryColumn).getByText("还差 20")).toBeInTheDocument();
     expect(
-      within(screen.getByRole("group", { name: "体五维属性" })).getByText("53"),
+      within(screen.getByRole("group", { name: "体五维属性" })).getByText("22"),
     ).toBeInTheDocument();
     await waitFor(() => {
       const stored = JSON.parse(
@@ -251,18 +259,19 @@ describe("SpiritBeastAttributeCalculator", () => {
 
     fireEvent.change(
       within(primaryColumn).getByRole("spinbutton", {
-        name: "可重置灵初始值",
+        name: "可重置体初始值",
       }),
-      { target: { value: "9" } },
+      { target: { value: "43" } },
     );
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    expect(screen.getByText("可重置初值 100 / 100")).toBeInTheDocument();
+    expect(within(primaryColumn).getByText("123")).toBeInTheDocument();
+    expect(within(primaryColumn).getByText("合宠 +23")).toBeInTheDocument();
     expect(
-      within(screen.getByRole("group", { name: "体五维属性" })).getByText("53"),
+      within(screen.getByRole("group", { name: "体五维属性" })).getByText("65"),
     ).toBeInTheDocument();
     expect(
-      within(screen.getByRole("group", { name: "灵五维属性" })).getByText("31"),
+      within(screen.getByRole("group", { name: "灵五维属性" })).getByText("42"),
     ).toBeInTheDocument();
 
     await waitFor(() => {
@@ -271,8 +280,8 @@ describe("SpiritBeastAttributeCalculator", () => {
           "{}",
       );
       expect(stored.resettableInitialPrimary).toEqual({
-        constitution: 31,
-        spirit: 9,
+        constitution: 43,
+        spirit: 20,
         strength: 20,
         endurance: 20,
         agility: 20,
@@ -295,14 +304,9 @@ describe("SpiritBeastAttributeCalculator", () => {
       screen.getByRole("spinbutton", {
         name: "可重置体初始值",
       }),
-    ).toHaveValue(31);
+    ).toHaveValue(43);
     expect(
-      screen.getByRole("spinbutton", {
-        name: "可重置灵初始值",
-      }),
-    ).toHaveValue(9);
-    expect(
-      within(screen.getByRole("group", { name: "体五维属性" })).getByText("53"),
+      within(screen.getByRole("group", { name: "体五维属性" })).getByText("65"),
     ).toBeInTheDocument();
   });
 
