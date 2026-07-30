@@ -21,13 +21,14 @@ export type SpiritBeastEquipmentSecondaryAttribute =
   | "magicalDamageResult"
   | "physicalDamageReduction"
   | "magicalDamageReduction"
-  | "criticalDamagePercent";
+  | "criticalDamagePercent"
+  | "criticalDamageReductionPercent"
+  | "dodgeRate";
 
 export const SPIRIT_BEAST_UNAVAILABLE_SEASON_EQUIPMENT_SECONDARY_ATTRIBUTES = [
   "healingPower",
   "sealHit",
   "sealResistance",
-  "dodgeRate",
 ] as const satisfies readonly SeasonEquipmentSecondaryAttribute[];
 
 type SpiritBeastUnavailableSeasonEquipmentSecondaryAttribute =
@@ -62,6 +63,9 @@ const SEASON_ATTRIBUTE_TO_SPIRIT_BEAST_ATTRIBUTE = {
   magicalDamageResult: "magicalDamageResult",
   physicalDamageReduction: "physicalDamageReduction",
   magicalDamageReduction: "magicalDamageReduction",
+  criticalDamageReductionPercent: "criticalDamageReductionPercent",
+  criticalDamagePercent: "criticalDamagePercent",
+  dodgeRate: "dodgeRate",
 } as const satisfies Record<
   SpiritBeastAvailableSeasonEquipmentSecondaryAttribute,
   SpiritBeastEquipmentSecondaryAttribute
@@ -82,6 +86,11 @@ const toSpiritBeastSecondaryAttributeOption = ({
   return {
     attribute: SEASON_ATTRIBUTE_TO_SPIRIT_BEAST_ATTRIBUTE[attribute],
     label,
+    ...(attribute === "criticalDamageReductionPercent" ||
+    attribute === "criticalDamagePercent" ||
+    attribute === "dodgeRate"
+      ? { unit: "%" as const }
+      : {}),
   };
 };
 
@@ -94,14 +103,7 @@ const SHARED_SEASON_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS =
   );
 
 export const SPIRIT_BEAST_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS: readonly SpiritBeastEquipmentSecondaryAttributeOption[] =
-  [
-    ...SHARED_SEASON_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS,
-    {
-      attribute: "criticalDamagePercent",
-      label: "暴击伤害（%）",
-      unit: "%",
-    },
-  ];
+  SHARED_SEASON_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS;
 
 export const SPIRIT_BEAST_EQUIPMENT_SECONDARY_ATTRIBUTES =
   SPIRIT_BEAST_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS.map(
@@ -377,6 +379,8 @@ export const createEmptySpiritBeastEquipmentBonuses =
     physicalDamageReduction: 0,
     magicalDamageReduction: 0,
     criticalDamagePercent: 0,
+    criticalDamageReductionPercent: 0,
+    dodgeRate: 0,
     constitution: 0,
     spirit: 0,
     strength: 0,

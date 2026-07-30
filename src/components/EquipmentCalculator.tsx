@@ -62,6 +62,8 @@ const SUMMARY_GROUPS: readonly {
       "magicalDamageResult",
       "physicalDamageReduction",
       "magicalDamageReduction",
+      "criticalDamagePercent",
+      "criticalDamageReductionPercent",
     ],
   },
   {

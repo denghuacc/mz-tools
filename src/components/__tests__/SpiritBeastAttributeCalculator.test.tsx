@@ -932,6 +932,8 @@ describe("SpiritBeastAttributeCalculator", () => {
       "法伤结果",
       "物伤减免",
       "法伤减免",
+      "闪避（%）",
+      "暴伤减免（%）",
       "暴击伤害（%）",
     ]);
     const garmentBaseAttributeTwo = within(dialog).getByRole("combobox", {
@@ -1010,7 +1012,7 @@ describe("SpiritBeastAttributeCalculator", () => {
     );
     await user.selectOptions(
       within(dialog).getByRole("combobox", { name: "宝冠：副属性 2" }),
-      "criticalDamagePercent",
+      "criticalDamageReductionPercent",
     );
     fireEvent.change(
       within(dialog).getByRole("spinbutton", {
@@ -1025,7 +1027,7 @@ describe("SpiritBeastAttributeCalculator", () => {
     );
     await user.selectOptions(
       within(dialog).getByRole("combobox", { name: "宝冠：副属性 3" }),
-      "physicalDamageReduction",
+      "dodgeRate",
     );
     fireEvent.change(
       within(dialog).getByRole("spinbutton", {
@@ -1071,8 +1073,8 @@ describe("SpiritBeastAttributeCalculator", () => {
     expect(screen.getByText("物攻 +65")).toBeInTheDocument();
     expect(screen.getByText("气血 +107")).toBeInTheDocument();
     expect(screen.getByText("法攻 +49")).toBeInTheDocument();
-    expect(screen.getByText("暴击伤害 +8%")).toBeInTheDocument();
-    expect(screen.getByText("物伤减免 +12")).toBeInTheDocument();
+    expect(screen.getByText("暴伤减免 +8%")).toBeInTheDocument();
+    expect(screen.getByText("闪避 +12%")).toBeInTheDocument();
     expect(screen.getByText("体 +10")).toBeInTheDocument();
     expect(screen.getByText("灵 +40")).toBeInTheDocument();
     expect(screen.getByText("力 +1")).toBeInTheDocument();
@@ -1088,8 +1090,12 @@ describe("SpiritBeastAttributeCalculator", () => {
         value: 107,
       });
       expect(stored.equipment.crown.specialEffectName).toBe("五行之水");
+      expect(stored.equipment.crown.secondaryAttributes[1]).toEqual({
+        attribute: "criticalDamageReductionPercent",
+        value: 8,
+      });
       expect(stored.equipment.crown.secondaryAttributes[2]).toEqual({
-        attribute: "physicalDamageReduction",
+        attribute: "dodgeRate",
         value: 12,
       });
       expect(stored.equipment.crown.specialEffectAdjustments[1]).toEqual({
@@ -1103,7 +1109,8 @@ describe("SpiritBeastAttributeCalculator", () => {
 
     expect(screen.getByText("法攻 +49")).toBeInTheDocument();
     expect(screen.getByText("气血 +107")).toBeInTheDocument();
-    expect(screen.getByText("物伤减免 +12")).toBeInTheDocument();
+    expect(screen.getByText("暴伤减免 +8%")).toBeInTheDocument();
+    expect(screen.getByText("闪避 +12%")).toBeInTheDocument();
     expect(screen.getByText("力 +1")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "编辑装备" }));
     dialog = screen.getByRole("dialog", { name: "编辑装备" });

@@ -211,8 +211,8 @@ describe("角色装备属性汇总", () => {
     state.equipment.ring = {
       ...state.equipment.ring,
       affixes: [
-        { attribute: "sealHit", value: 12 },
-        { attribute: "sealResistance", value: 8 },
+        { attribute: "criticalDamagePercent", value: 12 },
+        { attribute: "criticalDamageReductionPercent", value: 8 },
         { attribute: "dodgeRate", value: 3 },
       ],
       specialEffect: "疾风神固",
@@ -432,6 +432,29 @@ describe("角色装备属性汇总", () => {
       sealResistance: 8,
       dodgeRate: 3,
     });
+  });
+
+  it("赛年神装应该汇总暴击伤害与暴伤减免百分比副属性", () => {
+    const equipment = createEmptyEquipmentSet();
+    equipment.ring.affixes = [
+      { attribute: "criticalDamagePercent", value: 6.5 },
+      { attribute: "criticalDamageReductionPercent", value: 2 },
+    ];
+    equipment.necklace.affixes = [
+      { attribute: "criticalDamagePercent", value: 4 },
+      { attribute: "criticalDamageReductionPercent", value: 6.5 },
+    ];
+
+    const summary = calculateEquipmentSummary(equipment);
+
+    expect(summary.allAttributes.criticalDamagePercent).toBe(10.5);
+    expect(summary.allAttributes.criticalDamageReductionPercent).toBe(8.5);
+    expect(summary.characterBonuses).not.toHaveProperty(
+      "criticalDamagePercent",
+    );
+    expect(summary.characterBonuses).not.toHaveProperty(
+      "criticalDamageReductionPercent",
+    );
   });
 
   it("疾风神固应该按特效等级增加速度并忽略旧的自定义属性", () => {

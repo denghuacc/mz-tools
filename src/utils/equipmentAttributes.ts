@@ -48,7 +48,9 @@ export type EquipmentOnlyAttribute =
   | "physicalDamageResult"
   | "magicalDamageResult"
   | "physicalDamageReduction"
-  | "magicalDamageReduction";
+  | "magicalDamageReduction"
+  | "criticalDamageReductionPercent"
+  | "criticalDamagePercent";
 
 export type EquipmentAttribute =
   | CharacterBonusAttribute
@@ -209,6 +211,8 @@ export const EQUIPMENT_ATTRIBUTE_OPTIONS = [
   { attribute: "sealHit", label: "封印命中" },
   { attribute: "sealResistance", label: "抗封" },
   { attribute: "dodgeRate", label: "闪避" },
+  { attribute: "criticalDamageReductionPercent", label: "暴伤减免" },
+  { attribute: "criticalDamagePercent", label: "暴击伤害" },
 ] as const satisfies readonly {
   attribute: EquipmentAttribute;
   label: string;
@@ -216,7 +220,13 @@ export const EQUIPMENT_ATTRIBUTE_OPTIONS = [
 
 /** 角色戒指、项链等赛年神装共用的完整副属性候选。 */
 export const SEASON_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS =
-  EQUIPMENT_ATTRIBUTE_OPTIONS;
+  EQUIPMENT_ATTRIBUTE_OPTIONS.map((option) =>
+    option.attribute === "criticalDamageReductionPercent" ||
+    option.attribute === "criticalDamagePercent" ||
+    option.attribute === "dodgeRate"
+      ? { ...option, label: `${option.label}（%）` }
+      : option,
+  );
 export type SeasonEquipmentSecondaryAttribute =
   (typeof SEASON_EQUIPMENT_SECONDARY_ATTRIBUTE_OPTIONS)[number]["attribute"];
 

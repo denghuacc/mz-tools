@@ -562,7 +562,15 @@ describe("EquipmentCalculator", () => {
     expect(
       within(secondAffix).getByRole("option", { name: "物攻" }),
     ).toBeDisabled();
-    for (const label of ["法伤减免", "物伤减免", "封印命中", "抗封", "闪避"]) {
+    for (const label of [
+      "法伤减免",
+      "物伤减免",
+      "封印命中",
+      "抗封",
+      "闪避（%）",
+      "暴伤减免（%）",
+      "暴击伤害（%）",
+    ]) {
       expect(
         within(firstAffix).getByRole("option", { name: label }),
       ).toBeInTheDocument();
@@ -572,7 +580,7 @@ describe("EquipmentCalculator", () => {
       name: "戒指：副属性 3",
     });
     await user.selectOptions(firstAffix, "sealHit");
-    await user.selectOptions(secondAffix, "sealResistance");
+    await user.selectOptions(secondAffix, "criticalDamagePercent");
     await user.selectOptions(thirdAffix, "dodgeRate");
 
     for (const [name, value] of [
@@ -594,13 +602,13 @@ describe("EquipmentCalculator", () => {
     expect(panelSummary).not.toBeNull();
     expect(combatSummary).not.toBeNull();
     expect(within(panelSummary!).getByText("封印命中")).toBeInTheDocument();
-    expect(within(panelSummary!).getByText("抗封")).toBeInTheDocument();
     expect(within(panelSummary!).getByText("闪避")).toBeInTheDocument();
     expect(within(panelSummary!).getByText("+3%")).toBeInTheDocument();
+    expect(within(combatSummary!).getByText("暴击伤害")).toBeInTheDocument();
+    expect(within(combatSummary!).getByText("+8%")).toBeInTheDocument();
     expect(
       within(combatSummary!).queryByText("封印命中"),
     ).not.toBeInTheDocument();
-    expect(within(combatSummary!).queryByText("抗封")).not.toBeInTheDocument();
 
     await user.click(
       within(dialog).getByRole("button", { name: "删除戒指副属性 3" }),

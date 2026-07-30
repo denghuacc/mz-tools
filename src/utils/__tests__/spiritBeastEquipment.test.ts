@@ -28,6 +28,8 @@ describe("灵兽装备属性汇总", () => {
       "法伤结果",
       "物伤减免",
       "法伤减免",
+      "闪避（%）",
+      "暴伤减免（%）",
       "暴击伤害（%）",
     ]);
   });
@@ -51,9 +53,9 @@ describe("灵兽装备属性汇总", () => {
       { attribute: "physicalDefense", value: 18 },
     ];
     equipment.crown.secondaryAttributes = [
-      { attribute: "magicalAttack", value: 49 },
       { attribute: "criticalDamagePercent", value: 8 },
-      { attribute: "physicalDamageReduction", value: 12 },
+      { attribute: "criticalDamageReductionPercent", value: 12 },
+      { attribute: "dodgeRate", value: 3 },
     ];
     equipment.crown.temperingAttribute = {
       attribute: "agility",
@@ -67,7 +69,7 @@ describe("灵兽装备属性汇总", () => {
 
     expect(calculateSpiritBeastEquipmentBonuses(equipment)).toEqual({
       physicalAttack: 93,
-      magicalAttack: 49,
+      magicalAttack: 0,
       physicalDefense: 18,
       magicalDefense: 0,
       speed: 0,
@@ -75,9 +77,11 @@ describe("灵兽装备属性汇总", () => {
       mana: 0,
       physicalDamageResult: 0,
       magicalDamageResult: 0,
-      physicalDamageReduction: 12,
+      physicalDamageReduction: 0,
       magicalDamageReduction: 0,
       criticalDamagePercent: 8,
+      criticalDamageReductionPercent: 12,
+      dodgeRate: 3,
       constitution: 10,
       spirit: 40,
       strength: -2,
@@ -128,8 +132,9 @@ describe("灵兽装备属性汇总", () => {
         secondaryAttributes: [
           { attribute: "magicalAttack", value: -10 },
           { attribute: "sealResistance", value: 8 },
-          { attribute: "physicalDamageReduction", value: 11 },
+          { attribute: "criticalDamageReductionPercent", value: 6 },
           { attribute: "dodgeRate", value: 3 },
+          { attribute: "physicalDamageReduction", value: 11 },
         ],
         temperingAttribute: { attribute: "unknown", value: 20 },
         specialEffectName: "五行之水",
@@ -155,7 +160,8 @@ describe("灵兽装备属性汇总", () => {
     ]);
     expect(normalized.crown.secondaryAttributes).toEqual([
       { attribute: "magicalAttack", value: 0 },
-      { attribute: "physicalDamageReduction", value: 11 },
+      { attribute: "criticalDamageReductionPercent", value: 6 },
+      { attribute: "dodgeRate", value: 3 },
     ]);
     expect(normalized.crown.temperingAttribute).toEqual({
       attribute: "agility",
