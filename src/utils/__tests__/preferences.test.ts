@@ -35,6 +35,18 @@ describe("用户偏好存储", () => {
     });
   });
 
+  it("支持恢复灵兽融合计算器页签", () => {
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_PREFERENCES,
+        activeTool: "spirit-beast-fusion",
+      }),
+    );
+
+    expect(loadPreferences().activeTool).toBe("spirit-beast-fusion");
+  });
+
   it("损坏或非法字段安全回退默认值", () => {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,

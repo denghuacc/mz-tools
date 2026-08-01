@@ -56,7 +56,7 @@ const SettingsPage = ({
         <h2 className="text-base font-semibold text-slate-900">本地数据</h2>
         <p className="mt-2 text-sm leading-6 text-slate-500">
           当前收藏 {favoriteCount}{" "}
-          项。角色面板、八件装备和灵兽面板输入会保存在当前浏览器；错误信息和计算结果不会持久化。
+          项。角色面板、八件装备、灵兽面板和融合配置会保存在当前浏览器；融合结果仅在手动保存到记录时持久化。
         </p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <button

@@ -151,6 +151,7 @@ describe("App 组件", () => {
       "角色面板 (测试版)",
       "角色装备 (测试版)",
       "灵兽面板 (测试版)",
+      "灵兽融合 (测试版)",
     ]);
 
     await user.click(screen.getByRole("tab", { name: "角色装备 (测试版)" }));
@@ -184,6 +185,19 @@ describe("App 组件", () => {
       screen.getByRole("heading", { name: "基础属性 · 10 项" }),
     ).toBeInTheDocument();
     expect(loadPreferences().activeTool).toBe("spirit-beast");
+  });
+
+  it("应该提供灵兽融合模拟器并保存当前工具偏好", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("tab", { name: "灵兽融合 (测试版)" }));
+
+    expect(
+      screen.getByRole("heading", { name: "灵兽融合模拟器" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("经验模型")).toBeInTheDocument();
+    expect(loadPreferences().activeTool).toBe("spirit-beast-fusion");
   });
 
   it("应该保存三个角色存档并一键恢复角色面板和装备配置", async () => {
@@ -549,7 +563,9 @@ describe("App 组件", () => {
     expect(screen.getByText("FR69服明天")).toBeInTheDocument();
     expect(screen.getByText(/当前收藏 0 项/)).toBeInTheDocument();
     expect(
-      screen.getByText(/角色面板、八件装备和灵兽面板输入会保存在当前浏览器/),
+      screen.getByText(
+        /角色面板、八件装备、灵兽面板和融合配置会保存在当前浏览器/,
+      ),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "清空收藏" })).toBeDisabled();
 

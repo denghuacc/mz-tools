@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef } from "react";
+import { useId, useRef } from "react";
 import type { ReactNode } from "react";
-import { trapModalFocus } from "../utils/modalFocus";
+import { useModalDialog } from "../hooks/useModalDialog";
 
 type EditorDialogProps = {
   title: string;
@@ -19,46 +19,11 @@ const EditorDialog = ({
   titlePrefix = "编辑",
 }: EditorDialogProps) => {
   const titleId = useId();
-  const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const onCloseRef = useRef(onClose);
-  const isCloseDisabledRef = useRef(isCloseDisabled);
-
-  // 保持事件读取最新参数，同时避免参数变化时重复执行弹窗焦点初始化。
-  useEffect(() => {
-    onCloseRef.current = onClose;
-    isCloseDisabledRef.current = isCloseDisabled;
-  }, [isCloseDisabled, onClose]);
-
-  useEffect(() => {
-    const previousActiveElement = document.activeElement;
-    const previousBodyOverflow = document.body.style.overflow;
-
-    document.body.style.overflow = "hidden";
-    closeButtonRef.current?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !isCloseDisabledRef.current) {
-        onCloseRef.current();
-        return;
-      }
-
-      if (dialogRef.current) {
-        trapModalFocus(event, dialogRef.current);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-
-      if (previousActiveElement instanceof HTMLElement) {
-        previousActiveElement.focus();
-      }
-    };
-  }, []);
+  const dialogRef = useModalDialog(onClose, {
+    initialFocusRef: closeButtonRef,
+    isCloseDisabled,
+  });
 
   return (
     <div

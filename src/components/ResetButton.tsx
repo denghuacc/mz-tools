@@ -1,5 +1,5 @@
-import { useEffect, useId, useRef, useState } from "react";
-import { trapModalFocus } from "../utils/modalFocus";
+import { useId, useRef, useState } from "react";
+import { useModalDialog } from "../hooks/useModalDialog";
 
 type ResetButtonProps = {
   confirmationTitle: string;
@@ -17,36 +17,12 @@ const ResetButton = ({
   const titleId = useId();
   const descriptionId = useId();
   const resetButtonRef = useRef<HTMLButtonElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!isConfirmationOpen) return;
-
-    const previousBodyOverflow = document.body.style.overflow;
-    const resetButton = resetButtonRef.current;
-    document.body.style.overflow = "hidden";
-    cancelButtonRef.current?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsConfirmationOpen(false);
-        return;
-      }
-
-      if (dialogRef.current) {
-        trapModalFocus(event, dialogRef.current);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-      resetButton?.focus();
-    };
-  }, [isConfirmationOpen]);
+  const dialogRef = useModalDialog(() => setIsConfirmationOpen(false), {
+    enabled: isConfirmationOpen,
+    initialFocusRef: cancelButtonRef,
+    restoreFocusRef: resetButtonRef,
+  });
 
   return (
     <>
