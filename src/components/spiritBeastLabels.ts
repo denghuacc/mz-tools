@@ -49,3 +49,14 @@ export const SPIRIT_BEAST_QUALIFICATION_LABELS: Record<
   spirit: "灵力资质",
   speed: "速度资质",
 };
+
+export const SPIRIT_BEAST_QUALIFICATION_SHORT_LABELS: Record<
+  SpiritBeastQualification,
+  string
+> = {
+  physicalAttack: "物攻",
+  physicalDefense: "物防",
+  health: "气血",
+  spirit: "灵力",
+  speed: "速度",
+};

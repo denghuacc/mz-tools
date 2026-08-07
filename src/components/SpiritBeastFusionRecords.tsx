@@ -2,8 +2,7 @@ import {
   FUSION_RECORD_LIMIT,
   type FusionRecord,
 } from "../utils/spiritBeastFusion";
-
-const formatGrowth = (value: number) => value.toFixed(3);
+import { formatFusionGrowth } from "../utils/spiritBeastFusionFormatters";
 
 type SpiritBeastFusionRecordsProps = {
   records: readonly FusionRecord[];
@@ -51,7 +50,7 @@ const SpiritBeastFusionRecords = ({
                   <p className="mt-1 text-xs text-slate-500">
                     {record.result.skillCount} 技能 ·{" "}
                     {record.result.specialSkillCount} 特殊 · 成长{" "}
-                    {formatGrowth(record.result.growth)} · 初始属性{" "}
+                    {formatFusionGrowth(record.result.growth)} · 初始属性{" "}
                     {record.result.initialAttributeTotal}
                   </p>
                 </div>

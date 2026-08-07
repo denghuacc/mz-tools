@@ -1,7 +1,4 @@
-import {
-  SPIRIT_BEAST_QUALIFICATIONS,
-  type SpiritBeastQualification,
-} from "../utils/spiritBeastAttributes";
+import { SPIRIT_BEAST_QUALIFICATIONS } from "../utils/spiritBeastAttributes";
 import {
   FUSION_DOUBLE_SPECIAL_PITY,
   FUSION_PITY_WITHOUT_FRUIT,
@@ -12,15 +9,10 @@ import {
   type FusionStrategy,
   type FusionTarget,
 } from "../utils/spiritBeastFusion";
-import { SPIRIT_BEAST_QUALIFICATION_LABELS } from "./spiritBeastLabels";
-
-const QUALIFICATION_SHORT_LABELS: Record<SpiritBeastQualification, string> = {
-  physicalAttack: "物攻",
-  physicalDefense: "物防",
-  health: "气血",
-  spirit: "灵力",
-  speed: "速度",
-};
+import {
+  SPIRIT_BEAST_QUALIFICATION_LABELS,
+  SPIRIT_BEAST_QUALIFICATION_SHORT_LABELS,
+} from "./spiritBeastLabels";
 
 const clampNumber = (value: number, minimum: number, maximum: number) =>
   Math.min(maximum, Math.max(minimum, value));
@@ -101,7 +93,7 @@ const SpiritBeastFusionStrategyPanel = ({
             {SPIRIT_BEAST_QUALIFICATIONS.map((qualification) => (
               <label key={qualification} className="block">
                 <span className="mb-1 block text-[11px] text-slate-500">
-                  最低{QUALIFICATION_SHORT_LABELS[qualification]}
+                  最低{SPIRIT_BEAST_QUALIFICATION_SHORT_LABELS[qualification]}
                 </span>
                 <input
                   type="number"

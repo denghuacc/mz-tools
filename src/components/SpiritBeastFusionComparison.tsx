@@ -14,16 +14,15 @@ import {
   type FusionResult,
   type FusionRun,
 } from "../utils/spiritBeastFusion";
+import {
+  formatFusionGrowth,
+  formatFusionInteger,
+} from "../utils/spiritBeastFusionFormatters";
 import { SPIRIT_BEAST_QUALIFICATION_LABELS } from "./spiritBeastLabels";
 import { QualificationBurstMark } from "./SpiritBeastFusionMarks";
 import SpiritBeastFusionSkillIcons from "./SpiritBeastFusionSkillIcons";
 
 type Trend = "up" | "down" | "same";
-
-const formatGrowth = (value: number) => value.toFixed(3);
-
-const formatInteger = (value: number) =>
-  new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 0 }).format(value);
 
 const getTrend = (current: number, next: number): Trend => {
   if (next > current) return "up";
@@ -187,7 +186,7 @@ const ResultPanel = ({
           isNew &&
           Math.abs(result.growth - preview.growthRange.maximum) < 0.0005
         }
-        formatValue={formatGrowth}
+        formatValue={formatFusionGrowth}
       />
     </div>
 
@@ -386,11 +385,11 @@ const SpiritBeastFusionComparison = ({
               <button
                 type="button"
                 className="flex min-h-14 min-w-64 items-center justify-center gap-8 rounded-full bg-amber-200 px-10 py-3 text-lg font-bold text-amber-950 shadow-[0_8px_24px_rgba(217,119,6,0.18)] transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
-                aria-label={`${formatInteger(FUSION_SILVER_PER_ATTEMPT)} 银 · 重置`}
+                aria-label={`${formatFusionInteger(FUSION_SILVER_PER_ATTEMPT)} 银 · 重置`}
                 onClick={onReset}
               >
                 <span className="tabular-nums">
-                  {formatInteger(FUSION_SILVER_PER_ATTEMPT)} 银
+                  {formatFusionInteger(FUSION_SILVER_PER_ATTEMPT)} 银
                 </span>
                 <span>重置</span>
               </button>

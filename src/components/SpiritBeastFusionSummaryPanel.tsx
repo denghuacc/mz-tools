@@ -1,7 +1,4 @@
-import {
-  SPIRIT_BEAST_QUALIFICATIONS,
-  type SpiritBeastQualification,
-} from "../utils/spiritBeastAttributes";
+import { SPIRIT_BEAST_QUALIFICATIONS } from "../utils/spiritBeastAttributes";
 import {
   FUSION_DOUBLE_SPECIAL_PITY,
   FUSION_INITIAL_ATTRIBUTE_MAX,
@@ -15,25 +12,19 @@ import {
   type FusionResult,
   type FusionRun,
 } from "../utils/spiritBeastFusion";
-import { SPIRIT_BEAST_QUALIFICATION_LABELS } from "./spiritBeastLabels";
+import {
+  formatFusionGrowth,
+  formatFusionInteger,
+} from "../utils/spiritBeastFusionFormatters";
+import {
+  SPIRIT_BEAST_QUALIFICATION_LABELS,
+  SPIRIT_BEAST_QUALIFICATION_SHORT_LABELS,
+} from "./spiritBeastLabels";
 import { QualificationBurstMark } from "./SpiritBeastFusionMarks";
 import SpiritBeastFusionSkillIcons from "./SpiritBeastFusionSkillIcons";
 
-const QUALIFICATION_SHORT_LABELS: Record<SpiritBeastQualification, string> = {
-  physicalAttack: "物攻",
-  physicalDefense: "物防",
-  health: "气血",
-  spirit: "灵力",
-  speed: "速度",
-};
-
-const formatGrowth = (value: number) => value.toFixed(3);
-
-const formatInteger = (value: number) =>
-  new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 0 }).format(value);
-
 const formatAttempts = (value: number) =>
-  value < 10 ? value.toFixed(1) : formatInteger(Math.round(value));
+  value < 10 ? value.toFixed(1) : formatFusionInteger(Math.round(value));
 
 const RESULT_ATTRIBUTE_GRID_CLASS =
   "grid grid-cols-[minmax(0,1fr)_3.5rem_1.25rem] items-center gap-2";
@@ -48,31 +39,31 @@ const CostSummary = ({ cost, title }: { cost: FusionCost; title: string }) => (
   <section className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
     <p className="text-xs font-medium text-slate-500">{title}</p>
     <strong className="mt-1 block text-xl font-semibold tabular-nums text-slate-900">
-      {formatInteger(cost.attempts)} 次
+      {formatFusionInteger(cost.attempts)} 次
     </strong>
     <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
       <div>
         <span className="block text-slate-400">伐骨丹</span>
         <strong className="mt-0.5 block text-slate-700">
-          {formatInteger(cost.pills)} 个
+          {formatFusionInteger(cost.pills)} 个
         </strong>
       </div>
       <div>
         <span className="block text-slate-400">银两</span>
         <strong className="mt-0.5 block text-slate-700">
-          {formatInteger(cost.silver)}
+          {formatFusionInteger(cost.silver)}
         </strong>
       </div>
       <div>
         <span className="block text-slate-400">灵融果</span>
         <strong className="mt-0.5 block text-slate-700">
-          {formatInteger(cost.fruits)} 个
+          {formatFusionInteger(cost.fruits)} 个
         </strong>
       </div>
       <div>
         <span className="block text-slate-400">单次成本</span>
         <strong className="mt-0.5 block text-slate-700">
-          {formatInteger(FUSION_SILVER_PER_ATTEMPT)} 银
+          {formatFusionInteger(FUSION_SILVER_PER_ATTEMPT)} 银
         </strong>
       </div>
     </div>
@@ -143,8 +134,8 @@ const SpiritBeastFusionSummaryPanel = ({
         <div className="rounded-lg bg-slate-50 px-3 py-2.5">
           <span className="text-[11px] text-slate-500">成长</span>
           <strong className="mt-0.5 block text-sm tabular-nums text-slate-900">
-            {formatGrowth(preview.growthRange.minimum)}～
-            {formatGrowth(preview.growthRange.maximum)}
+            {formatFusionGrowth(preview.growthRange.minimum)}～
+            {formatFusionGrowth(preview.growthRange.maximum)}
           </strong>
         </div>
         <div className="rounded-lg bg-blue-50 px-3 py-2.5">
@@ -246,7 +237,7 @@ const SpiritBeastFusionSummaryPanel = ({
           {SPIRIT_BEAST_QUALIFICATIONS.map((qualification) => (
             <div key={qualification} className={RESULT_ATTRIBUTE_GRID_CLASS}>
               <span className="text-slate-500">
-                {QUALIFICATION_SHORT_LABELS[qualification]}
+                {SPIRIT_BEAST_QUALIFICATION_SHORT_LABELS[qualification]}
               </span>
               <strong className="text-right tabular-nums text-slate-900">
                 {lastRun.result.qualifications[qualification]}
@@ -261,7 +252,7 @@ const SpiritBeastFusionSummaryPanel = ({
           <div className={RESULT_ATTRIBUTE_GRID_CLASS}>
             <span className="text-slate-500">成长</span>
             <strong className="text-right tabular-nums text-slate-900">
-              {formatGrowth(lastRun.result.growth)}
+              {formatFusionGrowth(lastRun.result.growth)}
             </strong>
             <span className="size-5" aria-hidden="true" />
           </div>
@@ -299,13 +290,13 @@ const SpiritBeastFusionSummaryPanel = ({
           <div className="rounded-lg bg-white p-2.5">
             <span className="text-[10px] text-slate-500">中位</span>
             <strong className="mt-1 block text-sm text-slate-900">
-              {formatInteger(analysis.medianAttempts)}
+              {formatFusionInteger(analysis.medianAttempts)}
             </strong>
           </div>
           <div className="rounded-lg bg-white p-2.5">
             <span className="text-[10px] text-slate-500">较倒霉 P90</span>
             <strong className="mt-1 block text-sm text-slate-900">
-              {formatInteger(analysis.percentile90Attempts)}
+              {formatFusionInteger(analysis.percentile90Attempts)}
             </strong>
           </div>
         </div>
@@ -318,7 +309,7 @@ const SpiritBeastFusionSummaryPanel = ({
           <p className="mt-3 text-xs leading-5 text-blue-800">
             当前技能目标的理论保底上限为{" "}
             <strong>
-              {formatInteger(analysis.skillPityMaximumAttempts)} 次
+              {formatFusionInteger(analysis.skillPityMaximumAttempts)} 次
             </strong>
             。
             {analysis.hasNonGuaranteedAttributeTarget

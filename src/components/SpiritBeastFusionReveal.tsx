@@ -1,212 +1,16 @@
-import { useEffect, useId, useRef, useState } from "react";
-import type {
-  KeyboardEvent as ReactKeyboardEvent,
-  PointerEvent as ReactPointerEvent,
-  ReactNode,
-} from "react";
+import { useId, useRef, useState } from "react";
 import fusionRevealBackground from "../assets/spirit-beast-fusion-reveal-bg.png";
-import fusionScratchFilm from "../assets/spirit-beast-fusion-scratch-film.png";
 import { useModalDialog } from "../hooks/useModalDialog";
 import { SPIRIT_BEAST_QUALIFICATIONS } from "../utils/spiritBeastAttributes";
 import type { FusionResult } from "../utils/spiritBeastFusion";
+import { formatFusionGrowth } from "../utils/spiritBeastFusionFormatters";
 import { playFusionRevealSound } from "../utils/fusionRevealSound";
 import { SPIRIT_BEAST_QUALIFICATION_LABELS } from "./spiritBeastLabels";
 import { QualificationBurstMark } from "./SpiritBeastFusionMarks";
+import SpiritBeastFusionScratchReveal from "./SpiritBeastFusionScratchReveal";
 import SpiritBeastFusionSkillIcons from "./SpiritBeastFusionSkillIcons";
 
 const REVEAL_CARD_COUNT = SPIRIT_BEAST_QUALIFICATIONS.length + 3;
-
-const formatGrowth = (value: number) => value.toFixed(3);
-
-type ScratchRevealProps = {
-  label: string;
-  children: ReactNode;
-  revealAll: boolean;
-  onReveal: () => void;
-  className?: string;
-};
-
-const ScratchReveal = ({
-  label,
-  children,
-  revealAll,
-  onReveal,
-  className = "",
-}: ScratchRevealProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drawingRef = useRef(false);
-  const previousPointRef = useRef<{ x: number; y: number } | null>(null);
-  const strokeCountRef = useRef(0);
-  const hasReportedRevealRef = useRef(false);
-  const onRevealRef = useRef(onReveal);
-  const [isRevealed, setIsRevealed] = useState(false);
-
-  useEffect(() => {
-    onRevealRef.current = onReveal;
-  }, [onReveal]);
-
-  const reveal = () => {
-    setIsRevealed(true);
-    if (!hasReportedRevealRef.current) {
-      hasReportedRevealRef.current = true;
-      onRevealRef.current();
-    }
-  };
-
-  useEffect(() => {
-    if (revealAll) reveal();
-  }, [revealAll]);
-
-  useEffect(() => {
-    if (isRevealed) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const texture = new Image();
-    texture.src = fusionScratchFilm;
-
-    const drawCover = () => {
-      const bounds = canvas.getBoundingClientRect();
-      if (!bounds.width || !bounds.height) return;
-
-      const pixelRatio = window.devicePixelRatio || 1;
-      canvas.width = Math.round(bounds.width * pixelRatio);
-      canvas.height = Math.round(bounds.height * pixelRatio);
-      const context = canvas.getContext("2d");
-      if (!context) return;
-
-      context.globalCompositeOperation = "source-over";
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(texture, 0, 0, canvas.width, canvas.height);
-    };
-
-    texture.addEventListener("load", drawCover);
-    const resizeObserver =
-      typeof ResizeObserver === "undefined"
-        ? null
-        : new ResizeObserver(drawCover);
-    resizeObserver?.observe(canvas);
-    window.addEventListener("resize", drawCover);
-
-    return () => {
-      texture.removeEventListener("load", drawCover);
-      resizeObserver?.disconnect();
-      window.removeEventListener("resize", drawCover);
-    };
-  }, [isRevealed]);
-
-  const checkRevealProgress = () => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext("2d");
-    if (!canvas || !context) return;
-
-    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-    let transparentSamples = 0;
-    let totalSamples = 0;
-
-    for (let index = 3; index < pixels.length; index += 96) {
-      totalSamples += 1;
-      if (pixels[index] < 48) transparentSamples += 1;
-    }
-
-    if (totalSamples > 0 && transparentSamples / totalSamples >= 0.38) {
-      reveal();
-    }
-  };
-
-  const getCanvasPoint = (event: ReactPointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return null;
-
-    const bounds = canvas.getBoundingClientRect();
-    if (!bounds.width || !bounds.height) return null;
-
-    return {
-      x: ((event.clientX - bounds.left) / bounds.width) * canvas.width,
-      y: ((event.clientY - bounds.top) / bounds.height) * canvas.height,
-    };
-  };
-
-  const scratchTo = (event: ReactPointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext("2d");
-    const point = getCanvasPoint(event);
-    if (!canvas || !context || !point) return;
-
-    const previousPoint = previousPointRef.current ?? point;
-    context.globalCompositeOperation = "destination-out";
-    context.lineCap = "round";
-    context.lineJoin = "round";
-    context.lineWidth = Math.max(34, canvas.width * 0.055);
-    context.beginPath();
-    context.moveTo(previousPoint.x, previousPoint.y);
-    context.lineTo(point.x, point.y);
-    context.stroke();
-    previousPointRef.current = point;
-    strokeCountRef.current += 1;
-
-    if (strokeCountRef.current % 10 === 0) checkRevealProgress();
-  };
-
-  const finishScratching = () => {
-    if (!drawingRef.current) return;
-
-    drawingRef.current = false;
-    previousPointRef.current = null;
-    checkRevealProgress();
-  };
-
-  const handleKeyDown = (event: ReactKeyboardEvent<HTMLCanvasElement>) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
-
-    event.preventDefault();
-    reveal();
-  };
-
-  return (
-    <div
-      className={`relative min-h-24 overflow-hidden rounded-2xl border border-blue-200/70 bg-blue-950/80 shadow-[inset_0_0_24px_rgba(96,165,250,0.2),0_0_24px_rgba(59,130,246,0.18)] ${className}`}
-    >
-      <div
-        className="flex min-h-24 h-full items-center justify-center p-4 text-center"
-        aria-hidden={!isRevealed}
-      >
-        {children}
-      </div>
-
-      {!isRevealed ? (
-        <>
-          <canvas
-            ref={canvasRef}
-            className="absolute inset-0 z-10 size-full touch-none cursor-crosshair"
-            role="button"
-            tabIndex={0}
-            aria-label={`刮开${label}`}
-            onPointerDown={(event) => {
-              drawingRef.current = true;
-              event.currentTarget.setPointerCapture(event.pointerId);
-              previousPointRef.current = getCanvasPoint(event);
-              scratchTo(event);
-            }}
-            onPointerMove={(event) => {
-              if (drawingRef.current) scratchTo(event);
-            }}
-            onPointerUp={finishScratching}
-            onPointerCancel={finishScratching}
-            onKeyDown={handleKeyDown}
-          />
-          <span
-            className="pointer-events-none absolute left-6 right-3 top-1/2 z-20 -translate-y-1/2 text-left text-xl font-semibold tracking-[0.12em] text-white drop-shadow-md sm:text-2xl"
-            style={{ fontFamily: '"STKaiti", "KaiTi", serif' }}
-          >
-            {label}
-          </span>
-        </>
-      ) : null}
-    </div>
-  );
-};
 
 type SpiritBeastFusionRevealProps = {
   result: FusionResult;
@@ -293,7 +97,7 @@ const SpiritBeastFusionReveal = ({
         <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-6">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {SPIRIT_BEAST_QUALIFICATIONS.map((qualification) => (
-              <ScratchReveal
+              <SpiritBeastFusionScratchReveal
                 key={qualification}
                 label={SPIRIT_BEAST_QUALIFICATION_LABELS[qualification]}
                 revealAll={revealAll}
@@ -312,10 +116,10 @@ const SpiritBeastFusionReveal = ({
                     ) : null}
                   </span>
                 </div>
-              </ScratchReveal>
+              </SpiritBeastFusionScratchReveal>
             ))}
 
-            <ScratchReveal
+            <SpiritBeastFusionScratchReveal
               label="成长"
               revealAll={revealAll}
               onReveal={handleCardReveal}
@@ -323,12 +127,12 @@ const SpiritBeastFusionReveal = ({
               <div>
                 <span className="text-xs text-blue-200">成长</span>
                 <strong className="mt-1 block text-2xl tabular-nums text-white">
-                  {formatGrowth(result.growth)}
+                  {formatFusionGrowth(result.growth)}
                 </strong>
               </div>
-            </ScratchReveal>
+            </SpiritBeastFusionScratchReveal>
 
-            <ScratchReveal
+            <SpiritBeastFusionScratchReveal
               label="初始属性"
               revealAll={revealAll}
               onReveal={handleCardReveal}
@@ -340,9 +144,9 @@ const SpiritBeastFusionReveal = ({
                   {result.initialAttributeTotal}
                 </strong>
               </div>
-            </ScratchReveal>
+            </SpiritBeastFusionScratchReveal>
 
-            <ScratchReveal
+            <SpiritBeastFusionScratchReveal
               label="技能"
               revealAll={revealAll}
               onReveal={handleCardReveal}
@@ -361,7 +165,7 @@ const SpiritBeastFusionReveal = ({
                   />
                 </div>
               </div>
-            </ScratchReveal>
+            </SpiritBeastFusionScratchReveal>
           </div>
         </div>
 

@@ -9,16 +9,11 @@ import {
   type SpiritBeastQualification,
 } from "../utils/spiritBeastAttributes";
 import type { FusionBeast, FusionParents } from "../utils/spiritBeastFusion";
-import { SPIRIT_BEAST_QUALIFICATION_LABELS } from "./spiritBeastLabels";
+import {
+  SPIRIT_BEAST_QUALIFICATION_LABELS,
+  SPIRIT_BEAST_QUALIFICATION_SHORT_LABELS,
+} from "./spiritBeastLabels";
 import SpiritBeastFusionSkillEditor from "./SpiritBeastFusionSkillEditor";
-
-const QUALIFICATION_SHORT_LABELS: Record<SpiritBeastQualification, string> = {
-  physicalAttack: "物攻",
-  physicalDefense: "物防",
-  health: "气血",
-  spirit: "灵力",
-  speed: "速度",
-};
 
 const clampNumber = (value: number, minimum: number, maximum: number) =>
   Math.min(maximum, Math.max(minimum, value));
@@ -209,7 +204,7 @@ const SpiritBeastFusionParentEditor = ({
             aria-label={SPIRIT_BEAST_QUALIFICATION_LABELS[qualification]}
           >
             <span className="self-center font-medium text-slate-600">
-              {QUALIFICATION_SHORT_LABELS[qualification]}
+              {SPIRIT_BEAST_QUALIFICATION_SHORT_LABELS[qualification]}
             </span>
             <QualificationSliderInput
               label={`主宠${SPIRIT_BEAST_QUALIFICATION_LABELS[qualification]}`}

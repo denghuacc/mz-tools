@@ -3,15 +3,13 @@ import {
   FUSION_PILLS_PER_ATTEMPT,
   FUSION_SILVER_PER_ATTEMPT,
 } from "../utils/spiritBeastFusion";
+import { formatFusionInteger } from "../utils/spiritBeastFusionFormatters";
 import SpiritBeastFusionComparison from "./SpiritBeastFusionComparison";
 import SpiritBeastFusionParentEditor from "./SpiritBeastFusionParentEditor";
 import SpiritBeastFusionRecords from "./SpiritBeastFusionRecords";
 import SpiritBeastFusionReveal from "./SpiritBeastFusionReveal";
 import SpiritBeastFusionStrategyPanel from "./SpiritBeastFusionStrategyPanel";
 import SpiritBeastFusionSummaryPanel from "./SpiritBeastFusionSummaryPanel";
-
-const formatInteger = (value: number) =>
-  new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 0 }).format(value);
 
 /** 组装灵兽融合配置、模拟结果、对比流程和本地记录。 */
 const SpiritBeastFusionSimulator = () => {
@@ -64,7 +62,9 @@ const SpiritBeastFusionSimulator = () => {
           <div className="flex shrink-0 items-center gap-2 rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-700">
             <span>{FUSION_PILLS_PER_ATTEMPT} 伐骨丹</span>
             <span aria-hidden="true">·</span>
-            <strong>{formatInteger(FUSION_SILVER_PER_ATTEMPT)} 银/次</strong>
+            <strong>
+              {formatFusionInteger(FUSION_SILVER_PER_ATTEMPT)} 银/次
+            </strong>
           </div>
         </div>
       </section>

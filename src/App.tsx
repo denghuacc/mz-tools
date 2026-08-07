@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import RingConverter from "./components/RingConverter";
 import WeaponConverter from "./components/WeaponConverter";
 import CharacterAttributeCalculator from "./components/CharacterAttributeCalculator";
 import CharacterProfileSlots from "./components/CharacterProfileSlots";
 import EquipmentCalculator from "./components/EquipmentCalculator";
 import SpiritBeastAttributeCalculator from "./components/SpiritBeastAttributeCalculator";
-import SpiritBeastFusionSimulator from "./components/SpiritBeastFusionSimulator";
 import SpiritBeastProfileSlots from "./components/SpiritBeastProfileSlots";
 import DataPage from "./pages/DataPage";
 import FavoritesPage from "./pages/FavoritesPage";
@@ -57,6 +56,10 @@ import {
   restoreSpiritBeastStateSnapshot,
   saveSpiritBeastProfileSlots,
 } from "./utils/spiritBeastProfiles";
+
+const SpiritBeastFusionSimulator = lazy(
+  () => import("./components/SpiritBeastFusionSimulator"),
+);
 
 type PageId =
   | "home"
@@ -398,7 +401,18 @@ const CalculatorPage = () => {
         ) : isSpiritBeast ? (
           <SpiritBeastAttributeCalculator key={spiritBeastCalculatorKey} />
         ) : isSpiritBeastFusion ? (
-          <SpiritBeastFusionSimulator />
+          <Suspense
+            fallback={
+              <section
+                className="rounded-2xl border border-slate-200 bg-white px-5 py-12 text-center text-sm text-slate-500 shadow-sm"
+                role="status"
+              >
+                正在加载灵兽融合模拟器…
+              </section>
+            }
+          >
+            <SpiritBeastFusionSimulator />
+          </Suspense>
         ) : isWeapon ? (
           <WeaponConverter />
         ) : (

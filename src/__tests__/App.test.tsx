@@ -194,7 +194,7 @@ describe("App 组件", () => {
     await user.click(screen.getByRole("tab", { name: "灵兽融合 (测试版)" }));
 
     expect(
-      screen.getByRole("heading", { name: "灵兽融合模拟器" }),
+      await screen.findByRole("heading", { name: "灵兽融合模拟器" }),
     ).toBeInTheDocument();
     expect(screen.getByText("经验模型")).toBeInTheDocument();
     expect(loadPreferences().activeTool).toBe("spirit-beast-fusion");
