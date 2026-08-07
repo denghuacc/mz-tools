@@ -7,7 +7,6 @@ import {
   FUSION_INITIAL_ATTRIBUTE_MAX,
   FUSION_INITIAL_ATTRIBUTE_MIN,
   FUSION_SILVER_PER_ATTEMPT,
-  formatFusionSkillLabel,
   type FusionAnalysis,
   type FusionCost,
   type FusionParents,
@@ -18,6 +17,7 @@ import {
 } from "../utils/spiritBeastFusion";
 import { SPIRIT_BEAST_QUALIFICATION_LABELS } from "./spiritBeastLabels";
 import { QualificationBurstMark } from "./SpiritBeastFusionMarks";
+import SpiritBeastFusionSkillIcons from "./SpiritBeastFusionSkillIcons";
 
 const QUALIFICATION_SHORT_LABELS: Record<SpiritBeastQualification, string> = {
   physicalAttack: "物攻",
@@ -35,21 +35,12 @@ const formatInteger = (value: number) =>
 const formatAttempts = (value: number) =>
   value < 10 ? value.toFixed(1) : formatInteger(Math.round(value));
 
+const RESULT_ATTRIBUTE_GRID_CLASS =
+  "grid grid-cols-[minmax(0,1fr)_3.5rem_1.25rem] items-center gap-2";
+
 const FusionResultSkills = ({ result }: { result: FusionResult }) => (
-  <div className="mt-3 flex flex-wrap gap-2" aria-label="融合结果技能">
-    {result.skills.map((skill) => (
-      <span
-        key={skill.id}
-        className={
-          "rounded-full px-2.5 py-1 text-xs font-medium " +
-          (skill.isSpecial
-            ? "bg-violet-100 text-violet-700"
-            : "bg-slate-100 text-slate-700")
-        }
-      >
-        {formatFusionSkillLabel(skill)}
-      </span>
-    ))}
+  <div className="mt-3" aria-label="融合结果技能">
+    <SpiritBeastFusionSkillIcons skills={result.skills} size="small" />
   </div>
 );
 
@@ -253,32 +244,33 @@ const SpiritBeastFusionSummaryPanel = ({
 
         <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
           {SPIRIT_BEAST_QUALIFICATIONS.map((qualification) => (
-            <div
-              key={qualification}
-              className="flex items-center justify-between gap-2"
-            >
+            <div key={qualification} className={RESULT_ATTRIBUTE_GRID_CLASS}>
               <span className="text-slate-500">
                 {QUALIFICATION_SHORT_LABELS[qualification]}
               </span>
-              <strong className="tabular-nums text-slate-900">
+              <strong className="text-right tabular-nums text-slate-900">
                 {lastRun.result.qualifications[qualification]}
               </strong>
               {lastRun.result.qualificationBreakthroughs[qualification] ? (
                 <QualificationBurstMark compact />
-              ) : null}
+              ) : (
+                <span className="size-5" aria-hidden="true" />
+              )}
             </div>
           ))}
-          <div className="flex items-center justify-between gap-2">
+          <div className={RESULT_ATTRIBUTE_GRID_CLASS}>
             <span className="text-slate-500">成长</span>
-            <strong className="tabular-nums text-slate-900">
+            <strong className="text-right tabular-nums text-slate-900">
               {formatGrowth(lastRun.result.growth)}
             </strong>
+            <span className="size-5" aria-hidden="true" />
           </div>
-          <div className="flex items-center justify-between gap-2">
+          <div className={RESULT_ATTRIBUTE_GRID_CLASS}>
             <span className="text-slate-500">初始属性</span>
-            <strong className="tabular-nums text-blue-700">
+            <strong className="text-right tabular-nums text-blue-700">
               {lastRun.result.initialAttributeTotal}
             </strong>
+            <span className="size-5" aria-hidden="true" />
           </div>
         </div>
 

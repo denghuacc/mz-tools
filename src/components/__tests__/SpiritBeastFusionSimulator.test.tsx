@@ -103,8 +103,20 @@ describe("SpiritBeastFusionSimulator", () => {
     );
 
     const selectedSkills = screen.getByLabelText("主宠技能已录入技能");
+    expect(
+      within(selectedSkills).queryByText("高级迅捷"),
+    ).not.toBeInTheDocument();
+    await user.click(
+      within(selectedSkills).getByRole("button", {
+        name: "查看高级迅捷技能名称",
+      }),
+    );
     expect(within(selectedSkills).getByText("高级迅捷")).toBeInTheDocument();
-    expect(within(selectedSkills).getByText("高级健壮")).toBeInTheDocument();
+    expect(
+      within(selectedSkills).getByRole("button", {
+        name: "查看高级健壮技能名称",
+      }),
+    ).toBeInTheDocument();
 
     await waitFor(() => {
       const stored = JSON.parse(
@@ -141,6 +153,13 @@ describe("SpiritBeastFusionSimulator", () => {
       }),
     );
 
+    const specialSkillButton = screen.getByRole("button", {
+      name: "查看被动特 · 月影奇袭技能名称",
+    });
+    expect(specialSkillButton).toHaveTextContent("特");
+    expect(screen.queryByText("被动特 · 月影奇袭")).not.toBeInTheDocument();
+
+    await user.click(specialSkillButton);
     expect(screen.getByText("被动特 · 月影奇袭")).toBeInTheDocument();
 
     await waitFor(() => {
@@ -307,6 +326,14 @@ describe("SpiritBeastFusionSimulator", () => {
     expect(within(result).getByText("6 技能 · 0 特殊")).toBeInTheDocument();
     expect(within(result).getByText("已达标")).toBeInTheDocument();
     expect(within(result).getByText("15,000")).toBeInTheDocument();
+    const physicalAttackRow = within(result).getByText("物攻").parentElement;
+    const growthRow = within(result).getByText("成长").parentElement;
+    expect(physicalAttackRow).toHaveClass(
+      "grid",
+      "grid-cols-[minmax(0,1fr)_3.5rem_1.25rem]",
+    );
+    expect(physicalAttackRow?.children).toHaveLength(3);
+    expect(growthRow?.children).toHaveLength(3);
 
     expect(
       screen.queryByRole("button", { name: "保存到融合记录" }),

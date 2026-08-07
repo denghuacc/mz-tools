@@ -9,10 +9,10 @@ import fusionScratchFilm from "../assets/spirit-beast-fusion-scratch-film.png";
 import { useModalDialog } from "../hooks/useModalDialog";
 import { SPIRIT_BEAST_QUALIFICATIONS } from "../utils/spiritBeastAttributes";
 import type { FusionResult } from "../utils/spiritBeastFusion";
-import { formatFusionSkillLabel } from "../utils/spiritBeastFusion";
 import { playFusionRevealSound } from "../utils/fusionRevealSound";
 import { SPIRIT_BEAST_QUALIFICATION_LABELS } from "./spiritBeastLabels";
 import { QualificationBurstMark } from "./SpiritBeastFusionMarks";
+import SpiritBeastFusionSkillIcons from "./SpiritBeastFusionSkillIcons";
 
 const REVEAL_CARD_COUNT = SPIRIT_BEAST_QUALIFICATIONS.length + 3;
 
@@ -352,21 +352,13 @@ const SpiritBeastFusionReveal = ({
                 <span className="text-xs text-blue-200">
                   {result.skillCount} 技能 · {result.specialSkillCount} 特殊
                 </span>
-                <div className="mt-3 flex flex-wrap justify-center gap-2">
-                  {result.skills.map((skill) => (
-                    <span
-                      key={skill.id}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                        skill.isSpecial
-                          ? skill.specialType === "passive"
-                            ? "border-fuchsia-200/60 bg-fuchsia-400/20 text-fuchsia-100"
-                            : "border-cyan-200/60 bg-cyan-400/20 text-cyan-100"
-                          : "border-blue-200/30 bg-blue-100/10 text-blue-50"
-                      }`}
-                    >
-                      {formatFusionSkillLabel(skill)}
-                    </span>
-                  ))}
+                <div className="mt-3">
+                  <SpiritBeastFusionSkillIcons
+                    skills={result.skills}
+                    size="large"
+                    tone="dark"
+                    justify="center"
+                  />
                 </div>
               </div>
             </ScratchReveal>

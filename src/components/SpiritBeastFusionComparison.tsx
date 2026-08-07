@@ -10,13 +10,13 @@ import { SPIRIT_BEAST_QUALIFICATIONS } from "../utils/spiritBeastAttributes";
 import {
   FUSION_PILLS_PER_ATTEMPT,
   FUSION_SILVER_PER_ATTEMPT,
-  formatFusionSkillLabel,
   type FusionPreview,
   type FusionResult,
   type FusionRun,
 } from "../utils/spiritBeastFusion";
 import { SPIRIT_BEAST_QUALIFICATION_LABELS } from "./spiritBeastLabels";
 import { QualificationBurstMark } from "./SpiritBeastFusionMarks";
+import SpiritBeastFusionSkillIcons from "./SpiritBeastFusionSkillIcons";
 
 type Trend = "up" | "down" | "same";
 
@@ -120,21 +120,8 @@ const SkillList = ({ result }: { result: FusionResult }) => (
         {result.skillCount} 技能 · {result.specialSkillCount} 特殊
       </span>
     </div>
-    <div className="mt-2 flex min-h-44 flex-wrap content-start gap-2 rounded-lg bg-white/65 p-3">
-      {result.skills.map((skill) => (
-        <span
-          key={skill.id}
-          className={`rounded-full border px-2.5 py-1.5 text-xs font-semibold ${
-            skill.isSpecial
-              ? skill.specialType === "passive"
-                ? "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700"
-                : "border-cyan-200 bg-cyan-50 text-cyan-700"
-              : "border-slate-200 bg-white text-slate-700"
-          }`}
-        >
-          {formatFusionSkillLabel(skill)}
-        </span>
-      ))}
+    <div className="mt-2 min-h-44 rounded-lg bg-white/65 p-3">
+      <SpiritBeastFusionSkillIcons skills={result.skills} />
     </div>
   </div>
 );

@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { getSpiritBeastFusionSkillOption } from "../data/spiritBeastFusionSkills";
 import {
   FUSION_SKILL_MAX_PER_BEAST,
-  formatFusionSkillLabel,
   type FusionSkill,
   type FusionSpecialSkillType,
 } from "../utils/spiritBeastFusion";
+import SpiritBeastFusionSkillIcons from "./SpiritBeastFusionSkillIcons";
 import SpiritBeastFusionSkillPicker from "./SpiritBeastFusionSkillPicker";
 
 let fusionSkillIdSequence = 0;
@@ -191,41 +190,14 @@ const SpiritBeastFusionSkillEditor = ({
             暂无技能，至少录入 4 个。
           </p>
         ) : (
-          skills.map((skill) => {
-            const skillOption = getSpiritBeastFusionSkillOption(skill.name);
-
-            return (
-              <span
-                key={skill.id}
-                className={`inline-flex items-center gap-1 rounded-full py-1 pr-1 text-xs font-medium ${
-                  skill.isSpecial
-                    ? "bg-violet-100 pl-2.5 text-violet-700"
-                    : "bg-white pl-1 text-slate-700 ring-1 ring-inset ring-slate-200"
-                }`}
-              >
-                {skillOption ? (
-                  <img
-                    className="size-6 rounded-full object-cover"
-                    src={skillOption.iconUrl}
-                    alt=""
-                  />
-                ) : null}
-                {formatFusionSkillLabel(skill)}
-                <button
-                  type="button"
-                  className="grid size-5 place-items-center rounded-full text-current opacity-60 transition hover:bg-black/5 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label={`删除${title}${skill.name}`}
-                  onClick={() =>
-                    onChange(
-                      skills.filter((candidate) => candidate.id !== skill.id),
-                    )
-                  }
-                >
-                  ×
-                </button>
-              </span>
-            );
-          })
+          <SpiritBeastFusionSkillIcons
+            skills={skills}
+            size="small"
+            onRemove={(skillId) =>
+              onChange(skills.filter((skill) => skill.id !== skillId))
+            }
+            removeAriaLabel={(skill) => `删除${title}${skill.name}`}
+          />
         )}
       </div>
 
