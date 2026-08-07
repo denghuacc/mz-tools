@@ -77,37 +77,82 @@ describe("SpiritBeastFusionSimulator", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("至少需要录入 4 个");
   });
 
-  it("手动添加和删除技能并将输入保存到本地", async () => {
+  it("搜索并多选截图技能后将输入保存到本地", async () => {
     const user = userEvent.setup();
     render(<SpiritBeastFusionSimulator />);
 
-    const nameInput = screen.getByRole("textbox", { name: "主宠技能名称" });
-    await user.type(nameInput, "高级迅捷");
+    const skillPicker = screen.getByRole("group", {
+      name: "主宠技能技能选择",
+    });
+    await user.click(within(skillPicker).getByText("搜索并选择技能"));
+    const searchInput = screen.getByRole("searchbox", {
+      name: "主宠技能搜索技能",
+    });
+    const options = screen.getByRole("group", {
+      name: "主宠技能可选技能",
+    });
+
+    await user.type(searchInput, "迅捷");
     await user.click(
-      screen.getByRole("checkbox", {
-        name: "主宠技能该技能为特殊技能",
-      }),
+      within(options).getByRole("checkbox", { name: "高级迅捷" }),
     );
+    await user.clear(searchInput);
+    await user.type(searchInput, "健壮");
     await user.click(
-      screen.getByRole("radio", { name: "主宠技能被动特殊技能" }),
+      within(options).getByRole("checkbox", { name: "高级健壮" }),
     );
 
-    await user.click(screen.getAllByRole("button", { name: "添加" })[0]);
-    expect(screen.getByText("被动特 · 高级迅捷")).toBeInTheDocument();
+    const selectedSkills = screen.getByLabelText("主宠技能已录入技能");
+    expect(within(selectedSkills).getByText("高级迅捷")).toBeInTheDocument();
+    expect(within(selectedSkills).getByText("高级健壮")).toBeInTheDocument();
 
     await waitFor(() => {
       const stored = JSON.parse(
         window.localStorage.getItem(SPIRIT_BEAST_FUSION_STORAGE_KEY) ?? "{}",
       );
       expect(stored.parents.main.skills[0].name).toBe("高级迅捷");
-      expect(stored.parents.main.skills[0].isSpecial).toBe(true);
-      expect(stored.parents.main.skills[0].specialType).toBe("passive");
+      expect(stored.parents.main.skills[0].isSpecial).toBe(false);
+      expect(stored.parents.main.skills[1].name).toBe("高级健壮");
     });
 
     await user.click(
       screen.getByRole("button", { name: "删除主宠技能高级迅捷" }),
     );
-    expect(screen.queryByText("特 · 高级迅捷")).not.toBeInTheDocument();
+    expect(
+      within(selectedSkills).queryByText("高级迅捷"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("仍可补充截图列表外的被动特殊技能", async () => {
+    const user = userEvent.setup();
+    render(<SpiritBeastFusionSimulator />);
+
+    await user.click(screen.getAllByText("＋ 补充灵兽特殊技能")[0]);
+    const nameInput = screen.getByRole("textbox", {
+      name: "主宠技能特殊技能名称",
+    });
+    await user.type(nameInput, "月影奇袭");
+    await user.click(
+      screen.getByRole("radio", { name: "主宠技能被动特殊技能" }),
+    );
+    await user.click(
+      within(nameInput.closest("details")!).getByRole("button", {
+        name: "添加",
+      }),
+    );
+
+    expect(screen.getByText("被动特 · 月影奇袭")).toBeInTheDocument();
+
+    await waitFor(() => {
+      const stored = JSON.parse(
+        window.localStorage.getItem(SPIRIT_BEAST_FUSION_STORAGE_KEY) ?? "{}",
+      );
+      expect(stored.parents.main.skills[0]).toMatchObject({
+        name: "月影奇袭",
+        isSpecial: true,
+        specialType: "passive",
+      });
+    });
   });
 
   it("允许清空资质输入框后重新输入范围内数值", async () => {
