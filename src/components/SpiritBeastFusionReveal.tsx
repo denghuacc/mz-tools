@@ -6,6 +6,7 @@ import type { FusionResult } from "../utils/spiritBeastFusion";
 import { formatFusionGrowth } from "../utils/spiritBeastFusionFormatters";
 import { playFusionRevealSound } from "../utils/fusionRevealSound";
 import { SPIRIT_BEAST_QUALIFICATION_LABELS } from "./spiritBeastLabels";
+import { SPIRIT_BEAST_GAME_FONT_STYLE } from "./spiritBeastGameStyles";
 import { QualificationBurstMark } from "./SpiritBeastFusionMarks";
 import SpiritBeastFusionScratchReveal from "./SpiritBeastFusionScratchReveal";
 import SpiritBeastFusionSkillIcons from "./SpiritBeastFusionSkillIcons";
@@ -77,7 +78,7 @@ const SpiritBeastFusionReveal = ({
             <h2
               id={titleId}
               className="mt-1 text-2xl font-bold tracking-[0.16em] text-white sm:text-3xl"
-              style={{ fontFamily: '"STKaiti", "KaiTi", serif' }}
+              style={SPIRIT_BEAST_GAME_FONT_STYLE}
             >
               灵兽融合 · 揭秘
             </h2>

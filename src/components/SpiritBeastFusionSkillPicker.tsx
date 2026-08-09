@@ -1,14 +1,10 @@
 import { useMemo, useState } from "react";
-import {
-  SPIRIT_BEAST_FUSION_SKILL_OPTIONS,
-  type SpiritBeastFusionSkillCategory,
-} from "../data/spiritBeastFusionSkills";
+import { type SpiritBeastSkillCategoryFilter } from "../data/spiritBeastFusionSkills";
+import { useSpiritBeastSkillOptionFilter } from "../hooks/useSpiritBeastSkillOptionFilter";
 import { FUSION_SKILL_MAX_PER_BEAST } from "../utils/spiritBeastFusion";
 
-type SkillCategoryFilter = "all" | SpiritBeastFusionSkillCategory;
-
 const SKILL_CATEGORY_FILTERS: readonly {
-  value: SkillCategoryFilter;
+  value: SpiritBeastSkillCategoryFilter;
   label: string;
 }[] = [
   { value: "all", label: "全部" },
@@ -21,6 +17,7 @@ type SpiritBeastFusionSkillPickerProps = {
   title: string;
   selectedSkillNames: readonly string[];
   onToggle: (skillName: string) => void;
+  maxSelected?: number;
 };
 
 /** 从截图技能库中搜索并多选一只灵兽的自身技能。 */
@@ -28,22 +25,16 @@ const SpiritBeastFusionSkillPicker = ({
   title,
   selectedSkillNames,
   onToggle,
+  maxSelected = FUSION_SKILL_MAX_PER_BEAST,
 }: SpiritBeastFusionSkillPickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<SkillCategoryFilter>("all");
+  const { query, setQuery, category, setCategory, filteredOptions } =
+    useSpiritBeastSkillOptionFilter();
   const selectedSkillNameSet = useMemo(
     () => new Set(selectedSkillNames),
     [selectedSkillNames],
   );
-  const normalizedQuery = query.trim().toLocaleLowerCase();
-  const filteredOptions = SPIRIT_BEAST_FUSION_SKILL_OPTIONS.filter(
-    (option) =>
-      (category === "all" || option.category === category) &&
-      (!normalizedQuery ||
-        option.name.toLocaleLowerCase().includes(normalizedQuery)),
-  );
-  const isAtLimit = selectedSkillNames.length >= FUSION_SKILL_MAX_PER_BEAST;
+  const isAtLimit = selectedSkillNames.length >= maxSelected;
 
   return (
     <details
@@ -67,7 +58,7 @@ const SpiritBeastFusionSkillPicker = ({
           搜索并选择技能
         </span>
         <span className="flex shrink-0 items-center gap-2 text-xs text-slate-500">
-          {selectedSkillNames.length}/{FUSION_SKILL_MAX_PER_BEAST}
+          {selectedSkillNames.length}/{maxSelected}
           <svg
             className="size-3.5 transition group-open:rotate-180"
             viewBox="0 0 20 20"
@@ -134,7 +125,7 @@ const SpiritBeastFusionSkillPicker = ({
 
           {isAtLimit ? (
             <p className="mt-2 text-[11px] text-amber-700">
-              已选满 {FUSION_SKILL_MAX_PER_BEAST} 个；取消一个后可继续选择。
+              已选满 {maxSelected} 个；取消一个后可继续选择。
             </p>
           ) : null}
 

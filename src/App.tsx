@@ -60,6 +60,9 @@ import {
 const SpiritBeastFusionSimulator = lazy(
   () => import("./components/SpiritBeastFusionSimulator"),
 );
+const SpiritBeastSkillLearningSimulator = lazy(
+  () => import("./components/SpiritBeastSkillLearningSimulator"),
+);
 
 type PageId =
   | "home"
@@ -199,8 +202,14 @@ const CalculatorPage = () => {
   const isEquipment = activeTool === "equipment";
   const isSpiritBeast = activeTool === "spirit-beast";
   const isSpiritBeastFusion = activeTool === "spirit-beast-fusion";
+  const isSpiritBeastSkillLearning =
+    activeTool === "spirit-beast-skill-learning";
   const isStandaloneCalculator =
-    isCharacter || isEquipment || isSpiritBeast || isSpiritBeastFusion;
+    isCharacter ||
+    isEquipment ||
+    isSpiritBeast ||
+    isSpiritBeastFusion ||
+    isSpiritBeastSkillLearning;
   const equipmentSummary = useMemo(
     () =>
       calculateEquipmentSummary(
@@ -325,7 +334,7 @@ const CalculatorPage = () => {
           游戏数值计算
         </h1>
         <p className="mt-2 text-sm text-slate-500">
-          计算角色、装备与灵兽属性，模拟灵兽融合，或查看装备转换后的数值变化。
+          计算角色、装备与灵兽属性，模拟灵兽融合与技能学习，或查看装备转换后的数值变化。
         </p>
       </div>
 
@@ -342,6 +351,7 @@ const CalculatorPage = () => {
             ["equipment", "角色装备 (测试版)"],
             ["spirit-beast", "灵兽面板 (测试版)"],
             ["spirit-beast-fusion", "灵兽融合 (测试版)"],
+            ["spirit-beast-skill-learning", "灵兽技能学习 (测试版)"],
           ] as const
         ).map(([tool, label]) => (
           <button
@@ -412,6 +422,19 @@ const CalculatorPage = () => {
             }
           >
             <SpiritBeastFusionSimulator />
+          </Suspense>
+        ) : isSpiritBeastSkillLearning ? (
+          <Suspense
+            fallback={
+              <section
+                className="rounded-2xl border border-slate-200 bg-white px-5 py-12 text-center text-sm text-slate-500 shadow-sm"
+                role="status"
+              >
+                正在加载灵兽技能学习模拟器…
+              </section>
+            }
+          >
+            <SpiritBeastSkillLearningSimulator />
           </Suspense>
         ) : isWeapon ? (
           <WeaponConverter />

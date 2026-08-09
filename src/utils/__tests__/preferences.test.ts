@@ -47,6 +47,18 @@ describe("用户偏好存储", () => {
     expect(loadPreferences().activeTool).toBe("spirit-beast-fusion");
   });
 
+  it("支持恢复灵兽技能学习页签", () => {
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        ...DEFAULT_PREFERENCES,
+        activeTool: "spirit-beast-skill-learning",
+      }),
+    );
+
+    expect(loadPreferences().activeTool).toBe("spirit-beast-skill-learning");
+  });
+
   it("损坏或非法字段安全回退默认值", () => {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,

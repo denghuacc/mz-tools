@@ -13,6 +13,8 @@ export const SPIRIT_BEAST_PROFILES_STORAGE_KEY =
   "mz-tools.spirit-beast-profiles.v1";
 export const SPIRIT_BEAST_FUSION_STORAGE_KEY =
   "mz-tools.spirit-beast-fusion.v1";
+export const SPIRIT_BEAST_SKILL_LEARNING_STORAGE_KEY =
+  "mz-tools.spirit-beast-skill-learning.v1";
 
 /** 读取并校验计算器状态；缓存损坏或存储不可用时回退默认值。 */
 export const loadCalculatorState = <T>(

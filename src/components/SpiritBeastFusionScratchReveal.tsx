@@ -5,6 +5,7 @@ import type {
   ReactNode,
 } from "react";
 import fusionScratchFilm from "../assets/spirit-beast-fusion-scratch-film.png";
+import { SPIRIT_BEAST_GAME_FONT_STYLE } from "./spiritBeastGameStyles";
 
 type SpiritBeastFusionScratchRevealProps = {
   label: string;
@@ -218,7 +219,7 @@ const SpiritBeastFusionScratchReveal = ({
           />
           <span
             className="pointer-events-none absolute left-6 right-3 top-1/2 z-20 -translate-y-1/2 text-left text-xl font-semibold tracking-[0.12em] text-white drop-shadow-md sm:text-2xl"
-            style={{ fontFamily: '"STKaiti", "KaiTi", serif' }}
+            style={SPIRIT_BEAST_GAME_FONT_STYLE}
           >
             {label}
           </span>

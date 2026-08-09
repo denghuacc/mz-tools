@@ -6,6 +6,7 @@ export type CalculatorTool =
   | "equipment"
   | "spirit-beast"
   | "spirit-beast-fusion"
+  | "spirit-beast-skill-learning"
   | "weapon"
   | "ring";
 
@@ -39,6 +40,7 @@ const isCalculatorTool = (value: unknown): value is CalculatorTool =>
   value === "equipment" ||
   value === "spirit-beast" ||
   value === "spirit-beast-fusion" ||
+  value === "spirit-beast-skill-learning" ||
   value === "weapon" ||
   value === "ring";
 

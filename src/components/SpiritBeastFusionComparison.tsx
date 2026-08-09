@@ -1,7 +1,5 @@
 import { useId, useRef } from "react";
-import fusionCloseStar from "../assets/spirit-beast-fusion-close-star.png";
 import fusionFullMark from "../assets/spirit-beast-fusion-full-mark.png";
-import fusionHeaderCrescent from "../assets/spirit-beast-fusion-header-crescent.png";
 import fusionTransitionArrow from "../assets/spirit-beast-fusion-transition-arrow.png";
 import fusionTrendDown from "../assets/spirit-beast-fusion-trend-down.png";
 import fusionTrendUp from "../assets/spirit-beast-fusion-trend-up.png";
@@ -19,6 +17,8 @@ import {
   formatFusionInteger,
 } from "../utils/spiritBeastFusionFormatters";
 import { SPIRIT_BEAST_QUALIFICATION_LABELS } from "./spiritBeastLabels";
+import { SPIRIT_BEAST_GAME_FONT_STYLE } from "./spiritBeastGameStyles";
+import SpiritBeastGameDialogHeader from "./SpiritBeastGameDialogHeader";
 import { QualificationBurstMark } from "./SpiritBeastFusionMarks";
 import SpiritBeastFusionSkillIcons from "./SpiritBeastFusionSkillIcons";
 
@@ -151,7 +151,7 @@ const ResultPanel = ({
         className={`text-xl font-bold tracking-[0.1em] ${
           isNew ? "text-amber-900" : "text-slate-700"
         }`}
-        style={{ fontFamily: '"STKaiti", "KaiTi", serif' }}
+        style={SPIRIT_BEAST_GAME_FONT_STYLE}
       >
         {title}
       </h3>
@@ -221,14 +221,14 @@ const EmptyResultPanel = () => (
     <div className="mb-5 flex items-center justify-center">
       <h3
         className="text-3xl font-bold tracking-[0.1em] text-amber-900 sm:text-4xl"
-        style={{ fontFamily: '"STKaiti", "KaiTi", serif' }}
+        style={SPIRIT_BEAST_GAME_FONT_STYLE}
       >
         新属性
       </h3>
     </div>
     <p
       className="flex flex-1 items-center justify-center px-6 pb-12 text-center text-2xl font-medium leading-relaxed text-slate-600 sm:text-3xl"
-      style={{ fontFamily: '"STKaiti", "KaiTi", serif' }}
+      style={SPIRIT_BEAST_GAME_FONT_STYLE}
     >
       点击下方重置按钮获得新的
       <br />
@@ -278,35 +278,12 @@ const SpiritBeastFusionComparison = ({
         aria-modal="true"
         aria-labelledby={titleId}
       >
-        <header className="relative flex shrink-0 items-center justify-between gap-4 bg-[#536b9e] px-5 py-3 text-white sm:px-8 sm:py-4">
-          <img
-            className="pointer-events-none absolute -left-8 -top-5 w-28 object-contain sm:-left-10 sm:w-32"
-            src={fusionHeaderCrescent}
-            alt=""
-            aria-hidden="true"
-          />
-          <div className="relative z-10 pl-8 sm:pl-12">
-            <h2
-              id={titleId}
-              className="mt-1 text-2xl font-bold tracking-[0.12em] sm:text-3xl"
-              style={{ fontFamily: '"STKaiti", "KaiTi", serif' }}
-            >
-              融合结果
-            </h2>
-          </div>
-          <button
-            type="button"
-            className="relative z-10 inline-flex size-11 shrink-0 items-center justify-center rounded-full transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white"
-            aria-label="关闭融合结果"
-            onClick={onClose}
-          >
-            <img
-              className="size-9 object-contain"
-              src={fusionCloseStar}
-              alt=""
-            />
-          </button>
-        </header>
+        <SpiritBeastGameDialogHeader
+          title="融合结果"
+          titleId={titleId}
+          closeAriaLabel="关闭融合结果"
+          onClose={onClose}
+        />
 
         <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-6">
           <div className="mx-auto mb-5 flex w-fit items-center gap-3 rounded-lg border border-blue-100 bg-white/80 px-4 py-2 shadow-sm">
