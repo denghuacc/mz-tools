@@ -81,9 +81,9 @@ const FilterButtons = <T extends string>({
         key={item}
         type="button"
         aria-pressed={selected === item}
-        className={`min-h-10 rounded-lg px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        className={`min-h-10 rounded-lg px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
           selected === item
-            ? "bg-blue-600 text-white"
+            ? "bg-brand-600 text-white"
             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
         }`}
         onClick={() => onChange(item)}
@@ -205,9 +205,9 @@ const DataPage = ({
             role="tab"
             aria-selected={activeCategory === category.id}
             aria-controls="data-results"
-            className={`min-h-10 shrink-0 rounded-md px-4 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`min-h-10 shrink-0 rounded-md px-4 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 ${
               activeCategory === category.id
-                ? "bg-blue-600 text-white"
+                ? "bg-brand-600 text-white"
                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
             }`}
             onClick={() => handleCategoryChange(category.id)}
@@ -235,7 +235,7 @@ const DataPage = ({
               type="search"
               value={query}
               placeholder={SEARCH_CONTENT[activeCategory].placeholder}
-              className="block h-11 w-full max-w-xl rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="block h-11 w-full max-w-xl rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>

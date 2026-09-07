@@ -46,7 +46,7 @@ export const SpiritBeastAffinityControl = ({
             <span className="mb-1.5 block text-xs font-medium text-slate-600">
               {AFFINITY_LABELS[attribute]}
             </span>
-            <span className="flex h-10 items-center rounded-lg border border-slate-200 bg-white px-2 transition focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
+            <span className="flex h-10 items-center rounded-lg border border-slate-200 bg-white px-2 transition focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
               <input
                 aria-label={`${AFFINITY_LABELS[attribute]}亲和初值`}
                 type="number"

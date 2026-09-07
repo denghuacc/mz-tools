@@ -4,7 +4,7 @@ import type { EquipmentAttribute } from "../../utils/equipmentAttributes";
 import type { EquipmentAttributeLine } from "../../utils/equipmentAttributes";
 
 export const equipmentEditorInputClassName =
-  "mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400";
+  "mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400";
 
 export const EquipmentFieldLabel = ({ children }: { children: string }) => (
   <span className="text-xs font-medium text-slate-600">{children}</span>
@@ -104,7 +104,7 @@ export const RemoveAttributeLineButton = ({
     type="button"
     aria-label={label}
     disabled={disabled}
-    className="mb-0.5 flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-slate-200 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+    className="mb-0.5 flex size-9 items-center justify-center rounded-lg border border-slate-200 text-slate-400 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-slate-200 disabled:hover:bg-transparent disabled:hover:text-slate-400"
     onClick={onClick}
   >
     <svg
@@ -169,7 +169,7 @@ export const AddAttributeLineButton = ({
 }) => (
   <button
     type="button"
-    className="rounded-lg border border-dashed border-blue-200 px-3 py-2 text-xs font-medium text-blue-600 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    className="rounded-lg border border-dashed border-brand-200 px-3 py-2 text-xs font-medium text-brand-600 transition hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-500"
     onClick={onClick}
   >
     {children}
@@ -196,7 +196,7 @@ export const EquipmentEffectToggle = ({
   >
     <input
       type="checkbox"
-      className="size-4 accent-blue-600"
+      className="size-4 accent-brand-600"
       checked={checked}
       disabled={disabled}
       onChange={(event) => onChange(event.target.checked)}

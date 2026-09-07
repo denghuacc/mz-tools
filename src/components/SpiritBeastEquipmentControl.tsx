@@ -272,7 +272,7 @@ const EquipmentEnabledToggle = ({
   <label className="mb-4 flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
     <input
       type="checkbox"
-      className="size-4 accent-blue-600"
+      className="size-4 accent-brand-600"
       aria-label={`${itemLabel}：计入装备`}
       checked={enabled}
       onChange={(event) => onChange(event.target.checked)}
@@ -289,8 +289,8 @@ const SpiritBeastEquipmentControl = ({
   onChange: (equipment: SpiritBeastEquipmentSet) => void;
 }) => (
   <div className="space-y-3" aria-label="灵兽装备配置">
-    <div className="flex items-start justify-between gap-4 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3">
-      <p className="text-xs leading-5 text-blue-800">
+    <div className="flex items-start justify-between gap-4 rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-3">
+      <p className="text-xs leading-5 text-brand-800">
         三件装备均无等级。宝链技能请统一在“技能”来源录入，这里只记录会影响面板的属性。
       </p>
       <ResetButton

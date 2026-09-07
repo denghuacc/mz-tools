@@ -63,7 +63,7 @@ const CharacterTrainingBonusControl = ({
         </div>
         <button
           type="button"
-          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-blue-600 disabled:cursor-not-allowed disabled:text-slate-300"
+          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-brand-600 disabled:cursor-not-allowed disabled:text-slate-300"
           disabled={isDefault}
           onClick={onReset}
         >
@@ -87,13 +87,13 @@ const CharacterTrainingBonusControl = ({
                   <h3 className="text-sm font-semibold text-slate-800">
                     {label}
                   </h3>
-                  <p className="mt-1 text-[11px] leading-4 text-blue-600">
+                  <p className="mt-1 text-[11px] leading-4 text-brand-600">
                     {effectLabel}
                   </p>
                 </div>
                 <output
                   aria-label={`${label}当前等级`}
-                  className="shrink-0 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700"
+                  className="shrink-0 rounded-md bg-brand-50 px-2 py-1 text-[11px] font-semibold text-brand-700"
                 >
                   {formatCharacterTrainingLevel(config)} /{" "}
                   {CHARACTER_TRAINING_LEVEL_LIMIT}
@@ -104,7 +104,7 @@ const CharacterTrainingBonusControl = ({
                 <span className="mb-1.5 block">等级</span>
                 <select
                   aria-label={`${label}等级`}
-                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-sm text-slate-800 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                   value={config.level}
                   onChange={(event) =>
                     updateLevel(id, {

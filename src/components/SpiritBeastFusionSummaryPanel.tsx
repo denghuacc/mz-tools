@@ -109,7 +109,7 @@ const SpiritBeastFusionSummaryPanel = ({
             {parents.main.name || "主宠"} + {parents.secondary.name || "副宠"}
           </p>
         </div>
-        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+        <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
           最多 {preview.maximumSkillCount} 技能
         </span>
       </div>
@@ -138,9 +138,9 @@ const SpiritBeastFusionSummaryPanel = ({
             {formatFusionGrowth(preview.growthRange.maximum)}
           </strong>
         </div>
-        <div className="rounded-lg bg-blue-50 px-3 py-2.5">
-          <span className="text-[11px] text-blue-600">初始属性</span>
-          <strong className="mt-0.5 block text-sm text-blue-800">
+        <div className="rounded-lg bg-brand-50 px-3 py-2.5">
+          <span className="text-[11px] text-brand-600">初始属性</span>
+          <strong className="mt-0.5 block text-sm text-brand-800">
             {FUSION_INITIAL_ATTRIBUTE_MIN}～{FUSION_INITIAL_ATTRIBUTE_MAX}
           </strong>
         </div>
@@ -155,7 +155,7 @@ const SpiritBeastFusionSummaryPanel = ({
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
           <div
-            className="h-full rounded-full bg-blue-500 transition-[width]"
+            className="h-full rounded-full bg-brand-500 transition-[width]"
             style={{
               width: String((selectedPity / selectedPityLimit) * 100) + "%",
             }}
@@ -181,7 +181,7 @@ const SpiritBeastFusionSummaryPanel = ({
       <div className="mt-4 grid grid-cols-2 gap-2">
         <button
           type="button"
-          className="rounded-xl border border-blue-200 bg-white px-3 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl border border-brand-200 bg-white px-3 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={configurationError !== null}
           onClick={onSimulate}
         >
@@ -189,7 +189,7 @@ const SpiritBeastFusionSummaryPanel = ({
         </button>
         <button
           type="button"
-          className="rounded-xl bg-blue-600 px-3 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl bg-brand-600 px-3 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={fullSkillConfigurationError !== null}
           onClick={onFuseUntilFullSkills}
         >
@@ -258,7 +258,7 @@ const SpiritBeastFusionSummaryPanel = ({
           </div>
           <div className={RESULT_ATTRIBUTE_GRID_CLASS}>
             <span className="text-slate-500">初始属性</span>
-            <strong className="text-right tabular-nums text-blue-700">
+            <strong className="text-right tabular-nums text-brand-700">
               {lastRun.result.initialAttributeTotal}
             </strong>
             <span className="size-5" aria-hidden="true" />
@@ -273,7 +273,7 @@ const SpiritBeastFusionSummaryPanel = ({
     ) : null}
 
     {analysis ? (
-      <section className="rounded-2xl border border-blue-200 bg-blue-50/40 p-4 shadow-sm sm:p-5">
+      <section className="rounded-2xl border border-brand-200 bg-brand-50/40 p-4 shadow-sm sm:p-5">
         <h2 className="text-base font-semibold text-slate-900">达标成本分析</h2>
         <p className="mt-1 text-xs leading-5 text-slate-500">
           基于 {analysis.sampleCount} 轮经验概率模拟，其中{" "}
@@ -306,7 +306,7 @@ const SpiritBeastFusionSummaryPanel = ({
         </div>
 
         {analysis.skillPityMaximumAttempts !== null ? (
-          <p className="mt-3 text-xs leading-5 text-blue-800">
+          <p className="mt-3 text-xs leading-5 text-brand-800">
             当前技能目标的理论保底上限为{" "}
             <strong>
               {formatFusionInteger(analysis.skillPityMaximumAttempts)} 次

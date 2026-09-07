@@ -70,7 +70,7 @@ const SliderNumberField = ({
         <input
           type="number"
           aria-label={`${label}数值`}
-          className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:w-24"
+          className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100 sm:w-24"
           min={minimum}
           max={maximum}
           step={step}
@@ -98,7 +98,7 @@ const SliderNumberField = ({
       <input
         type="range"
         aria-label={`${label}滑杆`}
-        className="mt-3 h-2 w-full cursor-pointer accent-blue-600"
+        className="mt-3 h-2 w-full cursor-pointer accent-brand-600"
         min={minimum}
         max={maximum}
         step={step}

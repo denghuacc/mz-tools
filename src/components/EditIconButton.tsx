@@ -23,7 +23,7 @@ const EditIcon = () => (
 const EditIconButton = ({ label, onClick }: EditIconButtonProps) => (
   <button
     type="button"
-    className="flex size-7 shrink-0 items-center justify-center rounded-md text-blue-600 transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    className="flex size-7 shrink-0 items-center justify-center rounded-md text-brand-600 transition hover:bg-brand-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
     aria-label={label}
     title={label}
     onClick={onClick}

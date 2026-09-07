@@ -110,10 +110,10 @@ const PotentialAllocationControl = <PresetId extends string>({
               type="button"
               role="radio"
               aria-checked={isSelected}
-              className={`h-10 rounded-lg border text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+              className={`h-10 rounded-lg border text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 ${
                 isSelected
-                  ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                  ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
               }`}
               onClick={() => onAllocationModeChange(mode)}
             >
@@ -138,10 +138,10 @@ const PotentialAllocationControl = <PresetId extends string>({
                 type="button"
                 role="radio"
                 aria-checked={isSelected}
-                className={`h-9 rounded-lg border px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                className={`h-9 rounded-lg border px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 ${
                   isSelected
-                    ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                    ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
                 }`}
                 onClick={() => onSelectPreset(preset.id)}
               >
@@ -175,10 +175,10 @@ const PotentialAllocationControl = <PresetId extends string>({
                     type="button"
                     role="radio"
                     aria-checked={isSelected}
-                    className={`min-h-10 rounded-lg border px-2 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                    className={`min-h-10 rounded-lg border px-2 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 ${
                       isSelected
-                        ? "border-blue-600 bg-blue-50 text-blue-700"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50"
+                        ? "border-brand-600 bg-brand-50 text-brand-700"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50"
                     }`}
                     onClick={() => onCustomSchemeChange(scheme)}
                   >
@@ -213,10 +213,10 @@ const PotentialAllocationControl = <PresetId extends string>({
                       type="button"
                       role="radio"
                       aria-checked={isSelected}
-                      className={`h-9 rounded-lg border text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                      className={`h-9 rounded-lg border text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 ${
                         isSelected
-                          ? "border-blue-600 bg-blue-600 text-white"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50"
+                          ? "border-brand-600 bg-brand-600 text-white"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50"
                       }`}
                       onClick={() => selectMainAttribute(attribute)}
                     >
@@ -252,7 +252,7 @@ const PotentialAllocationControl = <PresetId extends string>({
                     className={`flex h-10 items-center rounded-lg border px-3 transition ${
                       isDisabled
                         ? "border-slate-100 bg-slate-100"
-                        : "border-slate-200 bg-white focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
+                        : "border-slate-200 bg-white focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100"
                     }`}
                   >
                     <input

@@ -53,7 +53,7 @@ const AttributeBonusCard = <Attribute extends string>({
         </div>
         <button
           type="button"
-          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-blue-600 disabled:cursor-not-allowed disabled:text-slate-300"
+          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-brand-600 disabled:cursor-not-allowed disabled:text-slate-300"
           disabled={!hasBonus}
           onClick={onReset}
         >
@@ -73,7 +73,7 @@ const AttributeBonusCard = <Attribute extends string>({
               <span className="mb-1.5 block text-xs font-medium text-slate-600">
                 {label}
               </span>
-              <span className="flex h-10 items-center rounded-lg border border-slate-200 bg-white px-3 transition focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
+              <span className="flex h-10 items-center rounded-lg border border-slate-200 bg-white px-3 transition focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
                 <span className="mr-2 text-sm text-slate-400">
                   {allowNegative ? "±" : "+"}
                 </span>

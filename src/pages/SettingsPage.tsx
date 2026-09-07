@@ -61,7 +61,7 @@ const SettingsPage = ({
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
-            className="min-h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="min-h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
             onClick={() => {
               onResetPreferences();
               setNotice("计算器偏好已恢复默认值。重新打开计算器后生效。");

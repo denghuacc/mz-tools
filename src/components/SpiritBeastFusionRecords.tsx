@@ -27,7 +27,7 @@ const SpiritBeastFusionRecords = ({
           ；应用记录免费且不推进保底。
         </span>
       </span>
-      <span className="text-xs font-medium text-blue-600">展开查看</span>
+      <span className="text-xs font-medium text-brand-600">展开查看</span>
     </summary>
 
     <div className="border-t border-slate-100 p-4 sm:p-5">

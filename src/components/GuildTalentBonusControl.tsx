@@ -33,7 +33,7 @@ const GuildTalentBonusControl = <OptionId extends string>({
         </div>
         <button
           type="button"
-          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-blue-600 disabled:cursor-not-allowed disabled:text-slate-300"
+          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-brand-600 disabled:cursor-not-allowed disabled:text-slate-300"
           disabled={selectedOptionIds.length === 0}
           onClick={() => onChange([])}
         >

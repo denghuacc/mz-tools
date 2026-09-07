@@ -58,7 +58,7 @@ const SanshengPillBonusControl = ({
         </div>
         <button
           type="button"
-          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-blue-600 disabled:cursor-not-allowed disabled:text-slate-300"
+          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-brand-600 disabled:cursor-not-allowed disabled:text-slate-300"
           disabled={usedCount === 0}
           onClick={() =>
             onChange({
@@ -87,7 +87,7 @@ const SanshengPillBonusControl = ({
               key={attribute}
               className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 transition ${
                 count > 0
-                  ? "border-blue-200 bg-blue-50/70"
+                  ? "border-brand-200 bg-brand-50/70"
                   : "border-slate-200 bg-slate-50/60"
               }`}
             >
@@ -95,7 +95,7 @@ const SanshengPillBonusControl = ({
                 <div className="text-xs font-medium text-slate-700">
                   {PRIMARY_ATTRIBUTE_LABELS[attribute]}
                 </div>
-                <div className="mt-0.5 text-[11px] font-medium text-blue-600">
+                <div className="mt-0.5 text-[11px] font-medium text-brand-600">
                   +{SANSHENG_PILL_ATTRIBUTE_POINTS} 点 / 颗
                 </div>
               </div>
@@ -105,7 +105,7 @@ const SanshengPillBonusControl = ({
                   type="button"
                   aria-label={`减少三生造化丹：${PRIMARY_ATTRIBUTE_LABELS[attribute]}`}
                   disabled={count === 0}
-                  className="h-7 w-7 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-500 transition hover:border-blue-200 hover:text-blue-600 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-300"
+                  className="h-7 w-7 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-500 transition hover:border-brand-200 hover:text-brand-600 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-300"
                   onClick={() => updateCount(attribute, count - 1)}
                 >
                   −
@@ -120,7 +120,7 @@ const SanshengPillBonusControl = ({
                   type="button"
                   aria-label={`增加三生造化丹：${PRIMARY_ATTRIBUTE_LABELS[attribute]}`}
                   disabled={usedCount >= maximumCount}
-                  className="h-7 w-7 rounded-lg bg-blue-600 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  className="h-7 w-7 rounded-lg bg-brand-600 text-sm font-semibold text-white transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-slate-300"
                   onClick={() => updateCount(attribute, count + 1)}
                 >
                   +
@@ -137,7 +137,7 @@ const SanshengPillBonusControl = ({
         className="mt-3 text-right text-xs text-slate-500"
       >
         {currentYear} 年为开服第 {gameYearCount} 年，已服用{" "}
-        <span className="font-medium text-blue-600">{usedCount}</span> /{" "}
+        <span className="font-medium text-brand-600">{usedCount}</span> /{" "}
         {maximumCount} 颗
       </p>
     </section>

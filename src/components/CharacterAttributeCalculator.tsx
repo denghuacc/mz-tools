@@ -2230,7 +2230,7 @@ const CharacterAttributeCalculator = ({
                   </span>
                   <select
                     aria-label="角色等级"
-                    className="mt-1 min-w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    className="mt-1 min-w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                     value={characterLevel}
                     onChange={(event) => {
                       const nextLevel = CHARACTER_LEVEL_OPTIONS.find(
@@ -2276,19 +2276,19 @@ const CharacterAttributeCalculator = ({
                             </span>
                           )}
                           {equipmentBonuses.health > 0 && (
-                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-blue-700">
+                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-brand-700">
                               +装备 {formatAttribute(equipmentBonuses.health)}
                             </span>
                           )}
                           {equipmentBonuses.healthPercent > 0 && (
-                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-blue-700">
+                            <span className="ml-2 inline-block whitespace-nowrap text-xs text-brand-700">
                               装备 {formatBonus(equipmentBonuses.healthPercent)}
                               %
                             </span>
                           )}
                           {areSoulArtifactBonusesValid &&
                             soulArtifactBonuses.health > 0 && (
-                              <span className="ml-2 inline-block whitespace-nowrap text-xs text-blue-600">
+                              <span className="ml-2 inline-block whitespace-nowrap text-xs text-brand-600">
                                 +魂器{" "}
                                 {formatAttribute(soulArtifactBonuses.health)}
                               </span>
@@ -2449,9 +2449,9 @@ const CharacterAttributeCalculator = ({
                     type="button"
                     role="tab"
                     aria-selected={activeAttributeTab === tab}
-                    className={`rounded-lg px-3 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`rounded-lg px-3 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 ${
                       activeAttributeTab === tab
-                        ? "bg-blue-600 text-white shadow-sm"
+                        ? "bg-brand-600 text-white shadow-sm"
                         : "text-slate-500 hover:text-slate-800"
                     }`}
                     onClick={() => setActiveAttributeTab(tab)}
@@ -2462,7 +2462,7 @@ const CharacterAttributeCalculator = ({
               </div>
               <button
                 type="button"
-                className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 aria-label={
                   areBonusDetailsVisible
                     ? "隐藏全部属性加成"
@@ -2539,7 +2539,7 @@ const CharacterAttributeCalculator = ({
                                   <span
                                     className={`ml-1 inline-block whitespace-nowrap text-[11px] ${
                                       skillBonuses[attribute] > 0
-                                        ? "text-blue-600"
+                                        ? "text-brand-600"
                                         : "text-rose-600"
                                     }`}
                                   >
@@ -2547,14 +2547,14 @@ const CharacterAttributeCalculator = ({
                                   </span>
                                 )}
                                 {equipmentBonuses[attribute] !== 0 && (
-                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-700">
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-brand-700">
                                     装备{" "}
                                     {formatBonus(equipmentBonuses[attribute])}
                                   </span>
                                 )}
                                 {attribute === "speed" &&
                                   equipmentBonuses.speedPercent !== 0 && (
-                                    <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-700">
+                                    <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-brand-700">
                                       装备{" "}
                                       {formatBonus(
                                         equipmentBonuses.speedPercent,
@@ -2564,7 +2564,7 @@ const CharacterAttributeCalculator = ({
                                   )}
                                 {areSoulArtifactBonusesValid &&
                                   soulArtifactBonuses[attribute] !== 0 && (
-                                    <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-600">
+                                    <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-brand-600">
                                       魂器{" "}
                                       {formatBonus(
                                         soulArtifactBonuses[attribute],
@@ -2731,13 +2731,13 @@ const CharacterAttributeCalculator = ({
                                   </span>
                                 )}
                                 {equipmentBonuses[attribute] > 0 && (
-                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-700">
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-brand-700">
                                     装备{" "}
                                     {formatBonus(equipmentBonuses[attribute])}
                                   </span>
                                 )}
                                 {skillBonuses[attribute] > 0 && (
-                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-600">
+                                  <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-brand-600">
                                     +加成{" "}
                                     {formatAttribute(skillBonuses[attribute])}
                                   </span>
@@ -2747,7 +2747,7 @@ const CharacterAttributeCalculator = ({
                                     <span
                                       className={`ml-1 inline-block whitespace-nowrap text-[11px] ${
                                         soulArtifactBonuses[attribute] > 0
-                                          ? "text-blue-600"
+                                          ? "text-brand-600"
                                           : "text-rose-600"
                                       }`}
                                     >
@@ -2887,7 +2887,7 @@ const CharacterAttributeCalculator = ({
                                     )}
                                   {attribute.attribute === "sealResistance" &&
                                     skillBonuses.sealResistance !== 0 && (
-                                      <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-600">
+                                      <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-brand-600">
                                         技能{" "}
                                         {formatBonus(
                                           skillBonuses.sealResistance,
@@ -2918,7 +2918,7 @@ const CharacterAttributeCalculator = ({
                                       "magicalCritical") &&
                                     equipmentBonuses[attribute.attribute] !==
                                       0 && (
-                                      <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-blue-700">
+                                      <span className="ml-1 inline-block whitespace-nowrap text-[11px] text-brand-700">
                                         装备{" "}
                                         {formatBonus(
                                           equipmentBonuses[attribute.attribute],

@@ -128,7 +128,7 @@ const RingConverter = () => {
               </label>
               <select
                 id="ring-current-sect"
-                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
                 value={currentSect}
                 onChange={(event) => {
                   handleCurrentSectChange(event.target.value as Sect);
@@ -147,7 +147,7 @@ const RingConverter = () => {
               </label>
               <select
                 id="ring-target-sect"
-                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
                 value={targetSect}
                 onChange={(event) => {
                   handleTargetSectChange(event.target.value as Sect);
@@ -186,7 +186,7 @@ const RingConverter = () => {
               min={0}
               step={1}
               inputMode="numeric"
-              className="block h-10 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="block h-10 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
               value={health ?? ""}
               onChange={(event) =>
                 handleNumberChange(event.target.value, setHealth)
@@ -208,7 +208,7 @@ const RingConverter = () => {
               min={0}
               step={1}
               inputMode="numeric"
-              className="block h-10 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="block h-10 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
               value={secondary ?? ""}
               onChange={(event) =>
                 handleNumberChange(event.target.value, setSecondary)
@@ -231,7 +231,7 @@ const RingConverter = () => {
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <button
             type="button"
-            className="min-h-11 flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="min-h-11 flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
             onClick={handleConvert}
           >
             转换
@@ -246,8 +246,8 @@ const RingConverter = () => {
         </div>
 
         {result ? (
-          <section className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
-            <div className="border-b border-blue-100 bg-blue-50/70 px-4 py-3">
+          <section className="overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm">
+            <div className="border-b border-brand-100 bg-brand-50/70 px-4 py-3">
               <h2 className="text-base font-semibold text-slate-900">
                 转换结果
               </h2>

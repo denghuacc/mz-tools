@@ -41,7 +41,7 @@ const AccessoryEditor = ({
     <label className="mb-4 flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
       <input
         type="checkbox"
-        className="size-4 accent-blue-600"
+        className="size-4 accent-brand-600"
         aria-label={`${tierLabel}：计入灵饰`}
         checked={item.enabled}
         onChange={(event) =>

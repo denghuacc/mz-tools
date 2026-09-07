@@ -127,7 +127,7 @@ const SpiritBeastDestinySkillControl = ({
           <span className="text-[11px] text-slate-400">加成</span>
           <strong
             className={`ml-2 text-sm sm:ml-0 sm:block ${
-              skill.attribute ? "text-blue-600" : "text-slate-300"
+              skill.attribute ? "text-brand-600" : "text-slate-300"
             }`}
           >
             {skill.attribute ? `+${value}` : "—"}

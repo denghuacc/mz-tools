@@ -70,7 +70,7 @@ const SpiritBeastFusionSkillIcons = ({
                 {onRemove ? (
                   <button
                     type="button"
-                    className="grid size-5 place-items-center rounded-full text-current opacity-60 transition hover:bg-black/5 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="grid size-5 place-items-center rounded-full text-current opacity-60 transition hover:bg-black/5 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     aria-label={removeAriaLabel(skill)}
                     onClick={() => onRemove(skill.id)}
                   >
@@ -85,18 +85,18 @@ const SpiritBeastFusionSkillIcons = ({
             <span key={skill.id} className="relative shrink-0">
               <button
                 type="button"
-                className={`${iconSizeClass} overflow-hidden rounded-full border-2 font-black transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                className={`${iconSizeClass} overflow-hidden rounded-full border-2 font-black transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
                   isActive
                     ? isDark
                       ? "border-amber-200 ring-2 ring-amber-200/60"
-                      : "border-blue-500 ring-2 ring-blue-200"
+                      : "border-brand-500 ring-2 ring-brand-200"
                     : isCustomSpecial
                       ? isDark
                         ? "border-fuchsia-200/70 bg-fuchsia-400/20 text-fuchsia-50 hover:border-fuchsia-100"
                         : "border-violet-300 bg-violet-100 text-violet-700 hover:border-violet-400"
                       : isDark
                         ? "border-blue-100/45 hover:border-blue-100"
-                        : "border-slate-200 hover:border-blue-300"
+                        : "border-slate-200 hover:border-brand-300"
                 }`}
                 aria-label={`查看${formatFusionSkillLabel(skill)}技能名称`}
                 aria-expanded={isActive}
@@ -135,7 +135,7 @@ const SpiritBeastFusionSkillIcons = ({
               {onRemove ? (
                 <button
                   type="button"
-                  className={`absolute -right-1 -top-1 grid size-5 place-items-center rounded-full border text-xs font-bold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`absolute -right-1 -top-1 grid size-5 place-items-center rounded-full border text-xs font-bold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-brand-500 ${
                     isDark
                       ? "border-blue-100/60 bg-blue-950 text-blue-50 hover:bg-blue-900"
                       : "border-white bg-slate-700 text-white hover:bg-slate-600"

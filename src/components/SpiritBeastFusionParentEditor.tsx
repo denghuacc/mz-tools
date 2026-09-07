@@ -96,7 +96,7 @@ const QualificationSliderInput = ({
 }) => (
   <div className="rounded-xl border border-slate-200 bg-slate-50/60 px-2.5 py-2">
     <BoundedNumberInput
-      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-sm font-semibold tabular-nums text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-sm font-semibold tabular-nums text-slate-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
       label={label}
       minimum={SPIRIT_BEAST_QUALIFICATION_MIN}
       maximum={SPIRIT_BEAST_QUALIFICATION_MAX}
@@ -108,7 +108,7 @@ const QualificationSliderInput = ({
     />
     <input
       type="range"
-      className="mt-2 h-2 w-full cursor-pointer accent-blue-600"
+      className="mt-2 h-2 w-full cursor-pointer accent-brand-600"
       aria-label={`${label}滑杆`}
       min={SPIRIT_BEAST_QUALIFICATION_MIN}
       max={SPIRIT_BEAST_QUALIFICATION_MAX}
@@ -225,7 +225,7 @@ const SpiritBeastFusionParentEditor = ({
 
         <span className="self-center font-medium text-slate-600">成长</span>
         <BoundedNumberInput
-          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-sm font-semibold tabular-nums text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-sm font-semibold tabular-nums text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
           label="主宠成长"
           minimum={SPIRIT_BEAST_GROWTH_MIN}
           maximum={SPIRIT_BEAST_GROWTH_MAX}
@@ -238,7 +238,7 @@ const SpiritBeastFusionParentEditor = ({
           }
         />
         <BoundedNumberInput
-          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-sm font-semibold tabular-nums text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-right text-sm font-semibold tabular-nums text-slate-900 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
           label="副宠成长"
           minimum={SPIRIT_BEAST_GROWTH_MIN}
           maximum={SPIRIT_BEAST_GROWTH_MAX}

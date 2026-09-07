@@ -23,10 +23,10 @@ const GuildBlessingBonusControl = ({
       <button
         type="button"
         aria-pressed={enabled}
-        className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        className={`shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
           enabled
-            ? "bg-blue-600 text-white hover:bg-blue-700"
-            : "border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+            ? "bg-brand-600 text-white hover:bg-brand-700"
+            : "border border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
         }`}
         onClick={() => onEnabledChange(!enabled)}
       >
@@ -40,7 +40,7 @@ const GuildBlessingBonusControl = ({
           key={label}
           className={`rounded-xl border px-3 py-3 text-center transition ${
             enabled
-              ? "border-blue-200 bg-blue-50 text-blue-700"
+              ? "border-brand-200 bg-brand-50 text-brand-700"
               : "border-slate-200 bg-slate-50 text-slate-400"
           }`}
         >

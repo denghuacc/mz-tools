@@ -716,7 +716,7 @@ const SpiritBeastAttributeCalculator = () => {
                   </span>
                   <select
                     aria-label="灵兽等级"
-                    className="mt-1 min-w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    className="mt-1 min-w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                     value={state.level}
                     onChange={(event) =>
                       setState((current) => ({
@@ -838,7 +838,7 @@ const SpiritBeastAttributeCalculator = () => {
                   </section>
                   <button
                     type="button"
-                    className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-600 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     aria-label={
                       areBonusDetailsVisible
                         ? "隐藏全部属性加成"
@@ -895,7 +895,7 @@ const SpiritBeastAttributeCalculator = () => {
                       </span>
                       <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
                         <label
-                          className={`flex h-8 w-12 shrink-0 items-center gap-1 rounded-md border bg-white px-1.5 transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 sm:w-20 ${
+                          className={`flex h-8 w-12 shrink-0 items-center gap-1 rounded-md border bg-white px-1.5 transition focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-100 sm:w-20 ${
                             resettableInitialPrimaryValidationError
                               ? "border-rose-300"
                               : "border-slate-200"
@@ -906,7 +906,7 @@ const SpiritBeastAttributeCalculator = () => {
                             可重置{PRIMARY_LABELS[attribute]}初始值
                           </span>
                           <span
-                            className="hidden shrink-0 text-[10px] font-medium text-blue-600 sm:inline"
+                            className="hidden shrink-0 text-[10px] font-medium text-brand-600 sm:inline"
                             aria-hidden="true"
                           >
                             初值
@@ -977,7 +977,7 @@ const SpiritBeastAttributeCalculator = () => {
                     className={`min-h-13 min-w-0 rounded-lg border px-3 py-2.5 sm:flex sm:items-center sm:justify-between sm:gap-2 ${
                       resettableInitialPrimaryValidationError
                         ? "border-rose-200 bg-rose-50"
-                        : "border-blue-100 bg-blue-50/70"
+                        : "border-brand-100 bg-brand-50/70"
                     }`}
                     role="status"
                     aria-live="polite"
@@ -996,7 +996,7 @@ const SpiritBeastAttributeCalculator = () => {
                         className={`shrink-0 text-base ${
                           resettableInitialPrimaryValidationError
                             ? "text-rose-700"
-                            : "text-blue-700"
+                            : "text-brand-700"
                         }`}
                       >
                         {resettableInitialPrimaryTotal}

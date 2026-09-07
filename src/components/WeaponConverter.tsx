@@ -124,7 +124,7 @@ const WeaponConverter = () => {
             </label>
             <select
               id="weapon-level"
-              className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
               value={String(weaponLevel)}
               onChange={(event) =>
                 setWeaponLevelAndMaxValues(
@@ -150,7 +150,7 @@ const WeaponConverter = () => {
               </label>
               <select
                 id="original-form"
-                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
                 value={originalForm ?? "无"}
                 onChange={handleOriginalFormChange}
               >
@@ -168,7 +168,7 @@ const WeaponConverter = () => {
               </label>
               <select
                 id="current-sect"
-                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
                 value={currentSect}
                 onChange={handleSectChange(setCurrentSect)}
               >
@@ -185,7 +185,7 @@ const WeaponConverter = () => {
               </label>
               <select
                 id="target-sect"
-                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                className="block h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
                 value={targetSect}
                 onChange={handleSectChange(setTargetSect)}
               >
@@ -240,7 +240,7 @@ const WeaponConverter = () => {
                   step={1}
                   inputMode="numeric"
                   aria-label={`${label}当前值`}
-                  className="block h-10 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  className="block h-10 w-full rounded-lg border border-slate-200 bg-white px-2 text-center text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100"
                   value={attribute.current ?? ""}
                   onChange={(event) =>
                     handleAttributeChange(type, event.target.value)
@@ -289,7 +289,7 @@ const WeaponConverter = () => {
         <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
           <button
             type="button"
-            className="min-h-11 flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="min-h-11 flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
             onClick={convertAttributes}
           >
             转换
@@ -305,8 +305,8 @@ const WeaponConverter = () => {
         </div>
 
         {result && (
-          <section className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm">
-            <div className="flex flex-col gap-3 border-b border-blue-100 bg-blue-50/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <section className="overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-brand-100 bg-brand-50/70 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-base font-semibold text-slate-900">
                   转换结果
@@ -328,7 +328,7 @@ const WeaponConverter = () => {
                 <button
                   type="button"
                   onClick={() => setShowOriginalData((visible) => !visible)}
-                  className="flex min-h-10 items-center gap-1.5 self-start rounded-lg border border-blue-200 bg-white px-3 text-xs font-medium text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:self-auto"
+                  className="flex min-h-10 items-center gap-1.5 self-start rounded-lg border border-brand-200 bg-white px-3 text-xs font-medium text-brand-700 shadow-sm transition hover:border-brand-300 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 sm:self-auto"
                   aria-expanded={showOriginalData}
                   aria-controls="original-form-values"
                   aria-label={
@@ -406,7 +406,7 @@ const WeaponConverter = () => {
                               {attributes[type].current ?? 0}
                             </span>
                             <span
-                              className="justify-self-center rounded-md bg-blue-50 px-1.5 py-0.5 text-center text-xs font-medium tabular-nums text-blue-700 ring-1 ring-inset ring-blue-100 sm:text-sm"
+                              className="justify-self-center rounded-md bg-brand-50 px-1.5 py-0.5 text-center text-xs font-medium tabular-nums text-brand-700 ring-1 ring-inset ring-brand-100 sm:text-sm"
                               data-testid={`original-form-${type}`}
                             >
                               （{originalData?.[type].current ?? "N/A"}）
@@ -446,7 +446,7 @@ const WeaponConverter = () => {
 
               {unchangedResultMessage && (
                 <div
-                  className="rounded-lg border border-blue-100 bg-blue-50/70 px-3 py-2.5"
+                  className="rounded-lg border border-brand-100 bg-brand-50/70 px-3 py-2.5"
                   role="status"
                 >
                   <p className="text-sm leading-6 text-slate-600">

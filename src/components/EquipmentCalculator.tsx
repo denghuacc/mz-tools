@@ -117,17 +117,17 @@ const EquipmentCalculator = ({ state, onChange }: EquipmentCalculatorProps) => {
                   已直接接入角色面板计算器的可映射字段。
                 </p>
               </div>
-              <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600">
+              <span className="shrink-0 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-600">
                 {summary.activeItemCount} / 8 件
               </span>
             </div>
 
-            <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/60 p-3">
+            <div className="mt-4 rounded-xl border border-brand-100 bg-brand-50/60 p-3">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs font-medium text-slate-600">
                   当前角色 {characterLevel} 级
                 </span>
-                <span className="shrink-0 text-xs font-medium text-blue-700">
+                <span className="shrink-0 text-xs font-medium text-brand-700">
                   宝石上限 {getGemLevelLimit(characterLevel)} 级
                 </span>
               </div>
@@ -218,7 +218,7 @@ const EquipmentCalculator = ({ state, onChange }: EquipmentCalculatorProps) => {
             </section>
           ) : null}
 
-          <section className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 text-xs leading-6 text-blue-900">
+          <section className="rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-4 text-xs leading-6 text-brand-900">
             <strong className="font-semibold">当前口径：</strong>
             六件基础装备按面板值、宝石与已收录独立词条汇总；戒指、项链为全等级赛年神装，计算装备属性、百炼、副属性和已收录面板特效。
           </section>
@@ -263,7 +263,7 @@ const EquipmentCalculator = ({ state, onChange }: EquipmentCalculatorProps) => {
                   key={slot}
                   className={`rounded-xl border bg-white p-4 shadow-sm transition ${
                     item.enabled
-                      ? "border-slate-200 hover:border-blue-200"
+                      ? "border-slate-200 hover:border-brand-200"
                       : "border-slate-200 opacity-60"
                   }`}
                 >
@@ -296,7 +296,7 @@ const EquipmentCalculator = ({ state, onChange }: EquipmentCalculatorProps) => {
                           className="rounded-md bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-600"
                         >
                           {EQUIPMENT_ATTRIBUTE_LABELS[attribute] ?? "速度"}{" "}
-                          <span className="text-blue-600">
+                          <span className="text-brand-600">
                             {formatValue(value, attribute)}
                           </span>
                         </span>
@@ -310,7 +310,7 @@ const EquipmentCalculator = ({ state, onChange }: EquipmentCalculatorProps) => {
                     {gemBonus || effects.length > 0 ? (
                       <>
                         {gemBonus ? (
-                          <span className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-medium text-blue-700">
+                          <span className="rounded-full bg-brand-50 px-2 py-1 text-[11px] font-medium text-brand-700">
                             {EQUIPMENT_GEM_CONFIG[gemBonus.type].label} ·{" "}
                             {gemBonus.breakthrough
                               ? `${gemBonus.levelLimit}+1`

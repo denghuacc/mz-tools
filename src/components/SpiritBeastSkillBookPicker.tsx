@@ -43,7 +43,7 @@ const SpiritBeastSkillBookPicker = ({
     <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium text-blue-600">技能书</p>
+          <p className="text-xs font-medium text-brand-600">技能书</p>
           <h2 className="mt-1 text-lg font-semibold text-slate-900">
             选择要学习的技能
           </h2>
@@ -60,7 +60,7 @@ const SpiritBeastSkillBookPicker = ({
         <span className="sr-only">搜索要学习的技能</span>
         <input
           type="search"
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+          className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-100"
           aria-label="搜索要学习的技能"
           placeholder="搜索技能名称，如“火元素”"
           value={query}
@@ -77,7 +77,7 @@ const SpiritBeastSkillBookPicker = ({
           <button
             key={filter.value}
             type="button"
-            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 ${
               category === filter.value
                 ? "bg-slate-800 text-white"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -106,10 +106,10 @@ const SpiritBeastSkillBookPicker = ({
                 isSelected ? "col-span-2 sm:col-span-2 xl:col-span-1" : ""
               } ${
                 isSelected
-                  ? "border-blue-500 bg-blue-50 ring-1 ring-blue-100"
+                  ? "border-brand-500 bg-brand-50 ring-1 ring-brand-100"
                   : isOwned
                     ? "border-slate-100 bg-slate-50 opacity-50"
-                    : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40"
+                    : "border-slate-200 bg-white hover:border-brand-300 hover:bg-brand-50/40"
               }`}
             >
               <button
@@ -117,7 +117,7 @@ const SpiritBeastSkillBookPicker = ({
                 role="radio"
                 aria-checked={isSelected}
                 aria-label={`${option.name}，参考价 ${priceFormatter.format(option.referencePrice)} 银`}
-                className={`relative flex min-h-16 w-full min-w-0 items-center gap-2 p-2 text-left transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${
+                className={`relative flex min-h-16 w-full min-w-0 items-center gap-2 p-2 text-left transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-500 ${
                   isSelected ? "pr-24" : ""
                 } ${isOwned ? "cursor-not-allowed" : ""}`}
                 disabled={isOwned}
@@ -145,7 +145,7 @@ const SpiritBeastSkillBookPicker = ({
               {isSelected ? (
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 z-10 inline-flex h-8 -translate-y-1/2 items-center justify-center rounded-lg bg-blue-600 px-3 !text-[11px] !font-semibold !leading-none text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
+                  className="absolute right-2 top-1/2 z-10 inline-flex h-8 -translate-y-1/2 items-center justify-center rounded-lg bg-brand-600 px-3 !text-[11px] !font-semibold !leading-none text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
                   aria-label={`学习${option.name}`}
                   disabled={Boolean(configurationError)}
                   onClick={onLearn}

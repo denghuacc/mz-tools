@@ -152,7 +152,7 @@ const EquipmentGemSection = ({
         </EquipmentEffectToggle>
       </div>
 
-      <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs leading-5 text-blue-800">
+      <p className="mt-3 rounded-lg border border-brand-100 bg-brand-50/60 px-3 py-2 text-xs leading-5 text-brand-800">
         角色 {characterLevel} 级，当前宝石上限 {levelLimit} 级
         {gemBonus
           ? `；${EQUIPMENT_GEM_CONFIG[gemBonus.type].label}（${
@@ -179,7 +179,7 @@ const EquipmentEffectsSection = ({ item, onChange }: EquipmentSectionProps) => {
       title="特效与特技"
       description="基础装备最多配置两个特效和一个特技；祝福按面板最终值记录，成长增加 20% 宝石属性。"
     >
-      <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-blue-50/60 px-3 py-2 text-xs text-blue-800">
+      <div className="mb-3 flex items-center justify-between gap-3 rounded-lg bg-brand-50/60 px-3 py-2 text-xs text-brand-800">
         <span>已配置特效</span>
         <strong>
           {configuredEffects.length} / {BASE_EQUIPMENT_EFFECT_LIMIT}
@@ -423,7 +423,7 @@ export const SeasonEquipmentEffectSection = ({
         </label>
       </div>
       {selectedEffect && item.seasonEffectLevel > 0 ? (
-        <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs leading-5 text-blue-800">
+        <p className="mt-3 rounded-lg border border-brand-100 bg-brand-50/60 px-3 py-2 text-xs leading-5 text-brand-800">
           当前提供速度 +{selectedEffect.valuePerLevel * item.seasonEffectLevel}
           。
         </p>

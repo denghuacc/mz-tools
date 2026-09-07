@@ -338,7 +338,7 @@ export const EquipmentIndependentAffixSection = ({
       </div>
 
       {independentAffixBonus ? (
-        <p className="mt-3 rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-2 text-xs leading-5 text-blue-800">
+        <p className="mt-3 rounded-lg border border-brand-100 bg-brand-50/60 px-3 py-2 text-xs leading-5 text-brand-800">
           当前提供{EQUIPMENT_ATTRIBUTE_LABELS[independentAffixBonus.attribute]}{" "}
           +{independentAffixBonus.value}。
         </p>

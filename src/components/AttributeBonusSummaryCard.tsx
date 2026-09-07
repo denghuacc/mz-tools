@@ -34,7 +34,7 @@ const AttributeBonusSummaryCard = ({
   validationError,
 }: AttributeBonusSummaryCardProps) => (
   <article
-    className={`flex min-h-24 flex-col rounded-xl border p-3 transition hover:border-blue-200 hover:bg-blue-50/30 ${
+    className={`flex min-h-24 flex-col rounded-xl border p-3 transition hover:border-brand-200 hover:bg-brand-50/30 ${
       validationError
         ? "border-rose-200 bg-rose-50/40"
         : "border-slate-200 bg-slate-50/60"
@@ -67,7 +67,7 @@ const AttributeBonusSummaryCard = ({
           <span
             key={`${item.label}-${item.unit ?? ""}`}
             className={`whitespace-nowrap rounded-md bg-white px-1.5 py-1 text-[11px] font-medium ${
-              item.value < 0 ? "text-rose-600" : "text-blue-600"
+              item.value < 0 ? "text-rose-600" : "text-brand-600"
             }`}
           >
             {item.label} {formatValue(item.value, item.unit)}

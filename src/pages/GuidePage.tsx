@@ -60,9 +60,9 @@ const GuidePage = ({
               key={item}
               type="button"
               aria-pressed={category === item}
-              className={`min-h-10 rounded-lg px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              className={`min-h-10 rounded-lg px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
                 category === item
-                  ? "bg-blue-600 text-white"
+                  ? "bg-brand-600 text-white"
                   : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
               onClick={() => setCategory(item)}
@@ -80,7 +80,7 @@ const GuidePage = ({
             >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                  <span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-700">
                     {entry.category}
                   </span>
                   <time

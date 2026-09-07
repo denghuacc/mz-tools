@@ -37,7 +37,7 @@ const UniformAttributeBonusControl = ({
         </div>
         <button
           type="button"
-          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-blue-600 disabled:cursor-not-allowed disabled:text-slate-300"
+          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-brand-600 disabled:cursor-not-allowed disabled:text-slate-300"
           disabled={value === 0}
           onClick={onReset}
         >
@@ -52,7 +52,7 @@ const UniformAttributeBonusControl = ({
         {attributeLabels.map((label) => (
           <span
             key={label}
-            className="rounded-lg border border-blue-100 bg-blue-50 px-1 py-2 text-center text-xs font-medium text-blue-700"
+            className="rounded-lg border border-brand-100 bg-brand-50 px-1 py-2 text-center text-xs font-medium text-brand-700"
           >
             {label}
           </span>
@@ -63,7 +63,7 @@ const UniformAttributeBonusControl = ({
         <span className="mb-1.5 block text-xs font-medium text-slate-600">
           五项统一加成
         </span>
-        <span className="flex h-10 items-center rounded-lg border border-slate-200 bg-white px-3 transition focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100">
+        <span className="flex h-10 items-center rounded-lg border border-slate-200 bg-white px-3 transition focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100">
           <span className="mr-2 text-sm text-slate-400">+</span>
           <input
             aria-label={`${title}：五项统一加成`}

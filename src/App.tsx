@@ -124,7 +124,7 @@ const HomePage = ({
 }) => (
   <div className="space-y-6">
     <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <p className="mb-2 text-sm font-medium text-blue-600">欢迎回来</p>
+      <p className="mb-2 text-sm font-medium text-brand-600">欢迎回来</p>
       <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
         梦幻新诛仙实用工具
       </h1>
@@ -134,8 +134,8 @@ const HomePage = ({
     </section>
 
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <article className="rounded-xl border border-blue-200 bg-white p-5 shadow-sm">
-        <p className="text-xs font-medium text-blue-600">已上线</p>
+      <article className="rounded-xl border border-brand-200 bg-white p-5 shadow-sm">
+        <p className="text-xs font-medium text-brand-600">已上线</p>
         <h2 className="mt-2 text-lg font-semibold text-slate-900">
           装备属性转换
         </h2>
@@ -144,7 +144,7 @@ const HomePage = ({
         </p>
         <button
           type="button"
-          className="mt-5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="mt-5 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
           onClick={onOpenCalculator}
         >
           进入计算器
@@ -152,7 +152,7 @@ const HomePage = ({
       </article>
 
       <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p className="text-xs font-medium text-blue-600">官网资料</p>
+        <p className="text-xs font-medium text-brand-600">官网资料</p>
         <h2 className="mt-2 text-lg font-semibold text-slate-900">
           游戏资料查询
         </h2>
@@ -161,7 +161,7 @@ const HomePage = ({
         </p>
         <button
           type="button"
-          className="mt-5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="mt-5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
           onClick={onOpenData}
         >
           查询资料
@@ -169,7 +169,7 @@ const HomePage = ({
       </article>
 
       <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p className="text-xs font-medium text-blue-600">官方内容</p>
+        <p className="text-xs font-medium text-brand-600">官方内容</p>
         <h2 className="mt-2 text-lg font-semibold text-slate-900">
           攻略与版本资料
         </h2>
@@ -178,7 +178,7 @@ const HomePage = ({
         </p>
         <button
           type="button"
-          className="mt-5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className="mt-5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
           onClick={onOpenGuide}
         >
           浏览攻略
@@ -381,19 +381,19 @@ const CalculatorPage = () => {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-5">
       <div>
-        <p className="text-sm font-medium text-blue-600">计算器</p>
-        <h1 className="mt-1 text-2xl font-semibold text-slate-900">
+        <p className="text-sm font-medium text-brand-600">计算器</p>
+        <h1 className="mt-1 text-2xl font-semibold text-slate-900 sm:text-3xl">
           游戏数值计算
         </h1>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm leading-6 text-slate-500">
           计算角色、装备与灵兽属性，模拟灵兽融合与技能学习，或查看装备转换后的数值变化。
         </p>
       </div>
 
       <div
-        className="no-scrollbar flex max-w-full overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 shadow-sm"
+        className="no-scrollbar flex max-w-full gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm"
         role="tablist"
         aria-label="计算器类型"
       >
@@ -406,9 +406,9 @@ const CalculatorPage = () => {
             aria-selected={activeTool === tool}
             aria-controls="calculator-panel"
             tabIndex={activeTool === tool ? 0 : -1}
-            className={`shrink-0 whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 sm:px-4 sm:text-sm ${
+            className={`min-h-11 shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 sm:px-4 sm:text-sm ${
               activeTool === tool
-                ? "bg-blue-600 text-white"
+                ? "bg-brand-600 text-white"
                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
             }`}
             onClick={() => handleToolChange(tool)}
@@ -595,15 +595,15 @@ function App() {
 
   return (
     <div className="min-h-screen w-full bg-gray-100 py-0 flex justify-center">
-      <div className="min-h-screen w-full bg-slate-50 text-slate-800">
+      <div className="min-h-screen w-full bg-canvas text-slate-800">
         <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
-          <div className="flex h-16 items-center">
-            <div className="flex h-full w-full items-center px-4 md:w-60 md:border-r md:border-slate-200 md:px-6">
+          <div className="flex h-16 items-center md:h-20">
+            <div className="flex h-full w-full shrink-0 items-center bg-ink px-4 md:w-60 md:px-6">
               <div className="min-w-0">
-                <p className="truncate text-lg font-semibold tracking-tight text-slate-900">
+                <p className="truncate font-display text-lg font-semibold tracking-wide text-white">
                   梦幻新诛仙工具箱
                 </p>
-                <p className="mt-0.5 text-xs text-slate-400 md:hidden">
+                <p className="mt-0.5 text-xs text-brand-200 md:hidden">
                   {activeItem.label}
                 </p>
               </div>
@@ -616,7 +616,7 @@ function App() {
                   {activeItem.label}
                 </span>
               </p>
-              <span className="shrink-0 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
+              <span className="shrink-0 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
                 持续更新中
               </span>
             </div>
@@ -631,9 +631,9 @@ function App() {
                 key={item.id}
                 type="button"
                 aria-current={activePage === item.id ? "page" : undefined}
-                className={`shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`min-h-11 shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 ${
                   activePage === item.id
-                    ? "bg-blue-50 text-blue-700"
+                    ? "bg-brand-50 text-brand-700"
                     : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
                 }`}
                 onClick={() => setActivePage(item.id)}
@@ -644,18 +644,21 @@ function App() {
           </nav>
         </header>
 
-        <div className="flex min-h-[calc(100vh-4rem)]">
-          <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-white md:block">
-            <nav className="sticky top-16 space-y-1 p-4" aria-label="主导航">
+        <div className="flex min-h-[calc(100vh-4rem)] md:min-h-[calc(100vh-5rem)]">
+          <aside className="hidden w-60 shrink-0 bg-ink md:block">
+            <nav
+              className="sticky top-20 space-y-2 p-4 pt-6"
+              aria-label="主导航"
+            >
               {NAVIGATION_ITEMS.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   aria-current={activePage === item.id ? "page" : undefined}
-                  className={`w-full rounded-lg border-l-2 px-4 py-3 text-left text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`min-h-12 w-full rounded-lg border-l-2 px-4 py-3 text-left text-sm font-medium tracking-wide transition focus:outline-none focus:ring-2 focus:ring-gold ${
                     activePage === item.id
-                      ? "border-blue-600 bg-blue-50 text-blue-700"
-                      : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      ? "border-gold bg-white/10 text-white"
+                      : "border-transparent text-brand-200 hover:bg-white/5 hover:text-white"
                   }`}
                   onClick={() => setActivePage(item.id)}
                 >

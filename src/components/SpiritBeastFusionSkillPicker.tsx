@@ -42,7 +42,7 @@ const SpiritBeastFusionSkillPicker = ({
       aria-label={`${title}技能选择`}
       onToggle={(event) => setIsOpen(event.currentTarget.open)}
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 outline-none transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-500 [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 outline-none transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-brand-500 [&::-webkit-details-marker]:hidden">
         <span className="flex items-center gap-2">
           <svg
             className="size-4 text-slate-500"
@@ -93,7 +93,7 @@ const SpiritBeastFusionSkillPicker = ({
             </svg>
             <input
               type="search"
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-100"
               aria-label={`${title}搜索技能`}
               placeholder="输入名称，如“迅捷”"
               value={query}
@@ -110,7 +110,7 @@ const SpiritBeastFusionSkillPicker = ({
               <button
                 key={filter.value}
                 type="button"
-                className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 ${
                   category === filter.value
                     ? "bg-slate-800 text-white"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
@@ -143,7 +143,7 @@ const SpiritBeastFusionSkillPicker = ({
                   key={option.id}
                   className={`relative flex min-w-0 cursor-pointer items-center gap-2 rounded-lg border p-1.5 text-left transition ${
                     isSelected
-                      ? "border-blue-400 bg-blue-50 ring-1 ring-blue-100"
+                      ? "border-brand-400 bg-brand-50 ring-1 ring-brand-100"
                       : isDisabled
                         ? "cursor-not-allowed border-slate-100 bg-slate-50 opacity-45"
                         : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
@@ -169,7 +169,7 @@ const SpiritBeastFusionSkillPicker = ({
                   </span>
                   {isSelected ? (
                     <span
-                      className="absolute right-1 top-1 grid size-4 place-items-center rounded-full bg-blue-600 text-[10px] font-bold text-white"
+                      className="absolute right-1 top-1 grid size-4 place-items-center rounded-full bg-brand-600 text-[10px] font-bold text-white"
                       aria-hidden="true"
                     >
                       ✓

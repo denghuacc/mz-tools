@@ -231,7 +231,7 @@ describe("综合测试", () => {
       const convertButton = screen.getByRole("button", { name: "转换" });
       const resetButton = screen.getByRole("button", { name: "重置" });
 
-      expect(convertButton).toHaveClass("bg-blue-600", "text-white");
+      expect(convertButton).toHaveClass("bg-brand-600", "text-white");
       expect(resetButton).toHaveClass("bg-white", "text-slate-600");
     });
 

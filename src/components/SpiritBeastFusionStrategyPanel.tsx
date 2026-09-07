@@ -58,7 +58,7 @@ const SpiritBeastFusionStrategyPanel = ({
           <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
-              className="size-4 accent-blue-600"
+              className="size-4 accent-brand-600"
               checked={target.requireFullSkills}
               onChange={(event) =>
                 onTargetChange({
@@ -86,7 +86,7 @@ const SpiritBeastFusionStrategyPanel = ({
         </div>
 
         <details className="mt-3 border-t border-slate-100 pt-3">
-          <summary className="cursor-pointer text-xs font-medium text-blue-600">
+          <summary className="cursor-pointer text-xs font-medium text-brand-600">
             设置资质与成长门槛
           </summary>
           <div className="mt-3 grid grid-cols-2 gap-2">
@@ -97,7 +97,7 @@ const SpiritBeastFusionStrategyPanel = ({
                 </span>
                 <input
                   type="number"
-                  className="h-8 w-full rounded-lg border border-slate-200 px-2 text-right text-xs font-semibold tabular-nums outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className="h-8 w-full rounded-lg border border-slate-200 px-2 text-right text-xs font-semibold tabular-nums outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
                   aria-label={`目标最低${SPIRIT_BEAST_QUALIFICATION_LABELS[qualification]}`}
                   min={0}
                   max={preview.qualificationRanges[qualification].maximum}
@@ -129,7 +129,7 @@ const SpiritBeastFusionStrategyPanel = ({
               </span>
               <input
                 type="number"
-                className="h-8 w-full rounded-lg border border-slate-200 px-2 text-right text-xs font-semibold tabular-nums outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="h-8 w-full rounded-lg border border-slate-200 px-2 text-right text-xs font-semibold tabular-nums outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
                 aria-label="目标最低成长"
                 min={0}
                 max={preview.growthRange.maximum}
@@ -170,7 +170,7 @@ const SpiritBeastFusionStrategyPanel = ({
               key={nextStrategy}
               className={`cursor-pointer rounded-lg border p-3 ${
                 strategy === nextStrategy
-                  ? "border-blue-300 bg-blue-50"
+                  ? "border-brand-300 bg-brand-50"
                   : "border-slate-200 bg-white"
               }`}
             >
@@ -178,7 +178,7 @@ const SpiritBeastFusionStrategyPanel = ({
                 <input
                   type="radio"
                   name="fusion-strategy"
-                  className="size-4 accent-blue-600"
+                  className="size-4 accent-brand-600"
                   checked={strategy === nextStrategy}
                   onChange={() => onStrategyChange(nextStrategy)}
                 />
@@ -200,7 +200,7 @@ const SpiritBeastFusionStrategyPanel = ({
             </span>
             <input
               type="number"
-              className="h-8 w-full rounded-lg border border-slate-200 px-2 text-right text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="h-8 w-full rounded-lg border border-slate-200 px-2 text-right text-xs font-semibold outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               aria-label="不使用灵融果满技能保底进度"
               min={0}
               max={FUSION_PITY_WITHOUT_FRUIT - 1}
@@ -223,7 +223,7 @@ const SpiritBeastFusionStrategyPanel = ({
             </span>
             <input
               type="number"
-              className="h-8 w-full rounded-lg border border-slate-200 px-2 text-right text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="h-8 w-full rounded-lg border border-slate-200 px-2 text-right text-xs font-semibold outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               aria-label="使用灵融果满技能保底进度"
               min={0}
               max={FUSION_PITY_WITH_FRUIT - 1}
@@ -246,7 +246,7 @@ const SpiritBeastFusionStrategyPanel = ({
             </span>
             <input
               type="number"
-              className="h-8 w-full rounded-lg border border-slate-200 px-2 text-right text-xs font-semibold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="h-8 w-full rounded-lg border border-slate-200 px-2 text-right text-xs font-semibold outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               aria-label="满技能双特殊保底进度"
               min={0}
               max={FUSION_DOUBLE_SPECIAL_PITY - 1}

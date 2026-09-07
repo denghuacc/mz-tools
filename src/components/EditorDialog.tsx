@@ -50,7 +50,7 @@ const EditorDialog = ({
           <button
             ref={closeButtonRef}
             type="button"
-            className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:text-slate-200 disabled:hover:bg-transparent"
+            className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:text-slate-200 disabled:hover:bg-transparent"
             aria-label="关闭弹窗"
             disabled={isCloseDisabled}
             onClick={onClose}
@@ -76,7 +76,7 @@ const EditorDialog = ({
         <div className="flex justify-end border-t border-slate-200 bg-white px-4 py-3 sm:px-5">
           <button
             type="button"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300"
             disabled={isCloseDisabled}
             onClick={onClose}
           >

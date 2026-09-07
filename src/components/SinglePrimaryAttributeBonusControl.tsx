@@ -61,7 +61,7 @@ const SinglePrimaryAttributeBonusControl = ({
         </div>
         <button
           type="button"
-          className="shrink-0 text-xs font-medium text-slate-400 transition hover:text-blue-600 disabled:cursor-not-allowed disabled:text-slate-300"
+          className="shrink-0 text-xs font-medium text-slate-400 transition hover:text-brand-600 disabled:cursor-not-allowed disabled:text-slate-300"
           disabled={selectedAttribute === null}
           onClick={onReset}
         >
@@ -83,10 +83,10 @@ const SinglePrimaryAttributeBonusControl = ({
               type="button"
               role="radio"
               aria-checked={isSelected}
-              className={`h-9 rounded-lg border text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+              className={`h-9 rounded-lg border text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 ${
                 isSelected
-                  ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                  ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
               }`}
               onClick={() => onSelect(attribute)}
             >
@@ -103,7 +103,7 @@ const SinglePrimaryAttributeBonusControl = ({
         <span
           className={`flex h-9 min-w-0 flex-1 items-center rounded-lg border bg-white px-3 transition ${
             selectedAttribute
-              ? "border-slate-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"
+              ? "border-slate-200 focus-within:border-brand-500 focus-within:ring-4 focus-within:ring-brand-100"
               : "border-slate-100 bg-slate-100"
           }`}
         >

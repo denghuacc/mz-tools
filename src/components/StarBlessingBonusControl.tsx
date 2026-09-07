@@ -47,7 +47,7 @@ const StarBlessingBonusControl = ({
         </div>
         <button
           type="button"
-          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-blue-600 disabled:cursor-not-allowed disabled:text-slate-300"
+          className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-brand-600 disabled:cursor-not-allowed disabled:text-slate-300"
           disabled={selectedAttributes.length === 0}
           onClick={() => onSelectedAttributesChange([])}
         >
@@ -72,10 +72,10 @@ const StarBlessingBonusControl = ({
               type="button"
               aria-pressed={isSelected}
               disabled={isDisabled}
-              className={`h-9 rounded-lg border text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:border-slate-100 disabled:bg-slate-100 disabled:text-slate-300 ${
+              className={`h-9 rounded-lg border text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 disabled:cursor-not-allowed disabled:border-slate-100 disabled:bg-slate-100 disabled:text-slate-300 ${
                 isSelected
-                  ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                  ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
               }`}
               onClick={() => toggleAttribute(attribute)}
             >
@@ -111,10 +111,10 @@ const StarBlessingBonusControl = ({
               type="button"
               role="radio"
               aria-checked={bonusValue === value}
-              className={`h-10 rounded-lg border text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+              className={`h-10 rounded-lg border text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 ${
                 bonusValue === value
-                  ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                  : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                  ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
               }`}
               onClick={() => onBonusValueChange(value)}
             >

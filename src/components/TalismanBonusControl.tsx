@@ -36,7 +36,7 @@ const TalismanBonusControl = ({
       </div>
       <button
         type="button"
-        className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-blue-600 disabled:cursor-not-allowed disabled:text-slate-300"
+        className="shrink-0 text-xs font-medium text-slate-500 transition hover:text-brand-600 disabled:cursor-not-allowed disabled:text-slate-300"
         disabled={selectedOptionId === null && !isAdditionalOptionSelected}
         onClick={onReset}
       >
@@ -58,17 +58,17 @@ const TalismanBonusControl = ({
             type="button"
             role="radio"
             aria-checked={isSelected}
-            className={`rounded-xl border px-3 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 ${
+            className={`rounded-xl border px-3 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 ${
               isSelected
-                ? "border-blue-600 bg-blue-50"
-                : "border-slate-200 bg-slate-50/60 hover:border-blue-200 hover:bg-blue-50/60"
+                ? "border-brand-600 bg-brand-50"
+                : "border-slate-200 bg-slate-50/60 hover:border-brand-200 hover:bg-brand-50/60"
             }`}
             onClick={() => onSelect(option.id)}
           >
             <span className="block text-sm font-medium text-slate-800">
               {option.title}
             </span>
-            <span className="mt-1 block text-xs font-medium text-blue-600">
+            <span className="mt-1 block text-xs font-medium text-brand-600">
               {option.effectLabel}
             </span>
           </button>

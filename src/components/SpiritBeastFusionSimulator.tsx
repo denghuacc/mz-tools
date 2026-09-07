@@ -59,7 +59,7 @@ const SpiritBeastFusionSimulator = () => {
               保底与材料消耗按现有规则计算；基础概率、资质上限和成长上限为经验估算，可自行调整。
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2 rounded-xl bg-blue-50 px-3 py-2 text-xs text-blue-700">
+          <div className="flex shrink-0 items-center gap-2 rounded-xl bg-brand-50 px-3 py-2 text-xs text-brand-700">
             <span>{FUSION_PILLS_PER_ATTEMPT} 伐骨丹</span>
             <span aria-hidden="true">·</span>
             <strong>

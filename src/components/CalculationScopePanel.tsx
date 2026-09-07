@@ -18,7 +18,7 @@ const CalculationScopePanel = ({
   return (
     <>
       <section
-        className="rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-4 text-xs leading-6 text-blue-900 sm:px-5"
+        className="rounded-xl border border-brand-100 bg-brand-50/60 px-4 py-4 text-xs leading-6 text-brand-900 sm:px-5"
         aria-labelledby={titleId}
       >
         <div className="flex items-center gap-1.5">
@@ -27,7 +27,7 @@ const CalculationScopePanel = ({
           </strong>
           <button
             type="button"
-            className="flex size-6 shrink-0 items-center justify-center rounded-full text-blue-500 transition hover:bg-blue-100 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex size-6 shrink-0 items-center justify-center rounded-full text-brand-500 transition hover:bg-brand-100 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
             aria-label="查看当前计算口径详情"
             aria-haspopup="dialog"
             aria-expanded={isDialogOpen}
@@ -47,7 +47,7 @@ const CalculationScopePanel = ({
             </svg>
           </button>
         </div>
-        <p className="mt-1 text-blue-800">{summary}</p>
+        <p className="mt-1 text-brand-800">{summary}</p>
       </section>
 
       {isDialogOpen ? (

@@ -58,7 +58,7 @@ const AttributeBonusSummaryPanel = <SourceId extends string>({
           >
             <input
               type="checkbox"
-              className="h-4 w-4 cursor-pointer accent-blue-600"
+              className="h-4 w-4 cursor-pointer accent-brand-600"
               checked={isEquipmentIncluded}
               onChange={(event) =>
                 onEquipmentIncludedChange(event.target.checked)

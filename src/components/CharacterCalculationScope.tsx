@@ -118,7 +118,7 @@ const CharacterCalculationScope = ({
               法力固定增加 6 + floor(L × 0.1)，每一级分别向下取整后累加。
             </li>
           </ul>
-          <p className="mt-2 rounded-lg bg-blue-50 px-3 py-2 text-blue-900">
+          <p className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-brand-900">
             当前 {characterLevel} 级从 0 级起共升级 {characterUpgradeCount} 次；
             未分配潜力前五维各为 {fixedPrimaryAttribute} 点，可分配潜力共{" "}
             {totalPotentialPoints} 点。
