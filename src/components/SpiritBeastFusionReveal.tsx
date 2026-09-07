@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from "react";
-import fusionRevealBackground from "../assets/spirit-beast-fusion-reveal-bg.png";
+import fusionRevealBackground from "../assets/spirit-beast-fusion-reveal-bg.jpg";
 import { useModalDialog } from "../hooks/useModalDialog";
 import { SPIRIT_BEAST_QUALIFICATIONS } from "../utils/spiritBeastAttributes";
 import type { FusionResult } from "../utils/spiritBeastFusion";

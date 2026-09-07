@@ -240,7 +240,7 @@ const normalizeFixedPanelLines = (
     lines.push({ attribute, value: 0 });
   }
 
-  return [lines[0] ?? { ...fallback[0] }, lines[1] ?? { ...fallback[1] }];
+  return [lines[0]!, lines[1]!];
 };
 
 const normalizePrimaryLine = (

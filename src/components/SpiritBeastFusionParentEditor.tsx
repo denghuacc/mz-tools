@@ -26,7 +26,7 @@ const BoundedNumberInput = ({
   step,
   className,
   inputMode,
-  normalizeValue = (nextValue) => nextValue,
+  normalizeValue,
   onChange,
 }: {
   label: string;
@@ -36,7 +36,7 @@ const BoundedNumberInput = ({
   step: number;
   className: string;
   inputMode?: "decimal" | "numeric";
-  normalizeValue?: (value: number) => number;
+  normalizeValue: (value: number) => number;
   onChange: (value: number) => void;
 }) => {
   const [draftValue, setDraftValue] = useState(String(value));

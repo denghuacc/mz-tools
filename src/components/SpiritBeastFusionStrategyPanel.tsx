@@ -111,7 +111,12 @@ const SpiritBeastFusionStrategyPanel = ({
                         [qualification]:
                           event.target.value === ""
                             ? 0
-                            : Number(event.target.value),
+                            : clampNumber(
+                                Number(event.target.value),
+                                0,
+                                preview.qualificationRanges[qualification]
+                                  .maximum,
+                              ),
                       },
                     })
                   }
@@ -137,7 +142,11 @@ const SpiritBeastFusionStrategyPanel = ({
                     minimumGrowth:
                       event.target.value === ""
                         ? 0
-                        : Number(event.target.value),
+                        : clampNumber(
+                            Number(event.target.value),
+                            0,
+                            preview.growthRange.maximum,
+                          ),
                   })
                 }
               />

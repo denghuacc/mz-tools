@@ -118,7 +118,14 @@ describe("SpiritBeastFusionScratchReveal", () => {
     const { onReveal } = renderScratchReveal();
     const canvas = screen.getByRole("button", { name: "刮开技能" });
 
-    fireEvent.keyDown(canvas, { key });
+    act(() => {
+      canvas.dispatchEvent(
+        new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+      );
+      canvas.dispatchEvent(
+        new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+      );
+    });
 
     expect(onReveal).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("button", { name: "刮开技能" })).toBeNull();
@@ -157,6 +164,9 @@ describe("SpiritBeastFusionScratchReveal", () => {
       }
     });
     drawImage.mockClear();
+    act(() => triggerResize());
+    expect(drawImage).not.toHaveBeenCalled();
+
     bounds = createBounds(320, 140);
 
     act(() => triggerResize());
@@ -175,5 +185,151 @@ describe("SpiritBeastFusionScratchReveal", () => {
           height === 140,
       ),
     ).toBe(true);
+  });
+
+  it("一键揭秘只上报一次，并使用最新的回调", () => {
+    const firstOnReveal = vi.fn();
+    const nextOnReveal = vi.fn();
+    const { rerender } = render(
+      <SpiritBeastFusionScratchReveal
+        label="技能"
+        revealAll={false}
+        onReveal={firstOnReveal}
+      >
+        <span>揭秘内容</span>
+      </SpiritBeastFusionScratchReveal>,
+    );
+
+    rerender(
+      <SpiritBeastFusionScratchReveal
+        label="技能"
+        revealAll
+        onReveal={nextOnReveal}
+      >
+        <span>揭秘内容</span>
+      </SpiritBeastFusionScratchReveal>,
+    );
+    rerender(
+      <SpiritBeastFusionScratchReveal
+        label="技能"
+        revealAll
+        onReveal={nextOnReveal}
+      >
+        <span>揭秘内容</span>
+      </SpiritBeastFusionScratchReveal>,
+    );
+
+    expect(firstOnReveal).not.toHaveBeenCalled();
+    expect(nextOnReveal).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "刮开技能" })).toBeNull();
+  });
+
+  it("未开始刮除时忽略移动、结束和无关键盘操作", () => {
+    const { onReveal } = renderScratchReveal();
+    const canvas = screen.getByRole("button", { name: "刮开技能" });
+
+    fireEvent.pointerMove(canvas, { clientX: 50, clientY: 20, pointerId: 1 });
+    fireEvent.pointerUp(canvas, { pointerId: 1 });
+    fireEvent.pointerCancel(canvas, { pointerId: 1 });
+    fireEvent.keyDown(canvas, { key: "Escape" });
+
+    expect(stroke).not.toHaveBeenCalled();
+    expect(onReveal).not.toHaveBeenCalled();
+    expect(canvas).toBeInTheDocument();
+  });
+
+  it("画布尺寸或上下文不可用时安全跳过绘制", () => {
+    bounds = createBounds(0, 0);
+    const { onReveal, unmount } = renderScratchReveal();
+    const canvas = screen.getByRole("button", { name: "刮开技能" });
+
+    fireEvent.pointerDown(canvas, { clientX: 20, clientY: 20, pointerId: 1 });
+    fireEvent.pointerUp(canvas, { pointerId: 1 });
+    expect(onReveal).not.toHaveBeenCalled();
+    unmount();
+
+    bounds = createBounds(200, 100);
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    expect(() => renderScratchReveal()).not.toThrow();
+  });
+
+  it("覆盖层未加载、尺寸未变化或透明样本不足时保持刮膜", () => {
+    class PendingImageMock {
+      complete = false;
+      naturalWidth = 0;
+      src = "";
+
+      addEventListener(
+        type: string,
+        listener: EventListenerOrEventListenerObject,
+      ) {
+        if (type === "load") imageLoadListener = listener;
+      }
+
+      removeEventListener() {}
+    }
+
+    vi.stubGlobal("Image", PendingImageMock);
+    getImageData.mockReturnValue({
+      data: new Uint8ClampedArray(0),
+    } as ImageData);
+    renderScratchReveal();
+    const canvas = screen.getByRole("button", { name: "刮开技能" });
+    const loadEvent = new Event("load");
+
+    act(() => {
+      if (typeof imageLoadListener === "function") {
+        imageLoadListener(loadEvent);
+      }
+      triggerResize();
+    });
+    fireEvent.pointerDown(canvas, { clientX: 20, clientY: 20, pointerId: 1 });
+    for (let index = 0; index < 9; index += 1) {
+      fireEvent.pointerMove(canvas, {
+        clientX: 30 + index,
+        clientY: 20,
+        pointerId: 1,
+      });
+    }
+    fireEvent.pointerUp(canvas, { pointerId: 1 });
+
+    expect(drawImage).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "刮开技能" }),
+    ).toBeInTheDocument();
+  });
+
+  it("没有 ResizeObserver 时仍响应窗口 resize", () => {
+    vi.stubGlobal("ResizeObserver", undefined);
+    renderScratchReveal();
+
+    expect(() => fireEvent(window, new Event("resize"))).not.toThrow();
+  });
+
+  it("设备像素比和绘图上下文不可用时使用安全回退", () => {
+    vi.stubGlobal("devicePixelRatio", 0);
+    const firstView = renderScratchReveal();
+    const loadEvent = new Event("load");
+
+    act(() => {
+      if (typeof imageLoadListener === "function") {
+        imageLoadListener(loadEvent);
+      }
+    });
+    expect(screen.getByRole("button", { name: "刮开技能" })).toHaveAttribute(
+      "width",
+      "200",
+    );
+    firstView.unmount();
+
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    renderScratchReveal();
+    expect(() => {
+      act(() => {
+        if (typeof imageLoadListener === "function") {
+          imageLoadListener(loadEvent);
+        }
+      });
+    }).not.toThrow();
   });
 });

@@ -829,7 +829,8 @@ describe("EquipmentCalculator", () => {
     const weaponCard = screen
       .getByRole("heading", { name: "武器" })
       .closest("article");
-    expect(weaponCard).toHaveTextContent("力 -5");
+    expect(weaponCard).not.toHaveTextContent("力 -5");
+    expect(weaponCard).toHaveTextContent("暂无属性");
     await user.click(
       within(dialog).getByRole("button", {
         name: "删除武器附加五维 2",

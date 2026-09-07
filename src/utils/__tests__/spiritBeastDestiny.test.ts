@@ -120,5 +120,18 @@ describe("灵兽命格", () => {
         isMutated: false,
       },
     ]);
+
+    expect(
+      normalizeSpiritBeastDestiny({
+        skills: [{ attribute: "health", level: "bad" }],
+      }).skills[0].level,
+    ).toBe(1);
+    expect(
+      getSpiritBeastDestinySkillValue({
+        attribute: "unknown" as "health",
+        level: 1,
+        isMutated: false,
+      }),
+    ).toBe(0);
   });
 });

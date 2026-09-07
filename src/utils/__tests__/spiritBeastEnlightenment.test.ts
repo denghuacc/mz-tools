@@ -20,6 +20,7 @@ describe("灵兽仙府点化", () => {
     expect(getSpiritBeastEnlightenmentPrimaryValueMaximum(3, 1)).toBe(15);
     expect(getSpiritBeastEnlightenmentPrimaryValueMaximum(4, 0)).toBe(20);
     expect(getSpiritBeastEnlightenmentPrimaryValueMaximum(5, 2)).toBe(15);
+    expect(getSpiritBeastEnlightenmentPrimaryValueMaximum(0, 0)).toBe(0);
   });
 
   it("应该清理重复词条，并按 5 星规则收紧数量和数值", () => {
@@ -96,6 +97,31 @@ describe("灵兽仙府点化", () => {
       strength: 15,
       endurance: 0,
       agility: 0,
+    });
+  });
+
+  it("应该忽略非数组词条和数组中的非对象条目", () => {
+    expect(
+      normalizeSpiritBeastEnlightenment({
+        star: 3,
+        qualificationBonuses: "bad",
+        primaryBonuses: "bad",
+      }),
+    ).toEqual({
+      star: 3,
+      qualificationBonuses: [],
+      primaryBonuses: [],
+    });
+
+    expect(
+      normalizeSpiritBeastEnlightenment({
+        star: 3,
+        qualificationBonuses: [null, { qualification: "health", value: 5 }],
+        primaryBonuses: [null, { attribute: "constitution", value: 10 }],
+      }),
+    ).toMatchObject({
+      qualificationBonuses: [{ qualification: "health", value: 5 }],
+      primaryBonuses: [{ attribute: "constitution", value: 10 }],
     });
   });
 });

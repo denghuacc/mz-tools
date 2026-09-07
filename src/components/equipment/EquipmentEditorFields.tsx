@@ -66,7 +66,9 @@ export const EquipmentAttributeValueInput = ({
       className={equipmentEditorInputClassName}
       value={value || ""}
       placeholder="0"
-      onChange={(event) => onChange(Number(event.target.value) || 0)}
+      onChange={(event) =>
+        onChange(Math.max(0, Number(event.target.value) || 0))
+      }
     />
   </label>
 );

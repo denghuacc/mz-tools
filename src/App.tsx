@@ -1,15 +1,9 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import RingConverter from "./components/RingConverter";
 import WeaponConverter from "./components/WeaponConverter";
-import CharacterAttributeCalculator from "./components/CharacterAttributeCalculator";
 import CharacterProfileSlots from "./components/CharacterProfileSlots";
-import EquipmentCalculator from "./components/EquipmentCalculator";
-import SpiritBeastAttributeCalculator from "./components/SpiritBeastAttributeCalculator";
 import SpiritBeastProfileSlots from "./components/SpiritBeastProfileSlots";
-import DataPage from "./pages/DataPage";
-import FavoritesPage from "./pages/FavoritesPage";
-import GuidePage from "./pages/GuidePage";
-import SettingsPage from "./pages/SettingsPage";
 import {
   loadPreferences,
   resetPreferences,
@@ -57,12 +51,25 @@ import {
   saveSpiritBeastProfileSlots,
 } from "./utils/spiritBeastProfiles";
 
+const CharacterAttributeCalculator = lazy(
+  () => import("./components/CharacterAttributeCalculator"),
+);
+const EquipmentCalculator = lazy(
+  () => import("./components/EquipmentCalculator"),
+);
+const SpiritBeastAttributeCalculator = lazy(
+  () => import("./components/SpiritBeastAttributeCalculator"),
+);
 const SpiritBeastFusionSimulator = lazy(
   () => import("./components/SpiritBeastFusionSimulator"),
 );
 const SpiritBeastSkillLearningSimulator = lazy(
   () => import("./components/SpiritBeastSkillLearningSimulator"),
 );
+const DataPage = lazy(() => import("./pages/DataPage"));
+const FavoritesPage = lazy(() => import("./pages/FavoritesPage"));
+const GuidePage = lazy(() => import("./pages/GuidePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 
 type PageId =
   | "home"
@@ -77,6 +84,25 @@ type NavigationItem = {
   label: string;
   description: string;
 };
+
+const CALCULATOR_TOOLS: readonly (readonly [CalculatorTool, string])[] = [
+  ["weapon", "武器转换"],
+  ["ring", "戒指转换"],
+  ["character", "角色面板 (测试版)"],
+  ["equipment", "角色装备 (测试版)"],
+  ["spirit-beast", "灵兽面板 (测试版)"],
+  ["spirit-beast-fusion", "灵兽融合 (测试版)"],
+  ["spirit-beast-skill-learning", "灵兽技能学习 (测试版)"],
+];
+
+const LoadingPanel = ({ label }: { label: string }) => (
+  <section
+    className="rounded-2xl border border-slate-200 bg-white px-5 py-12 text-center text-sm text-slate-500 shadow-sm"
+    role="status"
+  >
+    {label}
+  </section>
+);
 
 const NAVIGATION_ITEMS: readonly NavigationItem[] = [
   { id: "home", label: "首页", description: "工具箱概览与最近更新" },
@@ -261,6 +287,34 @@ const CalculatorPage = () => {
     updatePreferences({ activeTool: tool });
   };
 
+  const handleToolTabKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    currentIndex: number,
+  ) => {
+    let nextIndex: number | null = null;
+
+    if (event.key === "ArrowRight") {
+      nextIndex = (currentIndex + 1) % CALCULATOR_TOOLS.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex =
+        (currentIndex - 1 + CALCULATOR_TOOLS.length) % CALCULATOR_TOOLS.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = CALCULATOR_TOOLS.length - 1;
+    }
+
+    if (nextIndex === null) return;
+
+    event.preventDefault();
+    handleToolChange(CALCULATOR_TOOLS[nextIndex][0]);
+    const tabs =
+      event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
+        '[role="tab"]',
+      );
+    tabs?.[nextIndex]?.focus();
+  };
+
   const handleCharacterLevelChange = (characterLevel: CharacterLevel) => {
     setEquipmentState((current) => ({
       characterLevel,
@@ -343,28 +397,22 @@ const CalculatorPage = () => {
         role="tablist"
         aria-label="计算器类型"
       >
-        {(
-          [
-            ["weapon", "武器转换"],
-            ["ring", "戒指转换"],
-            ["character", "角色面板 (测试版)"],
-            ["equipment", "角色装备 (测试版)"],
-            ["spirit-beast", "灵兽面板 (测试版)"],
-            ["spirit-beast-fusion", "灵兽融合 (测试版)"],
-            ["spirit-beast-skill-learning", "灵兽技能学习 (测试版)"],
-          ] as const
-        ).map(([tool, label]) => (
+        {CALCULATOR_TOOLS.map(([tool, label], index) => (
           <button
             key={tool}
+            id={`calculator-tab-${tool}`}
             type="button"
             role="tab"
             aria-selected={activeTool === tool}
+            aria-controls="calculator-panel"
+            tabIndex={activeTool === tool ? 0 : -1}
             className={`shrink-0 whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-blue-500 sm:px-4 sm:text-sm ${
               activeTool === tool
                 ? "bg-blue-600 text-white"
                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
             }`}
             onClick={() => handleToolChange(tool)}
+            onKeyDown={(event) => handleToolTabKeyDown(event, index)}
           >
             {label}
           </button>
@@ -390,57 +438,40 @@ const CalculatorPage = () => {
       )}
 
       <div
+        id="calculator-panel"
+        role="tabpanel"
+        aria-labelledby={`calculator-tab-${activeTool}`}
         className={`grid items-start gap-5 ${
           isStandaloneCalculator
             ? ""
             : "xl:grid-cols-[minmax(0,672px)_minmax(260px,1fr)]"
         }`}
       >
-        {isCharacter ? (
-          <CharacterAttributeCalculator
-            key={characterCalculatorKey}
-            characterLevel={equipmentState.characterLevel}
-            onCharacterLevelChange={handleCharacterLevelChange}
-            equipmentBonuses={equipmentSummary.characterBonuses}
-          />
-        ) : isEquipment ? (
-          <EquipmentCalculator
-            state={equipmentState}
-            onChange={setEquipmentState}
-          />
-        ) : isSpiritBeast ? (
-          <SpiritBeastAttributeCalculator key={spiritBeastCalculatorKey} />
-        ) : isSpiritBeastFusion ? (
-          <Suspense
-            fallback={
-              <section
-                className="rounded-2xl border border-slate-200 bg-white px-5 py-12 text-center text-sm text-slate-500 shadow-sm"
-                role="status"
-              >
-                正在加载灵兽融合模拟器…
-              </section>
-            }
-          >
+        <Suspense fallback={<LoadingPanel label="正在加载计算器…" />}>
+          {isCharacter ? (
+            <CharacterAttributeCalculator
+              key={characterCalculatorKey}
+              characterLevel={equipmentState.characterLevel}
+              onCharacterLevelChange={handleCharacterLevelChange}
+              equipmentBonuses={equipmentSummary.characterBonuses}
+            />
+          ) : isEquipment ? (
+            <EquipmentCalculator
+              state={equipmentState}
+              onChange={setEquipmentState}
+            />
+          ) : isSpiritBeast ? (
+            <SpiritBeastAttributeCalculator key={spiritBeastCalculatorKey} />
+          ) : isSpiritBeastFusion ? (
             <SpiritBeastFusionSimulator />
-          </Suspense>
-        ) : isSpiritBeastSkillLearning ? (
-          <Suspense
-            fallback={
-              <section
-                className="rounded-2xl border border-slate-200 bg-white px-5 py-12 text-center text-sm text-slate-500 shadow-sm"
-                role="status"
-              >
-                正在加载灵兽技能学习模拟器…
-              </section>
-            }
-          >
+          ) : isSpiritBeastSkillLearning ? (
             <SpiritBeastSkillLearningSimulator />
-          </Suspense>
-        ) : isWeapon ? (
-          <WeaponConverter />
-        ) : (
-          <RingConverter />
-        )}
+          ) : isWeapon ? (
+            <WeaponConverter />
+          ) : (
+            <RingConverter />
+          )}
+        </Suspense>
 
         {!isStandaloneCalculator && (
           <aside className="space-y-4 xl:sticky xl:top-24">
@@ -635,7 +666,11 @@ function App() {
           </aside>
 
           <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
-            <div className="mx-auto max-w-[1400px]">{renderPage()}</div>
+            <div className="mx-auto max-w-[1400px]">
+              <Suspense fallback={<LoadingPanel label="正在加载页面…" />}>
+                {renderPage()}
+              </Suspense>
+            </div>
           </main>
         </div>
       </div>

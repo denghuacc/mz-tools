@@ -4,7 +4,7 @@ import type {
   PointerEvent as ReactPointerEvent,
   ReactNode,
 } from "react";
-import fusionScratchFilm from "../assets/spirit-beast-fusion-scratch-film.png";
+import fusionScratchFilm from "../assets/spirit-beast-fusion-scratch-film.jpg";
 import { SPIRIT_BEAST_GAME_FONT_STYLE } from "./spiritBeastGameStyles";
 
 type SpiritBeastFusionScratchRevealProps = {

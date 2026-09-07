@@ -579,7 +579,6 @@ export const getFusionConfigurationError = (
   state: Pick<SpiritBeastFusionState, "parents" | "target">,
 ): string | null => {
   const { main, secondary } = state.parents;
-  const totalSkillCount = main.skills.length + secondary.skills.length;
   const preview = calculateFusionPreview(state.parents);
   const skillPool = getFusionSkillPool(state.parents);
   const distinctSkillCount = skillPool.length;
@@ -598,13 +597,6 @@ export const getFusionConfigurationError = (
     secondary.skills.length > FUSION_SKILL_MAX_PER_BEAST
   ) {
     return `每只灵兽最多录入 ${FUSION_SKILL_MAX_PER_BEAST} 个自身技能。`;
-  }
-
-  if (
-    totalSkillCount < FUSION_SKILL_TOTAL_MIN ||
-    totalSkillCount > FUSION_SKILL_TOTAL_MAX
-  ) {
-    return `主副宠自身技能之和需要在 ${FUSION_SKILL_TOTAL_MIN}～${FUSION_SKILL_TOTAL_MAX} 个之间。`;
   }
 
   if (distinctSkillCount < preview.maximumSkillCount) {

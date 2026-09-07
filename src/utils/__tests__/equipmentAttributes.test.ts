@@ -11,6 +11,7 @@ import {
   createInitialEquipmentCalculatorState,
   createInitialEquipmentSet,
   getGemLevelLimit,
+  getNecklaceBaseAttributeLines,
   getEquipmentEffectLabels,
   getSeasonEquipmentResonance,
   normalizeEquipmentCalculatorState,
@@ -590,6 +591,35 @@ describe("角色装备属性汇总", () => {
     );
   });
 
+  it("应该补齐项链属性并回退损坏单件装备和空亲和特效", () => {
+    expect(getNecklaceBaseAttributeLines({ health: 120 })).toEqual([
+      { attribute: "health", value: 120 },
+      { attribute: "physicalDefense", value: 0 },
+    ]);
+
+    const state = createInitialEquipmentCalculatorState();
+    const storedState = structuredClone(state) as unknown as {
+      equipment: Record<string, unknown>;
+    };
+    storedState.equipment.weapon = null;
+    storedState.equipment.armor = {
+      ...state.equipment.armor,
+      affinityEffectAttribute: null,
+    };
+
+    const restored = normalizeEquipmentCalculatorState(storedState);
+    expect(restored?.equipment.weapon).toEqual(
+      createInitialEquipmentSet().weapon,
+    );
+    expect(restored?.equipment.armor.affinityEffectAttribute).toBeNull();
+
+    const invalidGem = {
+      ...createEmptyEquipmentSet().weapon,
+      gem: { type: "malachite", level: 8, breakthrough: false },
+    } as EquipmentItem;
+    expect(calculateEquipmentGemBonus(invalidGem)).toBeNull();
+  });
+
   it("应该过滤装备缓存中的非法属性行并限制同类宝石数量", () => {
     const state = createInitialEquipmentCalculatorState();
     const storedState = structuredClone(state) as unknown as {
@@ -649,6 +679,37 @@ describe("角色装备属性汇总", () => {
     expect(restored?.equipment.armor.enabled).toBe(true);
     expect(restored?.equipment.armor.level).toBe(60);
     expect(restored?.equipment.armor.gem).toBeNull();
+  });
+
+  it("应该过滤装备缓存中的负数属性", () => {
+    const state = createInitialEquipmentCalculatorState();
+    const storedState = structuredClone(state);
+    storedState.equipment.weapon = {
+      ...storedState.equipment.weapon,
+      baseAttributes: { physicalAttack: -100, magicAttack: 200 },
+      additionalPrimaryAttributes: [
+        { attribute: "strength", value: -5 },
+        { attribute: "agility", value: 8 },
+      ],
+      tempering: { attribute: "constitution", value: -3 },
+      supportAttribute: { attribute: "endurance", value: -4 },
+      specialEffectAttribute: { attribute: "magicAttack", value: -9 },
+    };
+
+    const restored = normalizeEquipmentCalculatorState(storedState);
+
+    expect(restored?.equipment.weapon.baseAttributes).toEqual({
+      magicAttack: 200,
+    });
+    expect(restored?.equipment.weapon.additionalPrimaryAttributes).toEqual([
+      { attribute: "agility", value: 8 },
+    ]);
+    expect(restored?.equipment.weapon.tempering).toEqual({
+      attribute: "constitution",
+      value: 25,
+    });
+    expect(restored?.equipment.weapon.supportAttribute).toBeNull();
+    expect(restored?.equipment.weapon.specialEffectAttribute).toBeNull();
   });
 
   it("应该忽略不匹配部位的宝石并停止计算第三条普通附加五维", () => {

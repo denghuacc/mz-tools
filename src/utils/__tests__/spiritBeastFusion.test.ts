@@ -2,11 +2,13 @@ import {
   FUSION_PITY_WITHOUT_FRUIT,
   FUSION_PITY_WITH_FRUIT,
   SPIRIT_BEAST_FUSION_STORAGE_KEY,
+  analyzeFusionTarget,
   calculateFusionCost,
   calculateFusionPreview,
   createDefaultSpiritBeastFusionState,
   getFusionConfigurationError,
   getFusionMaximumSkillCount,
+  getFusionSkillPityMaximumAttempts,
   normalizeSpiritBeastFusionState,
   simulateFusionAttempt,
   simulateFusionUntilTarget,
@@ -319,5 +321,196 @@ describe("灵兽融合规则", () => {
     expect(
       normalized?.records[0].result.qualificationBreakthroughs.physicalAttack,
     ).toBe(false);
+  });
+
+  it("恢复严重损坏的缓存时应该逐层回退并过滤非法记录", () => {
+    expect(normalizeSpiritBeastFusionState(null)).toBeNull();
+
+    const fallbackOnly = normalizeSpiritBeastFusionState({
+      parents: null,
+      probabilities: null,
+      pity: null,
+      target: null,
+      records: null,
+      strategy: "with-fruit",
+    });
+    expect(fallbackOnly).toMatchObject({
+      strategy: "with-fruit",
+      parents: {
+        main: { name: "主宠", growth: 1.2, skills: [] },
+        secondary: { name: "副宠", growth: 1.2, skills: [] },
+      },
+      records: [],
+    });
+
+    const normalized = normalizeSpiritBeastFusionState({
+      parents: {
+        main: {
+          name: "",
+          qualifications: null,
+          growth: "invalid",
+          skills: [
+            null,
+            { name: " " },
+            {
+              id: "",
+              name: " 被动特殊 ",
+              isSpecial: true,
+              specialType: "passive",
+            },
+            { name: "普通技能", isSpecial: false },
+          ],
+        },
+        secondary: {
+          name: 123,
+          growth: 1.3,
+          skills: "bad",
+        },
+      },
+      probabilities: { fullSkills: Number.NaN, doubleSpecial: 2 },
+      pity: { withoutFruit: "invalid" },
+      target: {
+        requireFullSkills: false,
+        requireDoubleSpecial: true,
+        minimumQualifications: null,
+        minimumGrowth: Number.NaN,
+      },
+      records: [
+        null,
+        {},
+        {
+          id: "",
+          createdAt: "invalid",
+          mainName: 1,
+          secondaryName: "",
+          result: {
+            qualifications: null,
+            qualificationBreakthroughs: { physicalAttack: true },
+            growth: "invalid",
+            initialAttributeTotal: "invalid",
+            skills: null,
+            isFullSkills: false,
+          },
+        },
+      ],
+    });
+
+    expect(normalized?.parents.main).toMatchObject({
+      name: "主宠",
+      growth: 1.2,
+      skills: [
+        {
+          id: "主宠-skill-2",
+          name: "被动特殊",
+          isSpecial: true,
+          specialType: "passive",
+        },
+        {
+          id: "主宠-skill-3",
+          name: "普通技能",
+          isSpecial: false,
+          specialType: null,
+        },
+      ],
+    });
+    expect(normalized?.parents.secondary).toMatchObject({
+      name: "副宠",
+      growth: 1.3,
+      skills: [],
+    });
+    expect(normalized?.probabilities).toEqual({
+      fullSkills: 0,
+      doubleSpecial: 1,
+    });
+    expect(normalized?.target).toMatchObject({
+      requireFullSkills: false,
+      requireDoubleSpecial: true,
+      minimumGrowth: 0,
+    });
+    expect(normalized?.records).toHaveLength(1);
+    expect(normalized?.records[0]).toMatchObject({
+      id: "fusion-record-2",
+      createdAt: 0,
+      mainName: "主宠",
+      secondaryName: "副宠",
+      result: {
+        growth: 1,
+        initialAttributeTotal: 100,
+        skills: [],
+        isDoubleSpecial: false,
+        qualificationBreakthroughs: {
+          physicalAttack: true,
+        },
+      },
+    });
+  });
+
+  it("应该覆盖配置上限、不可达目标和保底分析边界", () => {
+    const tooManySkills = createValidState();
+    tooManySkills.parents.main.skills = createSkills("主", 7);
+    expect(getFusionConfigurationError(tooManySkills)).toContain(
+      "每只灵兽最多录入 6 个自身技能",
+    );
+
+    const insufficientNormalSkills = createValidState();
+    insufficientNormalSkills.parents.main.skills = createSkills(
+      "主",
+      4,
+      [0, 1, 2],
+    );
+    insufficientNormalSkills.parents.secondary.skills = createSkills(
+      "副",
+      4,
+      [0, 1, 2],
+    );
+    expect(getFusionConfigurationError(insufficientNormalSkills)).toContain(
+      "普通技能不足",
+    );
+
+    const qualificationTarget = createValidState();
+    qualificationTarget.target.minimumQualifications.physicalAttack = 2_000;
+    expect(getFusionConfigurationError(qualificationTarget)).toContain(
+      "目标资质不能高于",
+    );
+
+    const growthTarget = createValidState();
+    growthTarget.target.minimumGrowth = 1.6;
+    expect(getFusionConfigurationError(growthTarget)).toContain(
+      "目标成长不能高于",
+    );
+
+    const immediateTarget = createValidState();
+    immediateTarget.target = {
+      ...immediateTarget.target,
+      requireFullSkills: false,
+      requireDoubleSpecial: false,
+    };
+    expect(
+      simulateFusionUntilTarget(immediateTarget, () => 0, 1),
+    ).toMatchObject({
+      reachedTarget: true,
+      cost: { attempts: 1 },
+    });
+    expect(() =>
+      simulateFusionUntilTarget(immediateTarget, () => 0, 0),
+    ).toThrow("融合模拟至少需要执行一次");
+    expect(getFusionSkillPityMaximumAttempts(immediateTarget)).toBeNull();
+
+    const fullSkillOnly = createValidState();
+    fullSkillOnly.target.requireDoubleSpecial = false;
+    expect(getFusionSkillPityMaximumAttempts(fullSkillOnly)).toBe(240);
+
+    const unreachableTarget = createValidState();
+    unreachableTarget.target.minimumGrowth = 1.6;
+    expect(analyzeFusionTarget(unreachableTarget, 2, () => 0, 1)).toMatchObject(
+      {
+        completedSampleCount: 0,
+        averageAttempts: 1,
+        medianAttempts: 1,
+        percentile90Attempts: 1,
+        maximumAttempts: 1,
+        hasNonGuaranteedAttributeTarget: true,
+      },
+    );
   });
 });

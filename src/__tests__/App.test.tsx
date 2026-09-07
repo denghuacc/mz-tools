@@ -87,13 +87,13 @@ describe("App 组件", () => {
     await user.click(within(navigation).getByRole("button", { name: "首页" }));
     await user.click(screen.getByRole("button", { name: "查询资料" }));
     expect(
-      screen.getByRole("heading", { name: "游戏资料查询" }),
+      await screen.findByRole("heading", { name: "游戏资料查询" }),
     ).toBeInTheDocument();
 
     await user.click(within(navigation).getByRole("button", { name: "首页" }));
     await user.click(screen.getByRole("button", { name: "浏览攻略" }));
     expect(
-      screen.getByRole("heading", { name: "官方攻略索引" }),
+      await screen.findByRole("heading", { name: "官方攻略索引" }),
     ).toBeInTheDocument();
   });
 
@@ -108,6 +108,43 @@ describe("App 组件", () => {
     expect(loadPreferences().activeTool).toBe("ring");
   });
 
+  it("计算器页签应该支持方向键、首尾键和面板关联", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const weaponTab = screen.getByRole("tab", { name: "武器转换" });
+    const ringTab = screen.getByRole("tab", { name: "戒指转换" });
+    expect(weaponTab).toHaveAttribute("tabindex", "0");
+    expect(ringTab).toHaveAttribute("tabindex", "-1");
+
+    weaponTab.focus();
+    await user.keyboard("{ArrowRight}");
+
+    expect(ringTab).toHaveFocus();
+    expect(ringTab).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tabpanel")).toHaveAttribute(
+      "aria-labelledby",
+      ringTab.id,
+    );
+
+    await user.keyboard("{End}");
+    expect(
+      screen.getByRole("tab", { name: "灵兽技能学习 (测试版)" }),
+    ).toHaveFocus();
+
+    await user.keyboard("{Home}");
+    expect(weaponTab).toHaveFocus();
+
+    await user.keyboard("{ArrowLeft}");
+    const lastTab = screen.getByRole("tab", {
+      name: "灵兽技能学习 (测试版)",
+    });
+    expect(lastTab).toHaveFocus();
+
+    await user.keyboard("a");
+    expect(lastTab).toHaveFocus();
+  });
+
   it("应该支持切换到角色面板计算器", async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -115,7 +152,7 @@ describe("App 组件", () => {
     await user.click(screen.getByRole("tab", { name: "角色面板 (测试版)" }));
 
     expect(
-      screen.getByRole("heading", { name: "基础属性 · 10 项" }),
+      await screen.findByRole("heading", { name: "基础属性 · 10 项" }),
     ).toBeInTheDocument();
     expect(
       within(screen.getByRole("region", { name: "潜力点分配摘要" })).getByText(
@@ -157,12 +194,13 @@ describe("App 组件", () => {
 
     await user.click(screen.getByRole("tab", { name: "角色装备 (测试版)" }));
     expect(
-      screen.getByRole("heading", { name: "装备总属性" }),
+      await screen.findByRole("heading", { name: "装备总属性" }),
     ).toBeInTheDocument();
     expect(screen.getByText("8 / 8 件")).toBeInTheDocument();
     expect(loadPreferences().activeTool).toBe("equipment");
 
     await user.click(screen.getByRole("tab", { name: "角色面板 (测试版)" }));
+    await screen.findByRole("checkbox", { name: "计入装备值" });
     expect(
       screen.queryByRole("region", { name: "装备属性接入状态" }),
     ).not.toBeInTheDocument();
@@ -176,11 +214,11 @@ describe("App 组件", () => {
 
     await user.click(screen.getByRole("tab", { name: "灵兽面板 (测试版)" }));
 
+    const resultRegion = await screen.findByRole("region", {
+      name: "灵兽面板结果",
+    });
     expect(
-      within(screen.getByRole("region", { name: "灵兽面板结果" })).getByRole(
-        "heading",
-        { name: "数值条" },
-      ),
+      within(resultRegion).getByRole("heading", { name: "数值条" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "基础属性 · 10 项" }),
@@ -283,7 +321,9 @@ describe("App 组件", () => {
     );
     expect(profileNotice).toHaveTextContent("已覆盖“鬼王69”的完整角色配置");
 
-    const skillEditButton = screen.getByRole("button", { name: "编辑技能" });
+    const skillEditButton = await screen.findByRole("button", {
+      name: "编辑技能",
+    });
     await user.click(skillEditButton);
     const skillDialog = screen.getByRole("dialog", { name: "编辑技能" });
     const healthInput = within(skillDialog).getByRole("spinbutton", {
@@ -336,7 +376,7 @@ describe("App 组件", () => {
       within(profileRegion).getByRole("textbox", { name: "存档1名称" }),
     ).toHaveValue("灵兽1");
 
-    const physicalAttackInput = screen.getByRole("spinbutton", {
+    const physicalAttackInput = await screen.findByRole("spinbutton", {
       name: "物攻资质数值",
     });
     await user.clear(physicalAttackInput);
@@ -375,6 +415,13 @@ describe("App 组件", () => {
       expect(storedProfiles[0].state.qualifications.physicalAttack).toBe(1500);
       expect(storedProfiles.slice(1)).toEqual([null, null]);
     });
+
+    await user.click(
+      within(profileRegion).getByRole("button", { name: "覆盖保存存档1" }),
+    );
+    expect(within(profileRegion).getByRole("status")).toHaveTextContent(
+      "已覆盖“物攻灵兽”的完整灵兽配置",
+    );
 
     await user.clear(physicalAttackInput);
     await user.type(physicalAttackInput, "1700");
@@ -422,7 +469,7 @@ describe("App 组件", () => {
       within(desktopNavigation).getByRole("button", { name: "数据查询" }),
     );
     expect(
-      screen.getByRole("heading", { name: "游戏资料查询" }),
+      await screen.findByRole("heading", { name: "游戏资料查询" }),
     ).toBeInTheDocument();
     expect(screen.getByText("找到 13 个门派")).toBeInTheDocument();
 
@@ -433,7 +480,7 @@ describe("App 组件", () => {
       within(mobileNavigation).getByRole("button", { name: "攻略" }),
     );
     expect(
-      screen.getByRole("heading", { name: "官方攻略索引" }),
+      await screen.findByRole("heading", { name: "官方攻略索引" }),
     ).toBeInTheDocument();
     expect(screen.getByText("五周年新门派与年度战斗调整")).toBeInTheDocument();
   });
@@ -446,7 +493,7 @@ describe("App 组件", () => {
     await user.click(
       within(navigation).getByRole("button", { name: "数据查询" }),
     );
-    await user.type(screen.getByLabelText("搜索门派或定位"), "持续治疗");
+    await user.type(await screen.findByLabelText("搜索门派或定位"), "持续治疗");
 
     expect(screen.getByText("找到 1 个门派")).toBeInTheDocument();
     expect(
@@ -473,7 +520,7 @@ describe("App 组件", () => {
       within(navigation).getByRole("button", { name: "数据查询" }),
     );
 
-    const sectTab = screen.getByRole("tab", { name: "门派" });
+    const sectTab = await screen.findByRole("tab", { name: "门派" });
     const equipmentTab = screen.getByRole("tab", { name: "装备" });
     sectTab.focus();
     await user.tab();
@@ -493,7 +540,7 @@ describe("App 组件", () => {
       within(navigation).getByRole("button", { name: "数据查询" }),
     );
 
-    await user.click(screen.getByRole("tab", { name: "装备" }));
+    await user.click(await screen.findByRole("tab", { name: "装备" }));
     expect(screen.getByText("找到 5 条装备资料")).toBeInTheDocument();
     await user.type(screen.getByLabelText("搜索装备资料"), "赛年神装");
     expect(screen.getByText("找到 1 条装备资料")).toBeInTheDocument();
@@ -513,7 +560,7 @@ describe("App 组件", () => {
 
     await user.click(within(navigation).getByRole("button", { name: "收藏" }));
     expect(
-      screen.getByRole("heading", { name: "装备资料" }),
+      await screen.findByRole("heading", { name: "装备资料" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: "灵兽与坐骑资料" }),
@@ -530,7 +577,7 @@ describe("App 组件", () => {
 
     const navigation = screen.getByRole("navigation", { name: "主导航" });
     await user.click(within(navigation).getByRole("button", { name: "攻略" }));
-    await user.click(screen.getByRole("button", { name: "坐骑" }));
+    await user.click(await screen.findByRole("button", { name: "坐骑" }));
 
     const title = "朱雀坐骑·涅离火技能介绍";
     expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
@@ -540,7 +587,9 @@ describe("App 组件", () => {
 
     await user.click(screen.getByRole("button", { name: `收藏${title}` }));
     await user.click(within(navigation).getByRole("button", { name: "收藏" }));
-    expect(screen.getByRole("heading", { name: title })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: title }),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: `取消收藏${title}` }));
     expect(screen.getByText("还没有收藏内容")).toBeInTheDocument();
   });
@@ -553,14 +602,14 @@ describe("App 组件", () => {
     await user.click(
       within(navigation).getByRole("button", { name: "数据查询" }),
     );
-    await user.click(screen.getByRole("button", { name: "收藏鬼王宗" }));
+    await user.click(await screen.findByRole("button", { name: "收藏鬼王宗" }));
     expect(
       screen.getByRole("button", { name: "取消收藏鬼王宗" }),
     ).toHaveAttribute("aria-pressed", "true");
 
     await user.click(within(navigation).getByRole("button", { name: "收藏" }));
     expect(
-      screen.getByRole("heading", { name: "我的收藏" }),
+      await screen.findByRole("heading", { name: "我的收藏" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "鬼王宗" })).toBeInTheDocument();
 
@@ -575,7 +624,9 @@ describe("App 组件", () => {
 
     const navigation = screen.getByRole("navigation", { name: "主导航" });
     await user.click(within(navigation).getByRole("button", { name: "设置" }));
-    expect(screen.getByRole("heading", { name: "设置" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "设置" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("FR69服明天")).toBeInTheDocument();
     expect(screen.getByText(/当前收藏 0 项/)).toBeInTheDocument();
     expect(
@@ -598,11 +649,13 @@ describe("App 组件", () => {
 
     const navigation = screen.getByRole("navigation", { name: "主导航" });
     await user.click(within(navigation).getByRole("button", { name: "收藏" }));
-    await user.click(screen.getByRole("button", { name: "浏览游戏资料" }));
-    await user.click(screen.getByRole("button", { name: "收藏鬼王宗" }));
+    await user.click(
+      await screen.findByRole("button", { name: "浏览游戏资料" }),
+    );
+    await user.click(await screen.findByRole("button", { name: "收藏鬼王宗" }));
 
     await user.click(within(navigation).getByRole("button", { name: "设置" }));
-    expect(screen.getByText(/当前收藏 1 项/)).toBeInTheDocument();
+    expect(await screen.findByText(/当前收藏 1 项/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "清空收藏" }));
     expect(screen.getByRole("status")).toHaveTextContent("收藏已清空");
     expect(screen.getByRole("button", { name: "清空收藏" })).toBeDisabled();

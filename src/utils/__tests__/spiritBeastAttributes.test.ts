@@ -7,6 +7,7 @@ import {
   getSpiritBeastAccessoryQualificationBonus,
   getSpiritBeastEquipmentBonusTotal,
   getSpiritBeastAllocationTotal,
+  getSpiritBeastAllocationRatio,
   getSpiritBeastPotentialPoints,
   getSpiritBeastResettableInitialPrimaryTotal,
   normalizeSpiritBeastCalculatorState,
@@ -566,6 +567,62 @@ describe("灵兽面板计算", () => {
     expect(
       normalized && getSpiritBeastAllocationTotal(normalized.customAllocation),
     ).toBe(10);
+  });
+
+  it("应该兼容字符串数值、敏系自由加点并回退未知预设", () => {
+    const presetState = {
+      ...createDefaultSpiritBeastState(),
+      selectedPresetId: "missing-preset",
+    } as unknown as Parameters<typeof getSpiritBeastAllocationRatio>[0];
+    expect(getSpiritBeastAllocationRatio(presetState)).toEqual({
+      constitution: 0,
+      spirit: 0,
+      strength: 10,
+      endurance: 0,
+      agility: 0,
+    });
+
+    const customState = createDefaultSpiritBeastState();
+    customState.allocationMode = "custom";
+    customState.customAllocation = {
+      constitution: 4,
+      spirit: 0,
+      strength: 6,
+      endurance: 0,
+      agility: 0,
+    };
+    expect(getSpiritBeastAllocationRatio(customState)).toEqual(
+      customState.customAllocation,
+    );
+
+    const normalized = normalizeSpiritBeastCalculatorState({
+      level: "20",
+      growth: "1.234",
+      resettableInitialPrimary: "bad",
+      allocationMode: "custom",
+      customAllocationScheme: "agility",
+      customAllocation: {
+        constitution: "3",
+        spirit: "",
+        strength: 0,
+        endurance: 2,
+        agility: 5,
+      },
+    });
+
+    expect(normalized).toMatchObject({
+      level: 20,
+      growth: 1.234,
+      customAllocationScheme: "agility",
+      customAllocation: {
+        constitution: 3,
+        spirit: 0,
+        strength: 0,
+        endurance: 2,
+        agility: 5,
+      },
+      resettableInitialPrimary: DEFAULT_SPIRIT_BEAST_RESETTABLE_INITIAL_PRIMARY,
+    });
   });
 
   it("非对象缓存应该安全回退", () => {

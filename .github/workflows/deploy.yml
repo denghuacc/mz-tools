@@ -11,8 +11,12 @@ jobs:
   deploy:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
-    # 只在CI成功时运行
-    if: github.event.workflow_run.conclusion == 'success'
+    # 仅发布本仓库主分支 push 的成功构建，不能发布 PR 的候选提交。
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      contains(fromJSON('["master", "main"]'), github.event.workflow_run.head_branch)
 
     steps:
       - name: Check Vercel secrets
@@ -26,6 +30,9 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # workflow_run 默认指向默认分支；部署必须绑定到实际通过 CI 的提交。
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

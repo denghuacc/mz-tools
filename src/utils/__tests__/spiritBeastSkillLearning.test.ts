@@ -64,6 +64,7 @@ describe("灵兽技能学习规则", () => {
   });
 
   it("支持多选和取消当前技能，并限制最多九个", () => {
+    expect(toggleSpiritBeastSkillLearningSkill([], "未知技能")).toEqual([]);
     expect(toggleSpiritBeastSkillLearningSkill([], "高级物暴")).toEqual([
       "高级物暴",
     ]);
@@ -104,6 +105,9 @@ describe("灵兽技能学习规则", () => {
       replacedSkillName: null,
       referencePrice: 5002,
     });
+    expect(
+      simulateSpiritBeastSkillLearning([], "高级火元素", Number.NaN),
+    ).toMatchObject({ resultType: "added" });
   });
 
   it("不超过三个技能时有 5% 概率新增，否则等概率替换", () => {

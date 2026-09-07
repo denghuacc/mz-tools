@@ -234,6 +234,18 @@ describe("角色面板计算", () => {
     expect(
       getCustomCharacterAllocationValidationError(
         {
+          constitution: 0.5,
+          spirit: 0,
+          strength: 8,
+          endurance: 0,
+          agility: 1.5,
+        },
+        "strength-or-spirit",
+      ),
+    ).toBe("每项加点必须是 0～10 的整数。");
+    expect(
+      getCustomCharacterAllocationValidationError(
+        {
           constitution: 0,
           spirit: 0,
           strength: 8,
@@ -309,6 +321,18 @@ describe("角色面板计算", () => {
         {
           constitution: 3,
           spirit: 0,
+          strength: 1,
+          endurance: 2,
+          agility: 4,
+        },
+        "agility",
+      ),
+    ).toBe("敏主属性方案不能分配力或灵。");
+    expect(
+      getCustomCharacterAllocationValidationError(
+        {
+          constitution: 3,
+          spirit: 0,
           strength: 0,
           endurance: 2,
           agility: 4,
@@ -328,6 +352,10 @@ describe("角色面板计算", () => {
         "agility",
       ),
     ).toBe("每级必须分配 10 点，当前已超出 1 点。");
+  });
+
+  it("无效年份应该按开服年回退三生造化丹上限", () => {
+    expect(calculateSanshengPillMaximumCount(Number.NaN)).toBe(0);
   });
 
   it("应该只支持三个角色等级档位并按等级重算成长和潜力点", () => {

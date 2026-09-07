@@ -6,7 +6,7 @@
 
 ## 本地发布前检查
 
-环境要求以 `package.json` 为准：Node.js 22.13 以上、pnpm 11。`pnpm/action-setup` 会直接读取 `packageManager`，工作流不再维护第二份 pnpm 版本。
+环境要求以 `package.json` 为准：Node.js 22.18 以上、pnpm 11。`pnpm/action-setup` 会直接读取 `packageManager`，工作流不再维护第二份 pnpm 版本。
 
 ```bash
 pnpm install --frozen-lockfile
@@ -31,7 +31,7 @@ CI 按顺序执行依赖安装、Vite+ Oxlint 检查、覆盖率测试、生产�
 
 ### 生产部署
 
-`.github/workflows/deploy.yml` 监听主分支 CI 结果。只有 CI 成功时才会构建并部署到 Vercel；失败或取消的 CI 不会触发生产发布。
+`.github/workflows/deploy.yml` 监听主分支 CI 结果。只有本仓库 `master` / `main` 分支 push 触发的 CI 成功时才会构建并部署到 Vercel，并检出该次 CI 的确切提交；PR、其它仓库以及失败或取消的 CI 不会触发生产发布。
 
 仓库需要配置以下 GitHub Actions Secrets：
 

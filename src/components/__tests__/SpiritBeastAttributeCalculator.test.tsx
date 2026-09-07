@@ -1177,6 +1177,50 @@ describe("SpiritBeastAttributeCalculator", () => {
     expect(dialog).not.toHaveTextContent("旧版装备汇总修正");
   });
 
+  it("应该继续编辑并清理灵饰、命格和坐骑的旧版汇总", async () => {
+    window.localStorage.setItem(
+      SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY,
+      JSON.stringify({
+        bonusSources: {
+          accessory: { strength: 10 },
+          destiny: { strength: 20 },
+          mount: { strength: 30 },
+        },
+      }),
+    );
+    const user = userEvent.setup();
+    render(<SpiritBeastAttributeCalculator />);
+
+    const cases = [
+      ["编辑灵饰", "旧版灵饰汇总修正", "10"],
+      ["编辑命格", "旧版命格汇总修正", "20"],
+      ["编辑坐骑统御", "旧版坐骑统御汇总修正", "30"],
+    ] as const;
+
+    for (const [editLabel, correctionTitle, initialValue] of cases) {
+      await user.click(screen.getByRole("button", { name: editLabel }));
+      const dialog = screen.getByRole("dialog", { name: editLabel });
+      const correctionSection = within(dialog)
+        .getByRole("heading", { name: correctionTitle })
+        .closest("section");
+      expect(correctionSection).not.toBeNull();
+
+      const input = within(correctionSection!).getByRole("spinbutton", {
+        name: `${correctionTitle}：力`,
+      });
+      expect(input).toHaveValue(Number(initialValue));
+      fireEvent.change(input, {
+        target: { value: String(Number(initialValue) + 1) },
+      });
+      expect(input).toHaveValue(Number(initialValue) + 1);
+      await user.click(
+        within(correctionSection!).getByRole("button", { name: "清空" }),
+      );
+      expect(dialog).not.toHaveTextContent(correctionTitle);
+      await user.click(within(dialog).getByRole("button", { name: "完成" }));
+    }
+  });
+
   it("损坏缓存不应该阻断计算器", () => {
     window.localStorage.setItem(
       SPIRIT_BEAST_ATTRIBUTES_STORAGE_KEY,

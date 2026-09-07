@@ -689,6 +689,9 @@ const EQUIPMENT_GEM_TYPE_SET = new Set<string>(
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
+const isNonNegativeFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0;
+
 const normalizeEquipmentAttributeValues = (
   value: unknown,
   fallback: EquipmentAttributeValues,
@@ -699,8 +702,7 @@ const normalizeEquipmentAttributeValues = (
     Object.entries(value).filter(
       ([attribute, storedValue]) =>
         EQUIPMENT_ATTRIBUTE_SET.has(attribute) &&
-        typeof storedValue === "number" &&
-        Number.isFinite(storedValue),
+        isNonNegativeFiniteNumber(storedValue),
     ),
   ) as EquipmentAttributeValues;
 };
@@ -784,8 +786,7 @@ const normalizeEquipmentAttributeLine = <Attribute extends EquipmentAttribute>(
     !isRecord(value) ||
     typeof value.attribute !== "string" ||
     !allowedAttributes.has(value.attribute) ||
-    typeof value.value !== "number" ||
-    !Number.isFinite(value.value)
+    !isNonNegativeFiniteNumber(value.value)
   ) {
     return fallback;
   }
@@ -808,8 +809,7 @@ const normalizeOptionalEquipmentAttributeLine = <
     !isRecord(value) ||
     typeof value.attribute !== "string" ||
     !allowedAttributes.has(value.attribute) ||
-    typeof value.value !== "number" ||
-    !Number.isFinite(value.value)
+    !isNonNegativeFiniteNumber(value.value)
   ) {
     return fallback;
   }
@@ -835,8 +835,7 @@ const normalizeEquipmentAttributeLines = <Attribute extends EquipmentAttribute>(
     if (
       typeof candidate.attribute !== "string" ||
       !allowedAttributes.has(candidate.attribute) ||
-      typeof candidate.value !== "number" ||
-      !Number.isFinite(candidate.value)
+      !isNonNegativeFiniteNumber(candidate.value)
     ) {
       continue;
     }

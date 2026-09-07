@@ -172,4 +172,99 @@ describe("灵兽装备属性汇总", () => {
       { attribute: "strength", value: -20 },
     ]);
   });
+
+  it("应该从结构损坏的旧缓存安全回退并兼容字符串数值", () => {
+    expect(normalizeSpiritBeastEquipmentSet(null)).toEqual(
+      createEmptySpiritBeastEquipmentSet(),
+    );
+
+    const normalized = normalizeSpiritBeastEquipmentSet({
+      garment: {
+        enabled: "yes",
+        baseAttributes: [
+          null,
+          { attribute: "speed", value: "12.5" },
+          { attribute: 1, value: 20 },
+        ],
+        enlightenmentAttributes: [
+          42,
+          { attribute: "constitution", value: " " },
+        ],
+      },
+      necklace: [],
+      crown: {
+        enabled: false,
+        baseAttributes: [
+          { attribute: "health", value: Number.POSITIVE_INFINITY },
+        ],
+        secondaryAttributes: [{ attribute: "mana", value: "14" }],
+        temperingAttribute: { attribute: "strength", value: "1000000" },
+        specialEffectName: 123,
+        specialEffectAdjustments: "bad",
+      },
+    });
+
+    expect(normalized.garment.enabled).toBe(true);
+    expect(normalized.garment.baseAttributes).toEqual([
+      { attribute: "speed", value: 12.5 },
+      { attribute: "physicalAttack", value: 0 },
+    ]);
+    expect(normalized.garment.enlightenmentAttributes).toEqual([
+      { attribute: "constitution", value: 0 },
+    ]);
+    expect(normalized.necklace).toEqual(
+      createEmptySpiritBeastEquipmentSet().necklace,
+    );
+    expect(normalized.crown.baseAttributes).toEqual([
+      { attribute: "health", value: 0 },
+      { attribute: "physicalAttack", value: 0 },
+    ]);
+    expect(normalized.crown.secondaryAttributes).toEqual([
+      { attribute: "mana", value: 14 },
+    ]);
+    expect(normalized.crown.temperingAttribute).toEqual({
+      attribute: "strength",
+      value: 999999,
+    });
+    expect(normalized.crown.specialEffectName).toBe("");
+    expect(normalized.crown.specialEffectAdjustments).toEqual([
+      { attribute: "spirit", value: 0 },
+    ]);
+
+    normalized.garment.enabled = false;
+    normalized.necklace.enabled = false;
+    expect(calculateSpiritBeastEquipmentBonuses(normalized)).toEqual(
+      expect.objectContaining({
+        health: 0,
+        mana: 0,
+        speed: 0,
+        strength: 0,
+      }),
+    );
+  });
+
+  it("应该补齐单条固定属性并分别回退缺失的宝衣和宝冠", () => {
+    const normalized = normalizeSpiritBeastEquipmentSet({
+      garment: null,
+      necklace: {},
+      crown: null,
+    });
+    expect(normalized.garment).toEqual(
+      createEmptySpiritBeastEquipmentSet().garment,
+    );
+    expect(normalized.crown).toEqual(
+      createEmptySpiritBeastEquipmentSet().crown,
+    );
+
+    expect(
+      normalizeSpiritBeastEquipmentSet({
+        garment: {
+          baseAttributes: [{ attribute: "physicalAttack", value: 10 }],
+        },
+      }).garment.baseAttributes,
+    ).toEqual([
+      { attribute: "physicalAttack", value: 10 },
+      { attribute: "magicalAttack", value: 0 },
+    ]);
+  });
 });
