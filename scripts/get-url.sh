@@ -23,7 +23,7 @@ echo "📋 项目信息："
 # 获取项目列表和网址
 vercel ls --scope $(vercel whoami) | grep mz-tools || {
     echo "❌ 未找到 mz-tools 项目"
-    echo "💡 请先运行: pnpm run vercel:config"
+    echo "💡 如需本地关联项目，请运行: pnpm run vercel:config"
     exit 1
 }
 
@@ -53,4 +53,3 @@ echo "   • https://mz-tools-[hash].vercel.app"
 echo ""
 echo "📱 其他获取方式："
 echo "   • Vercel Dashboard: https://vercel.com/dashboard"
-echo "   • GitHub Actions: https://github.com/denghuacc/mz-tools/actions"

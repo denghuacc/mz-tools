@@ -1,6 +1,6 @@
 # 部署指南
 
-项目使用 GitHub Actions 完成质量检查，并在主分支 CI 成功后部署到 Vercel。
+项目使用 GitHub Actions 完成质量检查，Vercel 通过 Git 集成构建并部署站点。
 
 正式网址：[https://mz-tools.alandeng.cc](https://mz-tools.alandeng.cc)。Vercel 自动生成的网址仅用于部署排查和预览。
 
@@ -31,16 +31,9 @@ CI 按顺序执行依赖安装、Vite+ Oxlint 检查、覆盖率测试、生产�
 
 ### 生产部署
 
-`.github/workflows/deploy.yml` 监听主分支 CI 结果。只有本仓库 `master` / `main` 分支 push 触发的 CI 成功时才会构建并部署到 Vercel，并检出该次 CI 的确切提交；PR、其它仓库以及失败或取消的 CI 不会触发生产发布。
+Vercel 项目的 Git 集成负责部署。推送到项目设置的生产分支后，Vercel 自动构建和发布；是否为其它分支或 Pull Request 创建预览部署取决于 Vercel 的 Git 设置。GitHub CI 和 Vercel 构建分别运行，CI 结果不会阻止 Vercel 发布。
 
-仓库需要配置以下 GitHub Actions Secrets：
-
-- `VERCEL_TOKEN`
-- `VERCEL_ORG_ID`
-- `VERCEL_PROJECT_ID`
-- `CODECOV_TOKEN`（可选，上传失败不会阻断 CI）
-
-详细的 Vercel 项目关联方式见 [VERCEL_SETUP.md](./VERCEL_SETUP.md)。
+Vercel 使用根目录的 `vercel.json` 指定构建命令与输出目录。关联仓库及生产分支的检查方式见 [VERCEL_SETUP.md](./VERCEL_SETUP.md)。Git 集成不需要 GitHub Actions 的 Vercel Secrets；`CODECOV_TOKEN` 仍是 CI 中可选的上传凭据。
 
 ## 手动部署
 
@@ -51,11 +44,11 @@ pnpm deploy       # 预览部署
 pnpm deploy:prod  # 生产部署
 ```
 
-手动生产部署会绕过 GitHub 的“CI 成功后再部署”编排，仅应在本地完整检查通过后使用。
+手动生产部署由本地直接发起，不经过 GitHub CI；运行前请确认本地检查通过，并核对关联的 Vercel 项目。
 
 ## 故障排查
 
-- pnpm 版本冲突：确认工作流没有重新声明 `version`，并检查 `package.json#packageManager`。
+- pnpm 版本冲突：确认 `package.json#packageManager` 与本地或 Vercel 构建环境一致。
 - 覆盖率失败：运行 `pnpm test:coverage -- --run`，根据报告补充用户行为测试，不降低门槛。
-- Vercel 鉴权失败：核对三个 Vercel Secrets 与项目归属，不要在日志或文档中输出 Secret 内容。
+- Vercel 部署失败：在 Vercel Dashboard 中查看对应提交的构建日志，核对 Git 仓库、生产分支和项目配置。
 - 生产验证：检查 [GitHub Actions](https://github.com/denghuacc/mz-tools/actions) 和 [线上站点](https://mz-tools.alandeng.cc)。

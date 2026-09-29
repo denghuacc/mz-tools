@@ -6,7 +6,6 @@
 # MZ Tools
 
 [![CI/CD](https://github.com/denghuacc/mz-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/denghuacc/mz-tools/actions/workflows/ci.yml)
-[![Deploy](https://github.com/denghuacc/mz-tools/actions/workflows/deploy.yml/badge.svg)](https://github.com/denghuacc/mz-tools/actions/workflows/deploy.yml)
 [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel&link=https://mz-tools.alandeng.cc)](https://mz-tools.alandeng.cc)
 [![Test Coverage](https://codecov.io/gh/denghuacc/mz-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/denghuacc/mz-tools)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
